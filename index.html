@@ -35,7 +35,6 @@
       --transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
     }
 
-    /* Тёмная тема */
     body.dark {
       --bg: #111827;
       --surface: #1f2937;
@@ -78,7 +77,6 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
-    /* HEADER */
     .header {
       position: sticky;
       top: 0;
@@ -160,13 +158,12 @@
       border: 2px solid var(--bg);
     }
 
-    /* BOTTOM NAV – всегда на виду */
     .bottom-nav {
       position: fixed;
       bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
       max-width: 1200px;
       background: var(--bg);
       backdrop-filter: blur(20px);
@@ -177,12 +174,13 @@
       align-items: center;
       padding: 4px 0 calc(6px + env(safe-area-inset-bottom));
       height: var(--nav-height);
-      z-index: 200;
+      z-index: 1000;
       transition: transform 0.2s;
+      transform: translateY(0);
     }
-    /* Скрыта только на странице логина */
+
     .bottom-nav.hidden {
-      transform: translateX(-50%) translateY(100%);
+      transform: translateY(100%);
     }
 
     .nav-item {
@@ -214,7 +212,6 @@
     }
     .nav-item.create-btn .material-symbols-rounded { font-size: 26px; }
 
-    /* MAIN */
     main {
       flex: 1;
       overflow-y: auto;
@@ -227,12 +224,11 @@
     }
     .screen.active { display: block; }
 
-    /* Экран логина – flex-контейнер */
     #screen-login.active {
       display: flex;
       align-items: center;
       justify-content: center;
-      height: calc(100vh - var(--header-height));
+      height: calc(100vh - var(--header-height) - var(--nav-height));
     }
 
     @keyframes fadeSlide {
@@ -240,7 +236,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* CATEGORIES ROW */
     .categories-row {
       display: flex;
       overflow-x: auto;
@@ -270,7 +265,6 @@
     .cat-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
     .cat-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
 
-    /* GRID */
     .listings-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -281,7 +275,6 @@
     @media (min-width: 900px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
     @media (min-width: 1100px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
 
-    /* CARD */
     .card {
       background: var(--surface);
       border-radius: var(--radius-md);
@@ -379,7 +372,6 @@
       gap: 2px;
     }
 
-    /* DETAIL */
     .detail-img {
       width: 100%;
       max-height: 300px;
@@ -416,7 +408,6 @@
     }
     .btn:hover { filter: brightness(1.1); }
 
-    /* FORMS */
     .input-field {
       width: 100%;
       padding: 14px 16px;
@@ -429,7 +420,6 @@
       color: var(--text-primary);
     }
 
-    /* PROFILE STATS */
     .stats-row {
       display: flex;
       gap: 8px;
@@ -454,7 +444,6 @@
 </head>
 <body>
 <div id="app">
-  <!-- Header -->
   <header class="header" id="main-header">
     <div class="logo">🌿 Geran Express</div>
     <div class="search-bar" id="search-trigger">
@@ -468,18 +457,14 @@
   </header>
 
   <main id="main-content">
-    <!-- Home Screen -->
     <div id="screen-home" class="screen active"></div>
-    <!-- Favorites Screen -->
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px">Избранное</h2><div id="favorites-container" class="listings-grid"></div></div>
-    <!-- My Listings Screen -->
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px">Публикации</h2><div id="my-container"></div></div>
-    <!-- Profile Screen -->
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div style="width:70px;height:70px;border-radius:50%;background:var(--primary-soft);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>
-        <h3 id="profile-name" style="margin-top:8px">Лоиков Абдулло</h3>
-        <p style="color:var(--text-secondary)">+992 971 220 800</p>
+        <h3 id="profile-name" style="margin-top:8px">Иван Иванов</h3>
+        <p style="color:var(--text-secondary)">+7 900 123-45-67</p>
       </div>
       <div class="stats-row">
         <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400">объявлений</small></div>
@@ -492,7 +477,6 @@
       </div>
       <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Выйти</button>
     </div>
-    <!-- Create Screen -->
     <div id="screen-create" class="screen">
       <h2 style="margin:4px 0 12px">Новое объявление</h2>
       <input class="input-field" id="create-title" placeholder="Название">
@@ -504,9 +488,7 @@
       <input class="input-field" id="create-phone" placeholder="Телефон">
       <button class="btn" id="submit-create">Опубликовать</button>
     </div>
-    <!-- Detail Screen -->
     <div id="screen-detail" class="screen"><span class="material-symbols-rounded" id="back-detail" style="cursor:pointer;font-size:28px;margin-bottom:8px;display:inline-block">arrow_back</span><div id="detail-content"></div></div>
-    <!-- Search Screen -->
     <div id="screen-search" class="screen">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
         <span class="material-symbols-rounded" id="back-search" style="cursor:pointer">arrow_back</span>
@@ -514,7 +496,6 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
-    <!-- Login Screen (отображается только при необходимости) -->
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <h1 style="color:var(--primary)">🌿 Geran Express</h1>
@@ -525,7 +506,6 @@
     </div>
   </main>
 
-  <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottom-nav">
     <div class="nav-item active" data-tab="home"><span class="material-symbols-rounded">home</span><span>Главная</span></div>
     <div class="nav-item" data-tab="favorites"><span class="material-symbols-rounded">favorite</span><span>Избранное</span></div>
@@ -540,7 +520,6 @@
     // ---------- Состояние ----------
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
-      // Изначально пустой массив – без моковых данных
       listings: JSON.parse(localStorage.getItem('geran_listings')) || [],
       favorites: JSON.parse(localStorage.getItem('geran_favorites')) || [],
       currentScreen: 'home',
@@ -549,40 +528,95 @@
       activeCategory: null
     };
 
+    // Стартовые 5 качественных объявлений, если массив пуст
+    if (!state.listings.length) {
+      state.listings = [
+        {
+          id: '1',
+          title: 'Смартфон Samsung Galaxy A54',
+          desc: 'Отличное состояние, полный комплект, коробка.',
+          price: 18000,
+          isFree: false,
+          category: 'Электроника',
+          phone: '+7 999 123-45-67',
+          village: 'Дехай Геран',
+          images: ['https://picsum.photos/id/1/400/500'],
+          date: Date.now() - 1000000,
+          userId: 'demo',
+          views: 12,
+          isVIP: false
+        },
+        {
+          id: '2',
+          title: 'Ноутбук Lenovo IdeaPad 3',
+          desc: '15.6", Ryzen 5, 8GB RAM, SSD 256GB. Для учёбы и работы.',
+          price: 32000,
+          isFree: false,
+          category: 'Компьютеры',
+          phone: '+7 999 234-56-78',
+          village: 'Дехай Геран',
+          images: ['https://picsum.photos/id/2/400/500'],
+          date: Date.now() - 2000000,
+          userId: 'demo',
+          views: 28,
+          isVIP: true
+        },
+        {
+          id: '3',
+          title: 'Дрель электрическая Makita',
+          desc: 'Мощная, с регулировкой оборотов. Была в использовании пару раз.',
+          price: 4500,
+          isFree: false,
+          category: 'Инструменты',
+          phone: '+7 999 345-67-89',
+          village: 'Дехай Геран',
+          images: ['https://picsum.photos/id/3/400/500'],
+          date: Date.now() - 3000000,
+          userId: 'demo',
+          views: 8,
+          isVIP: false
+        },
+        {
+          id: '4',
+          title: 'Диван угловой раскладной',
+          desc: 'Ткань серого цвета, удобный, есть ящик для белья.',
+          price: 22000,
+          isFree: false,
+          category: 'Недвижимость',
+          phone: '+7 999 456-78-90',
+          village: 'Дехай Геран',
+          images: ['https://picsum.photos/id/4/400/500'],
+          date: Date.now() - 5000000,
+          userId: 'demo',
+          views: 41,
+          isVIP: false
+        },
+        {
+          id: '5',
+          title: 'Куртка зимняя мужская',
+          desc: 'Размер L, носилась один сезон, состояние отличное.',
+          price: 5000,
+          isFree: false,
+          category: 'Одежда',
+          phone: '+7 999 567-89-01',
+          village: 'Дехай Геран',
+          images: ['https://picsum.photos/id/5/400/500'],
+          date: Date.now() - 7000000,
+          userId: 'demo',
+          views: 17,
+          isVIP: false
+        }
+      ];
+      localStorage.setItem('geran_listings', JSON.stringify(state.listings));
+    }
 
-if (!state.listings.length) {
-  state.listings = [
-    { id: '1', title: 'iPhone 14 Pro 128GB', desc: 'В идеальном состоянии, полный комплект', price: 55000, isFree: false, category: 'Электроника', phone: '+7 900 111-22-33', village: 'Новоселово', images: ['https://picsum.photos/id/0/400/500'], date: Date.now() - 3600000, userId: 'demo', views: 34, isVIP: true },
-    { id: '2', title: 'Зимние шины Nokian', desc: 'Шиповка, пробег 5000 км', price: 12000, isFree: false, category: 'Авто', phone: '+7 900 222-33-44', village: 'Новоселово', images: ['https://picsum.photos/id/10/400/500'], date: Date.now() - 7200000, userId: 'demo', views: 12 },
-    { id: '3', title: 'Ремонт стиральных машин', desc: 'Выезд по деревне, опыт 10 лет', price: 1500, isFree: false, category: 'Услуги', phone: '+7 900 333-44-55', village: 'Новоселово', images: ['https://picsum.photos/id/20/400/500'], date: Date.now() - 86400000, userId: 'demo', views: 78 },
-    { id: '4', title: 'Ноутбук Lenovo ThinkPad', desc: 'i5 10gen, 8GB, SSD 256', price: 28000, isFree: false, category: 'Компьютеры', phone: '+7 900 444-55-66', village: 'Новоселово', images: ['https://picsum.photos/id/30/400/500'], date: Date.now() - 5000000, userId: 'demo', views: 22 },
-    { id: '5', title: 'Детская коляска', desc: 'Почти новая, прогулочная', price: 5500, isFree: false, category: 'Детские', phone: '+7 900 555-66-77', village: 'Новоселово', images: ['https://picsum.photos/id/40/400/500'], date: Date.now() - 12000000, userId: 'demo', views: 9 },
-    { id: '6', title: 'Samsung Galaxy S23 Ultra', desc: '256GB, черный, на гарантии, без сколов', price: 68000, isFree: false, category: 'Электроника', phone: '+7 900 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 15000000, userId: 'user1', views: 45, isVIP: true },
-    { id: '7', title: 'Беспроводные наушники AirPods Pro 2', desc: 'Оригинал, чек есть, амбушюры не вскрывались', price: 16000, isFree: false, category: 'Электроника', phone: '+7 900 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 18000000, userId: 'user2', views: 112 },
-    { id: '8', title: 'Планшет Xiaomi Pad 6', desc: '6/128GB, идеален для фильмов и учебы, чехол в подарок', price: 23000, isFree: false, category: 'Электроника', phone: '+7 900 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 22000000, userId: 'user3', views: 28 },
-    { id: '9', title: 'Игровая приставка PlayStation 5', desc: 'Вторая ревизия, 2 геймпада, не шумит, не забанена', price: 42000, isFree: false, category: 'Электроника', phone: '+7 900 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 25000000, userId: 'user4', views: 190, isVIP: true },
-    { id: '10', title: 'Умные часы Apple Watch SE 2023', desc: '44mm, ремешок темно-синий, батарея 98%', price: 21000, isFree: false, category: 'Электроника', phone: '+7 900 000-11-22', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 30000000, userId: 'user5', views: 54 },
-    { id: '11', title: 'Монитор LG UltraGear 27"', desc: '144Hz, IPS, 2K разрешение, битых пикселей нет', price: 19500, isFree: false, category: 'Компьютеры', phone: '+7 901 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 35000000, userId: 'user6', views: 39 },
-    { id: '12', title: 'Робот-пылесос Roborock Q7', desc: 'С функцией влажной уборки, строит карту дома', price: 25000, isFree: false, category: 'Бытовая техника', phone: '+7 901 222-33-44', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 40000000, userId: 'user7', views: 67 },
-    { id: '13', title: 'Яндекс Станция Миди', desc: 'Умная колонка с Алисой, Zigbee, цвет черный', price: 8500, isFree: false, category: 'Электроника', phone: '+7 901 333-44-55', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 45000000, userId: 'user8', views: 81 },
-    { id: '14', title: 'Видеокарта RTX 3060 Ti 8GB', desc: 'В майнинге не была, обслужена, любые тесты', price: 26000, isFree: false, category: 'Компьютеры', phone: '+7 901 444-55-66', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 50000000, userId: 'user9', views: 143 },
-    { id: '15', title: 'Телевизор TCL 55" 4K Smart TV', desc: 'QLED, Android TV, состояние нового, коробка есть', price: 34000, isFree: false, category: 'Электроника', phone: '+7 901 555-66-77', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 55000000, userId: 'user10', views: 99 },
-    { id: '16', title: 'Смартфон Poco X5 Pro 5G', desc: '8/256GB, синий, быстрая зарядка 67W, чехол', price: 18500, isFree: false, category: 'Электроника', phone: '+7 901 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 60000000, userId: 'user11', views: 41 },
-    { id: '17', title: 'Зеркальный фотоаппарат Canon EOS 800D', desc: 'Объектив 18-55mm, сумка, флешка на 64GB', price: 37000, isFree: false, category: 'Электроника', phone: '+7 901 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 65000000, userId: 'user12', views: 23 },
-    { id: '18', title: 'Электронная книга Kindle Paperwhite', desc: 'Влагозащита, подсветка экрана, батарея держит месяц', price: 9000, isFree: false, category: 'Электроника', phone: '+7 901 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 70000000, userId: 'user13', views: 17 },
-    { id: '19', title: 'Кофемашина DeLonghi Magnifica', desc: 'Автоматическая, зерновая, полностью промыта и настроена', price: 29000, isFree: false, category: 'Бытовая техника', phone: '+7 901 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 75000000, userId: 'user14', views: 88, isVIP: true },
-    { id: '20', title: 'Квадрокоптер DJI Mini 2 Fly More Combo', desc: '3 аккумулятора, сумка, без падений и ремонтов', price: 35000, isFree: false, category: 'Электроника', phone: '+7 902 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 80000000, userId: 'user15', views: 104 }
-  ];
-}
-
-
-    // Больше никакой автоматической подстановки тестовых объявлений!
-
+    // ---------- Сохранение ----------
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
     };
 
+    // ---------- DOM элементы ----------
     const screens = {
       home: document.getElementById('screen-home'),
       favorites: document.getElementById('screen-favorites'),
@@ -593,12 +627,12 @@ if (!state.listings.length) {
       search: document.getElementById('screen-search'),
       login: document.getElementById('screen-login'),
     };
-
     const bottomNav = document.getElementById('bottom-nav');
     const mainHeader = document.getElementById('main-header');
 
-    // Нижняя панель скрыта только на экране логина
+    // ---------- Управление нижней панелью ----------
     function updateNavVisibility(screenId) {
+      // Панель скрыта только на экране логина
       if (screenId === 'login') {
         bottomNav.classList.add('hidden');
       } else {
@@ -612,6 +646,7 @@ if (!state.listings.length) {
       if (navItem) navItem.classList.add('active');
     }
 
+    // ---------- Переключение экранов ----------
     function showScreen(id) {
       // Если пользователь не авторизован и пытается зайти в профиль,
       // перенаправляем на экран логина
@@ -623,12 +658,8 @@ if (!state.listings.length) {
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
 
-      // Управление видимостью заголовка и нижней панели
-      if (id === 'login') {
-        mainHeader.style.display = 'none';
-      } else {
-        mainHeader.style.display = 'flex';
-      }
+      // Заголовок видим везде, кроме логина
+      mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
 
       updateNavVisibility(id);
       setActiveNavTab(id);
@@ -636,13 +667,17 @@ if (!state.listings.length) {
     }
 
     function renderScreen(id) {
-      if (id === 'home') renderHome();
-      else if (id === 'favorites') renderFavorites();
-      else if (id === 'my') renderMy();
-      else if (id === 'profile') renderProfile();
-      else if (id === 'search') renderSearch();
+      switch (id) {
+        case 'home': renderHome(); break;
+        case 'favorites': renderFavorites(); break;
+        case 'my': renderMy(); break;
+        case 'profile': renderProfile(); break;
+        case 'search': renderSearch(); break;
+        // detail и create не требуют отдельной отрисовки вне своих обработчиков
+      }
     }
 
+    // ---------- Карточка объявления ----------
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
       const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} ₽`;
@@ -661,7 +696,7 @@ if (!state.listings.length) {
             <div class="card-price">${priceText}</div>
             <div class="card-title">${l.title}</div>
             <div class="card-meta">
-              <span>📍 ${l.village||'Новоселово'}</span>
+              <span>📍 ${l.village || 'Дехай Геран'}</span>
               <span>${new Date(l.date).toLocaleDateString()}</span>
               <span><span class="material-symbols-rounded" style="font-size:14px">visibility</span>${l.views||0}</span>
             </div>
@@ -669,6 +704,7 @@ if (!state.listings.length) {
         </div>`;
     }
 
+    // ---------- Категории ----------
     function renderCategories() {
       const categories = ['Электроника','Компьютеры','Бытовая техника','Авто','Мото','Недвижимость','Инструменты','Запчасти','Одежда','Игры','Книги','Детские','Животные','Работа','Услуги','Разное'];
       const icons = {
@@ -730,7 +766,6 @@ if (!state.listings.length) {
     }
 
     function renderProfile() {
-      // Если пользователь не авторизован, показываем логин (на всякий случай)
       if (!state.user) {
         showScreen('login');
         return;
@@ -750,7 +785,7 @@ if (!state.listings.length) {
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${l.isFree?'Бесплатно':l.price.toLocaleString()+' ₽'}</h3>
         <p style="margin:10px 0">${l.desc}</p>
-        <p>📍 ${l.village||'Новоселово'} · ${l.category}</p>
+        <p>📍 ${l.village || 'Дехай Геран'} · ${l.category}</p>
         <div class="detail-actions">
           <button class="btn" onclick="alert('Звонок на ${l.phone}')"><span class="material-symbols-rounded">call</span>Позвонить</button>
           <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${state.favorites.includes(l.id)?'favorite':'favorite'}</span></button>
@@ -764,10 +799,14 @@ if (!state.listings.length) {
       document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : '<p>Ничего не найдено</p>';
     }
 
+    // ---------- Глобальные методы ----------
     window._toggleFav = (id) => {
-      if (!state.user) return alert('Войдите');
-      if (state.favorites.includes(id)) state.favorites = state.favorites.filter(f => f !== id);
-      else state.favorites.push(id);
+      if (!state.user) return alert('Войдите, чтобы добавлять в избранное');
+      if (state.favorites.includes(id)) {
+        state.favorites = state.favorites.filter(f => f !== id);
+      } else {
+        state.favorites.push(id);
+      }
       save();
       renderScreen(state.currentScreen);
     };
@@ -785,13 +824,45 @@ if (!state.listings.length) {
     };
 
     window._deleteListing = (id) => {
-      if (confirm('Удалить?')) {
+      if (confirm('Удалить объявление?')) {
         state.listings = state.listings.filter(l => l.id !== id);
         save();
         renderMy();
       }
     };
 
+    // ---------- Функция для ручного добавления через консоль ----------
+    window.addMyProduct = ({ title, desc, price, category, phone, images = [] }) => {
+      if (!title || !phone) {
+        console.error('addMyProduct: title и phone обязательны');
+        return;
+      }
+      const newListing = {
+        id: 'manual_' + Date.now(),
+        title,
+        desc: desc || '',
+        price: Number(price) || 0,
+        isFree: price === 0,
+        category: category || 'Разное',
+        phone,
+        images: images.length ? images : ['https://picsum.photos/400/500'],
+        village: 'Дехай Геран',
+        date: Date.now(),
+        userId: state.user?.uid || 'anonymous',
+        views: 0,
+        isActive: true,
+        isVIP: false
+      };
+      state.listings.unshift(newListing);
+      save();
+      // Перерендерить текущий экран, если это главная или избранное
+      if (state.currentScreen === 'home' || state.currentScreen === 'favorites') {
+        renderScreen(state.currentScreen);
+      }
+      console.log('✅ Товар добавлен:', newListing);
+    };
+
+    // ---------- Обработчики кнопок ----------
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
@@ -804,7 +875,7 @@ if (!state.listings.length) {
         price: parseInt(document.getElementById('create-price').value) || 0,
         isFree: false,
         phone,
-        village: 'Новоселово',
+        village: 'Дехай Геран',
         images: ['https://picsum.photos/400/500'],
         date: Date.now(),
         userId: state.user?.uid || 'demo',
@@ -828,10 +899,10 @@ if (!state.listings.length) {
     document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
-    document.getElementById('logout-btn').addEventListener('click', () => { 
-      localStorage.removeItem('geran_user'); 
-      state.user = null; 
-      showScreen('login'); 
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('geran_user');
+      state.user = null;
+      showScreen('login');
     });
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
@@ -841,13 +912,20 @@ if (!state.listings.length) {
         showScreen('home');
       }
     });
-    document.getElementById('theme-checkbox')?.addEventListener('change', e => {
+
+    // Тёмная тема
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    themeCheckbox?.addEventListener('change', e => {
       document.body.classList.toggle('dark', e.target.checked);
       localStorage.setItem('geran_dark', e.target.checked);
     });
-    document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
 
-    // Навигация по табам
+    document.getElementById('search-input').addEventListener('input', e => {
+      state.searchQuery = e.target.value;
+      renderSearch();
+    });
+
+    // Нижняя навигация
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
         const tab = item.dataset.tab;
@@ -858,7 +936,7 @@ if (!state.listings.length) {
     // Инициализация темы
     if (localStorage.getItem('geran_dark') === 'true') {
       document.body.classList.add('dark');
-      document.getElementById('theme-checkbox').checked = true;
+      themeCheckbox.checked = true;
     }
 
     // Стартовый экран

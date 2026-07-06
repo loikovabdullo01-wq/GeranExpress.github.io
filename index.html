@@ -35,6 +35,20 @@
       --transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
     }
 
+    /* Тёмная тема */
+    body.dark {
+      --bg: #111827;
+      --surface: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --primary: #34d399;
+      --primary-soft: #064e3b;
+      --border: #374151;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
     body {
       font-family: var(--font);
       background: var(--bg);
@@ -45,6 +59,7 @@
       min-height: 100vh;
       -webkit-tap-highlight-color: transparent;
       margin: 0;
+      transition: background 0.3s, color 0.3s;
     }
 
     #app {
@@ -68,15 +83,15 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding: 0 16px;
       height: var(--header-height);
       display: flex;
       align-items: center;
       gap: 12px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .logo {
@@ -93,21 +108,23 @@
       flex: 1;
       display: flex;
       align-items: center;
-      background: #f1f3f4;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 40px;
       padding: 8px 14px;
       gap: 6px;
       cursor: pointer;
       transition: background var(--transition);
+      color: var(--text-secondary);
     }
-    .search-bar:hover { background: #e8eaed; }
+    .search-bar:hover { background: var(--border); }
     .search-bar .material-symbols-rounded {
       font-size: 20px;
-      color: #5f6368;
+      color: var(--text-secondary);
     }
     .search-bar span {
       font-size: 0.9rem;
-      color: #80868b;
+      color: var(--text-tertiary);
       font-weight: 400;
     }
 
@@ -126,11 +143,11 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #444;
+      color: var(--text-secondary);
       position: relative;
       transition: background var(--transition);
     }
-    .icon-btn:hover { background: #f1f3f4; }
+    .icon-btn:hover { background: var(--surface); }
     .icon-btn .material-symbols-rounded { font-size: 22px; }
     .badge-dot {
       position: absolute;
@@ -140,10 +157,10 @@
       height: 8px;
       background: var(--accent-heart);
       border-radius: 50%;
-      border: 2px solid white;
+      border: 2px solid var(--bg);
     }
 
-    /* BOTTOM NAV – всегда видна на основных экранах */
+    /* BOTTOM NAV – всегда на виду */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -151,7 +168,7 @@
       transform: translateX(-50%);
       width: 100%;
       max-width: 1200px;
-      background: rgba(255,255,255,0.9);
+      background: var(--bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
@@ -163,7 +180,7 @@
       z-index: 200;
       transition: transform 0.2s;
     }
-    /* Панель скрывается только на второстепенных экранах */
+    /* Скрыта только на странице логина */
     .bottom-nav.hidden {
       transform: translateX(-50%) translateY(100%);
     }
@@ -173,7 +190,7 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      color: #888;
+      color: var(--text-tertiary);
       cursor: pointer;
       padding: 6px 8px;
       border-radius: 16px;
@@ -209,6 +226,15 @@
       animation: fadeSlide 0.25s ease;
     }
     .screen.active { display: block; }
+
+    /* Экран логина – flex-контейнер */
+    #screen-login.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - var(--header-height));
+    }
+
     @keyframes fadeSlide {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
@@ -229,7 +255,7 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: white;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 24px;
       padding: 7px 14px;
@@ -238,10 +264,10 @@
       color: var(--text-secondary);
       transition: all var(--transition);
       cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      box-shadow: var(--shadow-sm);
     }
     .cat-chip .material-symbols-rounded { font-size: 18px; }
-    .cat-chip:hover { border-color: #bbb; background: #fafafa; }
+    .cat-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
     .cat-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
 
     /* GRID */
@@ -251,30 +277,17 @@
       gap: 12px;
       margin-top: 8px;
     }
-
-    @media (min-width: 600px) {
-      .listings-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-    @media (min-width: 900px) {
-      .listings-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-    @media (min-width: 1100px) {
-      .listings-grid {
-        grid-template-columns: repeat(5, 1fr);
-      }
-    }
+    @media (min-width: 600px) { .listings-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 900px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1100px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
 
     /* CARD */
     .card {
-      background: white;
+      background: var(--surface);
       border-radius: var(--radius-md);
       overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      border: 1px solid #f0f0f0;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
       transition: all var(--transition);
       cursor: pointer;
       display: flex;
@@ -286,7 +299,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 4 / 5;
-      background: #f3f4f6;
+      background: var(--border);
     }
     .card-img img {
       width: 100%;
@@ -373,7 +386,7 @@
       object-fit: contain;
       border-radius: var(--radius-md);
       margin: 12px 0;
-      background: #f3f4f6;
+      background: var(--border);
     }
     .detail-actions {
       display: flex;
@@ -401,7 +414,7 @@
       border: 1.5px solid var(--primary);
       color: var(--primary);
     }
-    .btn:hover { background: #12392e; }
+    .btn:hover { filter: brightness(1.1); }
 
     /* FORMS */
     .input-field {
@@ -412,7 +425,8 @@
       font-size: 0.95rem;
       margin-bottom: 12px;
       font-family: var(--font);
-      background: white;
+      background: var(--surface);
+      color: var(--text-primary);
     }
 
     /* PROFILE STATS */
@@ -468,9 +482,9 @@
         <p style="color:var(--text-secondary)">+7 900 123-45-67</p>
       </div>
       <div class="stats-row">
-        <div class="stat-box"><span id="stat-listings">3</span><br><small style="font-weight:400">объявлений</small></div>
-        <div class="stat-box"><span id="stat-views">62</span><br><small style="font-weight:400">просмотров</small></div>
-        <div class="stat-box"><span id="stat-favs">5</span><br><small style="font-weight:400">избранных</small></div>
+        <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400">объявлений</small></div>
+        <div class="stat-box"><span id="stat-views">0</span><br><small style="font-weight:400">просмотров</small></div>
+        <div class="stat-box"><span id="stat-favs">0</span><br><small style="font-weight:400">избранных</small></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)">
         <span>Тёмная тема</span>
@@ -500,8 +514,8 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
-    <!-- Login Screen -->
-    <div id="screen-login" class="screen active" style="display:flex;align-items:center;justify-content:center;height:100vh">
+    <!-- Login Screen (отображается только при необходимости) -->
+    <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <h1 style="color:var(--primary)">🌿 Geran Express</h1>
         <p style="margin:12px 0 32px;color:var(--text-secondary)">Покупайте и продавайте рядом</p>
@@ -523,8 +537,10 @@
 
 <script>
   (() => {
+    // ---------- Состояние ----------
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
+      // Изначально пустой массив – без моковых данных
       listings: JSON.parse(localStorage.getItem('geran_listings')) || [],
       favorites: JSON.parse(localStorage.getItem('geran_favorites')) || [],
       currentScreen: 'home',
@@ -533,31 +549,7 @@
       activeCategory: null
     };
 
-if (!state.listings.length) {
-  state.listings = [
-    { id: '1', title: 'iPhone 14 Pro 128GB', desc: 'В идеальном состоянии, полный комплект', price: 55000, isFree: false, category: 'Электроника', phone: '+7 900 111-22-33', village: 'Новоселово', images: ['https://picsum.photos/id/0/400/500'], date: Date.now() - 3600000, userId: 'demo', views: 34, isVIP: true },
-    { id: '2', title: 'Зимние шины Nokian', desc: 'Шиповка, пробег 5000 км', price: 12000, isFree: false, category: 'Авто', phone: '+7 900 222-33-44', village: 'Новоселово', images: ['https://picsum.photos/id/10/400/500'], date: Date.now() - 7200000, userId: 'demo', views: 12 },
-    { id: '3', title: 'Ремонт стиральных машин', desc: 'Выезд по деревне, опыт 10 лет', price: 1500, isFree: false, category: 'Услуги', phone: '+7 900 333-44-55', village: 'Новоселово', images: ['https://picsum.photos/id/20/400/500'], date: Date.now() - 86400000, userId: 'demo', views: 78 },
-    { id: '4', title: 'Ноутбук Lenovo ThinkPad', desc: 'i5 10gen, 8GB, SSD 256', price: 28000, isFree: false, category: 'Компьютеры', phone: '+7 900 444-55-66', village: 'Новоселово', images: ['https://picsum.photos/id/30/400/500'], date: Date.now() - 5000000, userId: 'demo', views: 22 },
-    { id: '5', title: 'Детская коляска', desc: 'Почти новая, прогулочная', price: 5500, isFree: false, category: 'Детские', phone: '+7 900 555-66-77', village: 'Новоселово', images: ['https://picsum.photos/id/40/400/500'], date: Date.now() - 12000000, userId: 'demo', views: 9 },
-    { id: '6', title: 'Samsung Galaxy S23 Ultra', desc: '256GB, черный, на гарантии, без сколов', price: 68000, isFree: false, category: 'Электроника', phone: '+7 900 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 15000000, userId: 'user1', views: 45, isVIP: true },
-    { id: '7', title: 'Беспроводные наушники AirPods Pro 2', desc: 'Оригинал, чек есть, амбушюры не вскрывались', price: 16000, isFree: false, category: 'Электроника', phone: '+7 900 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 18000000, userId: 'user2', views: 112 },
-    { id: '8', title: 'Планшет Xiaomi Pad 6', desc: '6/128GB, идеален для фильмов и учебы, чехол в подарок', price: 23000, isFree: false, category: 'Электроника', phone: '+7 900 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 22000000, userId: 'user3', views: 28 },
-    { id: '9', title: 'Игровая приставка PlayStation 5', desc: 'Вторая ревизия, 2 геймпада, не шумит, не забанена', price: 42000, isFree: false, category: 'Электроника', phone: '+7 900 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 25000000, userId: 'user4', views: 190, isVIP: true },
-    { id: '10', title: 'Умные часы Apple Watch SE 2023', desc: '44mm, ремешок темно-синий, батарея 98%', price: 21000, isFree: false, category: 'Электроника', phone: '+7 900 000-11-22', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 30000000, userId: 'user5', views: 54 },
-    { id: '11', title: 'Монитор LG UltraGear 27"', desc: '144Hz, IPS, 2K разрешение, битых пикселей нет', price: 19500, isFree: false, category: 'Компьютеры', phone: '+7 901 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 35000000, userId: 'user6', views: 39 },
-    { id: '12', title: 'Робот-пылесос Roborock Q7', desc: 'С функцией влажной уборки, строит карту дома', price: 25000, isFree: false, category: 'Бытовая техника', phone: '+7 901 222-33-44', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 40000000, userId: 'user7', views: 67 },
-    { id: '13', title: 'Яндекс Станция Миди', desc: 'Умная колонка с Алисой, Zigbee, цвет черный', price: 8500, isFree: false, category: 'Электроника', phone: '+7 901 333-44-55', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 45000000, userId: 'user8', views: 81 },
-    { id: '14', title: 'Видеокарта RTX 3060 Ti 8GB', desc: 'В майнинге не была, обслужена, любые тесты', price: 26000, isFree: false, category: 'Компьютеры', phone: '+7 901 444-55-66', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 50000000, userId: 'user9', views: 143 },
-    { id: '15', title: 'Телевизор TCL 55" 4K Smart TV', desc: 'QLED, Android TV, состояние нового, коробка есть', price: 34000, isFree: false, category: 'Электроника', phone: '+7 901 555-66-77', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 55000000, userId: 'user10', views: 99 },
-    { id: '16', title: 'Смартфон Poco X5 Pro 5G', desc: '8/256GB, синий, быстрая зарядка 67W, чехол', price: 18500, isFree: false, category: 'Электроника', phone: '+7 901 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 60000000, userId: 'user11', views: 41 },
-    { id: '17', title: 'Зеркальный фотоаппарат Canon EOS 800D', desc: 'Объектив 18-55mm, сумка, флешка на 64GB', price: 37000, isFree: false, category: 'Электроника', phone: '+7 901 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 65000000, userId: 'user12', views: 23 },
-    { id: '18', title: 'Электронная книга Kindle Paperwhite', desc: 'Влагозащита, подсветка экрана, батарея держит месяц', price: 9000, isFree: false, category: 'Электроника', phone: '+7 901 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 70000000, userId: 'user13', views: 17 },
-    { id: '19', title: 'Кофемашина DeLonghi Magnifica', desc: 'Автоматическая, зерновая, полностью промыта и настроена', price: 29000, isFree: false, category: 'Бытовая техника', phone: '+7 901 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 75000000, userId: 'user14', views: 88, isVIP: true },
-    { id: '20', title: 'Квадрокоптер DJI Mini 2 Fly More Combo', desc: '3 аккумулятора, сумка, без падений и ремонтов', price: 35000, isFree: false, category: 'Электроника', phone: '+7 902 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 80000000, userId: 'user15', views: 104 }
-  ];
-}
-
+    // Больше никакой автоматической подстановки тестовых объявлений!
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
@@ -578,12 +570,12 @@ if (!state.listings.length) {
     const bottomNav = document.getElementById('bottom-nav');
     const mainHeader = document.getElementById('main-header');
 
+    // Нижняя панель скрыта только на экране логина
     function updateNavVisibility(screenId) {
-      const isMainTab = ['home','favorites','my','profile'].includes(screenId);
-      if (isMainTab) {
-        bottomNav.classList.remove('hidden');
-      } else {
+      if (screenId === 'login') {
         bottomNav.classList.add('hidden');
+      } else {
+        bottomNav.classList.remove('hidden');
       }
     }
 
@@ -594,19 +586,24 @@ if (!state.listings.length) {
     }
 
     function showScreen(id) {
+      // Если пользователь не авторизован и пытается зайти в профиль,
+      // перенаправляем на экран логина
+      if (id === 'profile' && !state.user) {
+        id = 'login';
+      }
+
       Object.values(screens).forEach(s => s.classList.remove('active'));
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
 
-      // Управление видимостью панели и заголовка
+      // Управление видимостью заголовка и нижней панели
       if (id === 'login') {
         mainHeader.style.display = 'none';
-        bottomNav.classList.add('hidden');
       } else {
         mainHeader.style.display = 'flex';
-        updateNavVisibility(id);
       }
 
+      updateNavVisibility(id);
       setActiveNavTab(id);
       renderScreen(id);
     }
@@ -693,7 +690,7 @@ if (!state.listings.length) {
     }
 
     function renderMy() {
-      const my = state.listings.filter(l => l.userId === (state.user?.uid || 'demo'));
+      const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('my-container').innerHTML = my.length ? my.map(l => `
         <div class="card" style="padding:14px;margin-bottom:10px">
           <b>${l.title}</b> - ${l.isFree?'Бесплатно':l.price.toLocaleString()+' ₽'}
@@ -706,8 +703,13 @@ if (!state.listings.length) {
     }
 
     function renderProfile() {
-      document.getElementById('profile-name').textContent = state.user?.name || 'Иван Иванов';
-      const my = state.listings.filter(l => l.userId === (state.user?.uid || 'demo'));
+      // Если пользователь не авторизован, показываем логин (на всякий случай)
+      if (!state.user) {
+        showScreen('login');
+        return;
+      }
+      document.getElementById('profile-name').textContent = state.user?.name || 'Пользователь';
+      const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('stat-listings').textContent = my.length;
       document.getElementById('stat-views').textContent = my.reduce((acc,l)=>acc+(l.views||0),0);
       document.getElementById('stat-favs').textContent = state.favorites.length;
@@ -799,7 +801,11 @@ if (!state.listings.length) {
     document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
-    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
+    document.getElementById('logout-btn').addEventListener('click', () => { 
+      localStorage.removeItem('geran_user'); 
+      state.user = null; 
+      showScreen('login'); 
+    });
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
       if (phone) {
@@ -814,7 +820,7 @@ if (!state.listings.length) {
     });
     document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
 
-    // Обработчики для нижней навигации
+    // Навигация по табам
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
         const tab = item.dataset.tab;
@@ -822,13 +828,18 @@ if (!state.listings.length) {
       });
     });
 
-    if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); }
+    // Инициализация темы
+    if (localStorage.getItem('geran_dark') === 'true') {
+      document.body.classList.add('dark');
+      document.getElementById('theme-checkbox').checked = true;
+    }
+
+    // Стартовый экран
     if (state.user) {
       showScreen('home');
     } else {
       showScreen('login');
     }
-    renderHome();
   })();
 </script>
 </body>

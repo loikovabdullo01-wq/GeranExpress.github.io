@@ -445,7 +445,7 @@
     <div class="logo">🌿 Geran Express</div>
     <div class="search-bar" id="search-trigger">
       <span class="material-symbols-rounded">search</span>
-      <span>Поиск товаров и услуг</span>
+      <span>поиск</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="notif-btn"><span class="material-symbols-rounded">notifications</span><span class="badge-dot"></span></button>
@@ -533,15 +533,31 @@
       activeCategory: null
     };
 
-    if (!state.listings.length) {
-      state.listings = [
-        { id:'1', title:'iPhone 14 Pro 128GB', desc:'В идеальном состоянии, полный комплект', price:55000, isFree:false, category:'Электроника', phone:'+7 900 111-22-33', village:'Новоселово', images:['https://picsum.photos/id/0/400/500'], date:Date.now()-3600000, userId:'demo', views:34, isVIP:true },
-        { id:'2', title:'Зимние шины Nokian', desc:'Шиповка, пробег 5000 км', price:12000, isFree:false, category:'Авто', phone:'+7 900 222-33-44', village:'Новоселово', images:['https://picsum.photos/id/10/400/500'], date:Date.now()-7200000, userId:'demo', views:12 },
-        { id:'3', title:'Ремонт стиральных машин', desc:'Выезд по деревне, опыт 10 лет', price:1500, isFree:false, category:'Услуги', phone:'+7 900 333-44-55', village:'Новоселово', images:['https://picsum.photos/id/20/400/500'], date:Date.now()-86400000, userId:'demo', views:78 },
-        { id:'4', title:'Ноутбук Lenovo ThinkPad', desc:'i5 10gen, 8GB, SSD 256', price:28000, isFree:false, category:'Компьютеры', phone:'+7 900 444-55-66', village:'Новоселово', images:['https://picsum.photos/id/30/400/500'], date:Date.now()-5000000, userId:'demo', views:22 },
-        { id:'5', title:'Детская коляска', desc:'Почти новая, прогулочная', price:5500, isFree:false, category:'Детские', phone:'+7 900 555-66-77', village:'Новоселово', images:['https://picsum.photos/id/40/400/500'], date:Date.now()-12000000, userId:'demo', views:9 },
-      ];
-    }
+if (!state.listings.length) {
+  state.listings = [
+    { id: '1', title: 'iPhone 14 Pro 128GB', desc: 'В идеальном состоянии, полный комплект', price: 55000, isFree: false, category: 'Электроника', phone: '+7 900 111-22-33', village: 'Новоселово', images: ['https://picsum.photos/id/0/400/500'], date: Date.now() - 3600000, userId: 'demo', views: 34, isVIP: true },
+    { id: '2', title: 'Зимние шины Nokian', desc: 'Шиповка, пробег 5000 км', price: 12000, isFree: false, category: 'Авто', phone: '+7 900 222-33-44', village: 'Новоселово', images: ['https://picsum.photos/id/10/400/500'], date: Date.now() - 7200000, userId: 'demo', views: 12 },
+    { id: '3', title: 'Ремонт стиральных машин', desc: 'Выезд по деревне, опыт 10 лет', price: 1500, isFree: false, category: 'Услуги', phone: '+7 900 333-44-55', village: 'Новоселово', images: ['https://picsum.photos/id/20/400/500'], date: Date.now() - 86400000, userId: 'demo', views: 78 },
+    { id: '4', title: 'Ноутбук Lenovo ThinkPad', desc: 'i5 10gen, 8GB, SSD 256', price: 28000, isFree: false, category: 'Компьютеры', phone: '+7 900 444-55-66', village: 'Новоселово', images: ['https://picsum.photos/id/30/400/500'], date: Date.now() - 5000000, userId: 'demo', views: 22 },
+    { id: '5', title: 'Детская коляска', desc: 'Почти новая, прогулочная', price: 5500, isFree: false, category: 'Детские', phone: '+7 900 555-66-77', village: 'Новоселово', images: ['https://picsum.photos/id/40/400/500'], date: Date.now() - 12000000, userId: 'demo', views: 9 },
+    { id: '6', title: 'Samsung Galaxy S23 Ultra', desc: '256GB, черный, на гарантии, без сколов', price: 68000, isFree: false, category: 'Электроника', phone: '+7 900 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 15000000, userId: 'user1', views: 45, isVIP: true },
+    { id: '7', title: 'Беспроводные наушники AirPods Pro 2', desc: 'Оригинал, чек есть, амбушюры не вскрывались', price: 16000, isFree: false, category: 'Электроника', phone: '+7 900 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 18000000, userId: 'user2', views: 112 },
+    { id: '8', title: 'Планшет Xiaomi Pad 6', desc: '6/128GB, идеален для фильмов и учебы, чехол в подарок', price: 23000, isFree: false, category: 'Электроника', phone: '+7 900 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 22000000, userId: 'user3', views: 28 },
+    { id: '9', title: 'Игровая приставка PlayStation 5', desc: 'Вторая ревизия, 2 геймпада, не шумит, не забанена', price: 42000, isFree: false, category: 'Электроника', phone: '+7 900 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 25000000, userId: 'user4', views: 190, isVIP: true },
+    { id: '10', title: 'Умные часы Apple Watch SE 2023', desc: '44mm, ремешок темно-синий, батарея 98%', price: 21000, isFree: false, category: 'Электроника', phone: '+7 900 000-11-22', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 30000000, userId: 'user5', views: 54 },
+    { id: '11', title: 'Монитор LG UltraGear 27"', desc: '144Hz, IPS, 2K разрешение, битых пикселей нет', price: 19500, isFree: false, category: 'Компьютеры', phone: '+7 901 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 35000000, userId: 'user6', views: 39 },
+    { id: '12', title: 'Робот-пылесос Roborock Q7', desc: 'С функцией влажной уборки, строит карту дома', price: 25000, isFree: false, category: 'Бытовая техника', phone: '+7 901 222-33-44', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 40000000, userId: 'user7', views: 67 },
+    { id: '13', title: 'Яндекс Станция Миди', desc: 'Умная колонка с Алисой, Zigbee, цвет черный', price: 8500, isFree: false, category: 'Электроника', phone: '+7 901 333-44-55', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 45000000, userId: 'user8', views: 81 },
+    { id: '14', title: 'Видеокарта RTX 3060 Ti 8GB', desc: 'В майнинге не была, обслужена, любые тесты', price: 26000, isFree: false, category: 'Компьютеры', phone: '+7 901 444-55-66', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 50000000, userId: 'user9', views: 143 },
+    { id: '15', title: 'Телевизор TCL 55" 4K Smart TV', desc: 'QLED, Android TV, состояние нового, коробка есть', price: 34000, isFree: false, category: 'Электроника', phone: '+7 901 555-66-77', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 55000000, userId: 'user10', views: 99 },
+    { id: '16', title: 'Смартфон Poco X5 Pro 5G', desc: '8/256GB, синий, быстрая зарядка 67W, чехол', price: 18500, isFree: false, category: 'Электроника', phone: '+7 901 666-77-88', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 60000000, userId: 'user11', views: 41 },
+    { id: '17', title: 'Зеркальный фотоаппарат Canon EOS 800D', desc: 'Объектив 18-55mm, сумка, флешка на 64GB', price: 37000, isFree: false, category: 'Электроника', phone: '+7 901 777-88-99', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 65000000, userId: 'user12', views: 23 },
+    { id: '18', title: 'Электронная книга Kindle Paperwhite', desc: 'Влагозащита, подсветка экрана, батарея держит месяц', price: 9000, isFree: false, category: 'Электроника', phone: '+7 901 888-99-00', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 70000000, userId: 'user13', views: 17 },
+    { id: '19', title: 'Кофемашина DeLonghi Magnifica', desc: 'Автоматическая, зерновая, полностью промыта и настроена', price: 29000, isFree: false, category: 'Бытовая техника', phone: '+7 901 999-00-11', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 75000000, userId: 'user14', views: 88, isVIP: true },
+    { id: '20', title: 'Квадрокоптер DJI Mini 2 Fly More Combo', desc: '3 аккумулятора, сумка, без падений и ремонтов', price: 35000, isFree: false, category: 'Электроника', phone: '+7 902 111-22-33', village: 'Новоселово', images: ['https://picsum.photos'], date: Date.now() - 80000000, userId: 'user15', views: 104 }
+  ];
+}
+
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));

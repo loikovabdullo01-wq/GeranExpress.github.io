@@ -4,51 +4,86 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Geran Express – Маркетплейс</title>
-  <!-- Предзагрузка шрифтов для предотвращения FOUT (Задача 10) -->
+  
+  <!-- Задача 4: КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
+  <style>
+    /* Сброс и основа — рендерятся мгновенно */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --font:'Inter',system-ui,-apple-system,sans-serif;
+      --bg:#ffffff;--surface:#f7f7f9;--text-primary:#1a1a1a;
+      --text-secondary:#6b7280;--text-tertiary:#9ca3af;
+      --primary:#1e4a3b;--primary-soft:#e6f0eb;--accent-price:#1e4a3b;
+      --accent-heart:#ef4444;--border:#e5e7eb;
+      --header-height:56px;--nav-height:64px;
+      --transition:0.2s cubic-bezier(0.2,0,0,1)
+    }
+    body{
+      font-family:var(--font);background:var(--bg);color:var(--text-primary);
+      display:flex;justify-content:center;align-items:flex-start;
+      min-height:100vh;-webkit-tap-highlight-color:transparent;margin:0
+    }
+    #app{
+      width:100%;max-width:1200px;min-height:100vh;background:var(--bg);
+      display:flex;flex-direction:column;position:relative;overflow:hidden;
+      box-shadow:0 0 30px rgba(0,0,0,0.03)
+    }
+    
+    /* ХЕДЕР — критический рендер */
+    .header{
+      position:sticky;top:0;z-index:100;background:var(--bg);
+      border-bottom:1px solid var(--border);width:100%;padding:0 16px;
+      height:var(--header-height);display:flex;align-items:center;
+      justify-content:space-between;
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
+    }
+    .logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;cursor:pointer}
+    .logo img{height:38px;width:auto;object-fit:contain;display:block}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-grow:0;margin-left:auto}
+    .header-actions button,.icon-btn{
+      background:transparent;border:none;outline:none;width:40px;height:40px;
+      border-radius:50%;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:var(--text-secondary);padding:0;flex-shrink:0;position:relative
+    }
+    .search-bar{
+      flex:1;display:flex;align-items:center;background:var(--surface);
+      border:1px solid var(--border);border-radius:40px;padding:8px 14px;
+      gap:6px;cursor:pointer;color:var(--text-secondary);margin:0 12px
+    }
+    
+    /* НИЖНЯЯ ПАНЕЛЬ — критический рендер */
+    .bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:1200px;
+      background:var(--bg);border-top:1px solid var(--border);
+      display:flex;justify-content:space-around;align-items:center;
+      padding:4px 0 calc(6px + env(safe-area-inset-bottom));
+      height:var(--nav-height);z-index:1000
+    }
+    .nav-item{
+      display:flex;flex-direction:column;align-items:center;gap:2px;
+      color:var(--text-tertiary);cursor:pointer;padding:6px 8px;
+      border-radius:16px;font-size:0.65rem;font-weight:500
+    }
+    .nav-item.active{color:var(--primary)}
+    .nav-item.create-btn{
+      background:var(--primary);color:white;width:44px;height:44px;
+      border-radius:50%;display:flex;align-items:center;justify-content:center;
+      margin-top:-14px;box-shadow:0 4px 10px rgba(30,74,59,0.25)
+    }
+    
+    /* Иконки — скрываем текст до загрузки шрифта */
+    .material-symbols-rounded{font-display:block;visibility:hidden}
+    .fonts-loaded .material-symbols-rounded{visibility:visible}
+  </style>
+
+  <!-- Предзагрузка шрифтов -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Material Symbols загружаются с display=block, чтобы не прыгали -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+  
   <style>
-    /* Критический CSS: скрываем текст иконок до загрузки шрифта (FOUT fix) */
-    .material-symbols-rounded {
-      font-display: block;
-      visibility: hidden;
-    }
-    .fonts-loaded .material-symbols-rounded {
-      visibility: visible;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --font: 'Inter', system-ui, -apple-system, sans-serif;
-      --bg: #ffffff;
-      --surface: #f7f7f9;
-      --text-primary: #1a1a1a;
-      --text-secondary: #6b7280;
-      --text-tertiary: #9ca3af;
-      --primary: #1e4a3b;
-      --primary-soft: #e6f0eb;
-      /* Задача 8: Меняем оранжевый цвет цен на темно-зеленый */
-      --accent-price: #1e4a3b;
-      --accent-heart: #ef4444;
-      --border: #e5e7eb;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
-      --header-height: 56px;
-      --nav-height: 64px;
-      --radius-sm: 10px;
-      --radius-md: 14px;
-      --radius-lg: 18px;
-      --transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-
+    /* Остальные стили */
     body.dark {
       --bg: #111827;
       --surface: #1f2937;
@@ -63,92 +98,12 @@
     }
 
     body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text-primary);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      -webkit-tap-highlight-color: transparent;
-      margin: 0;
       transition: background 0.3s, color 0.3s;
-    }
-
-    #app {
-      width: 100%;
-      max-width: 1200px;
-      min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 30px rgba(0,0,0,0.03);
     }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-
-    /* ========== ШАПКА ========== */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      width: 100%;
-      padding: 0 16px;
-      height: var(--header-height);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      flex-shrink: 0;
-    }
-
-    .logo img {
-      height: 38px;
-      width: auto;
-      object-fit: contain;
-      display: block;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-      flex-grow: 0;
-      margin-left: auto;
-    }
-
-    .header-actions button,
-    .icon-btn {
-      background: transparent;
-      border: none;
-      outline: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: background var(--transition), color var(--transition);
-      padding: 0;
-      flex-shrink: 0;
-      position: relative;
-    }
 
     .header-actions button:hover,
     .icon-btn:hover {
@@ -175,20 +130,6 @@
       border: 2px solid var(--bg);
     }
 
-    .search-bar {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 8px 14px;
-      gap: 6px;
-      cursor: pointer;
-      transition: background var(--transition);
-      color: var(--text-secondary);
-      margin: 0 12px;
-    }
     .search-bar:hover { background: var(--border); }
     .search-bar .material-symbols-rounded {
       font-size: 20px;
@@ -200,58 +141,18 @@
       font-weight: 400;
     }
 
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      margin: 0 auto;
-      max-width: 1200px;
-      background: var(--bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 4px 0 calc(6px + env(safe-area-inset-bottom));
-      height: var(--nav-height);
-      z-index: 1000;
-      transition: transform 0.2s;
-      transform: translateY(0);
-    }
-
     .bottom-nav.hidden {
       transform: translateY(100%);
     }
 
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      color: var(--text-tertiary);
-      cursor: pointer;
-      padding: 6px 8px;
-      border-radius: 16px;
-      font-size: 0.65rem;
-      font-weight: 500;
-      transition: all var(--transition);
+    .bottom-nav {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: transform 0.2s;
+      transform: translateY(0);
     }
+
     .nav-item .material-symbols-rounded { font-size: 24px; }
-    .nav-item.active { color: var(--primary); }
-    .nav-item.create-btn {
-      background: var(--primary);
-      color: white;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: -14px;
-      box-shadow: 0 4px 10px rgba(30,74,59,0.25);
-    }
     .nav-item.create-btn .material-symbols-rounded { font-size: 26px; }
 
     main {
@@ -301,7 +202,7 @@
       color: var(--text-secondary);
       transition: all var(--transition);
       cursor: pointer;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .cat-chip .material-symbols-rounded { font-size: 18px; }
     .cat-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
@@ -319,21 +220,21 @@
 
     .card {
       background: var(--surface);
-      border-radius: var(--radius-md);
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       border: 1px solid var(--border);
       transition: all var(--transition);
       cursor: pointer;
       display: flex;
       flex-direction: column;
     }
-    .card:hover { box-shadow: var(--shadow-md); }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
     .card-img {
       position: relative;
       width: 100%;
-      aspect-ratio: 4 / 5;
+      aspect-ratio: 1 / 1;
       background: var(--border);
     }
     .card-img img {
@@ -376,35 +277,34 @@
     .card-heart.liked { color: var(--accent-heart); }
 
     .card-body {
-      padding: 10px 12px;
-      flex: 1;
+      padding: 8px 10px;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
     }
     .card-price {
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: var(--accent-price);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       line-height: 1.2;
     }
     .card-title {
       font-weight: 500;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-primary);
       line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-bottom: 6px;
-      flex: 1;
+      margin-bottom: 4px;
     }
     .card-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-tertiary);
       margin-top: auto;
     }
@@ -418,7 +318,7 @@
       width: 100%;
       max-height: 300px;
       object-fit: contain;
-      border-radius: var(--radius-md);
+      border-radius: 14px;
       margin: 12px 0;
       background: var(--border);
     }
@@ -462,6 +362,25 @@
       color: var(--text-primary);
     }
 
+    .select-field {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--text-primary);
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      cursor: pointer;
+    }
+
     .stats-row {
       display: flex;
       gap: 8px;
@@ -470,7 +389,7 @@
     .stat-box {
       flex: 1;
       background: var(--surface);
-      border-radius: var(--radius-md);
+      border-radius: 14px;
       padding: 12px 8px;
       text-align: center;
       font-weight: 600;
@@ -483,7 +402,6 @@
     input:checked + .slider { background: var(--primary); }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* Задача 1: Стили для выбора состояния товара */
     .condition-selector {
       display: flex;
       gap: 12px;
@@ -513,7 +431,6 @@
       font-size: 20px;
     }
 
-    /* Задача 5: Стили для загрузки фото */
     .photo-upload-area {
       display: flex;
       flex-wrap: wrap;
@@ -567,7 +484,6 @@
       font-size: 24px;
     }
 
-    /* Профиль: редактирование */
     .profile-avatar-wrapper {
       position: relative;
       width: 80px;
@@ -609,12 +525,29 @@
     .hidden-file-input {
       display: none;
     }
+
+    /* Задача 1: Секция локации в профиле — визуально отделена */
+    .profile-location-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .profile-location-section label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .profile-location-section .select-field {
+      margin-bottom: 16px;
+    }
   </style>
 </head>
 <body>
 <div id="app">
   <header class="header" id="main-header">
-    <a href="/" class="logo">
+    <a href="/" class="logo" onclick="event.preventDefault(); window.location.reload();">
       <img src="1.jpg" alt="Geran Express">
     </a>
 
@@ -638,7 +571,8 @@
     <div id="screen-home" class="screen active"></div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px">Избранное</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px">Мои публикации</h2><div id="my-container"></div></div>
-    <!-- Задача 3: Профиль с возможностью редактирования -->
+    
+    <!-- Профиль: село визуально отделено от телефона (Задача 1) -->
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div class="profile-avatar-wrapper">
@@ -649,11 +583,27 @@
         <h3 id="profile-name" style="margin-top:8px">Пользователь</h3>
         <p id="profile-phone" style="color:var(--text-secondary)"></p>
       </div>
+      
+      <!-- Форма: имя и телефон -->
       <div class="profile-edit-form">
         <input class="input-field" id="edit-name" placeholder="Имя" value="">
         <input class="input-field" id="edit-phone" placeholder="Номер телефона" value="">
-        <button class="btn" id="save-profile-btn">Сохранить изменения</button>
       </div>
+
+      <!-- Задача 1: Выбор села в ОТДЕЛЬНОЙ визуальной секции -->
+      <div class="profile-location-section">
+        <label for="edit-village">📍 Моё село</label>
+        <select class="select-field" id="edit-village">
+          <option value="Дехаи Геран">Дехаи Геран</option>
+          <option value="Дехаи Дуввум">Дехаи Дуввум</option>
+          <option value="Дехаи Севвум">Дехаи Севвум</option>
+          <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+        </select>
+        <p id="profile-village" style="color:var(--primary);font-size:0.85rem;font-weight:500;margin-bottom:12px;"></p>
+      </div>
+
+      <button class="btn" id="save-profile-btn">Сохранить изменения</button>
+
       <div class="stats-row">
         <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400">объявлений</small></div>
         <div class="stat-box"><span id="stat-views">0</span><br><small style="font-weight:400">просмотров</small></div>
@@ -665,7 +615,8 @@
       </div>
       <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Выйти</button>
     </div>
-    <!-- Задачи 1, 5, 6: Обновленная форма создания товара -->
+
+    <!-- Форма создания товара -->
     <div id="screen-create" class="screen">
       <h2 style="margin:4px 0 12px">Новое объявление</h2>
       <input class="input-field" id="create-title" placeholder="Название">
@@ -673,7 +624,7 @@
       <select class="input-field" id="create-category">
         <option value="Электроника">Электроника</option><option value="Одежда">Одежда</option><option value="Авто">Авто</option><option value="Услуги">Услуги</option><option value="Другое">Другое</option>
       </select>
-      <!-- Состояние товара (Задача 1) -->
+      
       <div class="condition-selector" id="condition-selector">
         <div class="condition-option active" data-condition="new">
           <span class="material-symbols-rounded">new_releases</span> Новый
@@ -682,9 +633,18 @@
           <span class="material-symbols-rounded">history</span> Б.у.
         </div>
       </div>
+      
+      <!-- Задача 3: select деревни НЕ сбрасывает остальные поля -->
+      <select class="select-field" id="create-village">
+        <option value="Дехаи Геран">Дехаи Геран</option>
+        <option value="Дехаи Дуввум">Дехаи Дуввум</option>
+        <option value="Дехаи Севвум">Дехаи Севвум</option>
+        <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+      </select>
+      
       <input class="input-field" id="create-price" placeholder="Цена (с.)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
-      <!-- Загрузка фото (Задача 5) -->
+      
       <div class="photo-upload-area" id="photo-upload-area">
         <div class="photo-upload-btn" id="photo-upload-btn">
           <span class="material-symbols-rounded">add_a_photo</span>
@@ -694,6 +654,7 @@
       <input type="file" id="photo-file-input" class="hidden-file-input" accept="image/*" multiple>
       <button class="btn" id="submit-create">Опубликовать</button>
     </div>
+
     <div id="screen-detail" class="screen"><span class="material-symbols-rounded" id="back-detail" style="cursor:pointer;font-size:28px;margin-bottom:8px;display:inline-block">arrow_back</span><div id="detail-content"></div></div>
     <div id="screen-search" class="screen">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
@@ -723,14 +684,13 @@
 
 <script>
   (() => {
-    // ---------- FOUT Fix (Задача 10) ----------
+    // Моментальный рендер иконок
     document.documentElement.classList.add('fonts-loaded');
-    // Принудительно скрываем текст иконок до полной загрузки
     document.fonts.ready.then(() => {
       document.body.classList.add('fonts-loaded');
     });
 
-    // ---------- Состояние ----------
+    // Состояние
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
       listings: JSON.parse(localStorage.getItem('geran_listings')) || [],
@@ -739,99 +699,27 @@
       editId: null,
       searchQuery: '',
       activeCategory: null,
-      selectedCondition: 'new', // Задача 1
-      uploadedPhotos: [], // Задача 5: временное хранилище dataURL
+      selectedCondition: 'new',
+      uploadedPhotos: [],
     };
 
     if (!state.listings.length) {
       state.listings = [
-        {
-          id: '1',
-          title: 'Смартфон Samsung Galaxy A54',
-          desc: 'Отличное состояние, полный комплект, коробка.',
-          price: 18000,
-          isFree: false,
-          category: 'Электроника',
-          phone: '+992 999 123 456',
-          village: 'Дехай Геран',
-          images: [],
-          date: Date.now() - 1000000,
-          userId: 'demo',
-          condition: 'new',
-          isVIP: false
-        },
-        {
-          id: '2',
-          title: 'Ноутбук Lenovo IdeaPad 3',
-          desc: '15.6", Ryzen 5, 8GB RAM, SSD 256GB. Для учёбы и работы.',
-          price: 32000,
-          isFree: false,
-          category: 'Компьютеры',
-          phone: '+992 999 234 567',
-          village: 'Дехай Геран',
-          images: [],
-          date: Date.now() - 2000000,
-          userId: 'demo',
-          condition: 'used',
-          isVIP: true
-        },
-        {
-          id: '3',
-          title: 'Дрель электрическая Makita',
-          desc: 'Мощная, с регулировкой оборотов. Была в использовании пару раз.',
-          price: 4500,
-          isFree: false,
-          category: 'Инструменты',
-          phone: '+992 999 345 678',
-          village: 'Дехай Геран',
-          images: [],
-          date: Date.now() - 3000000,
-          userId: 'demo',
-          condition: 'used',
-          isVIP: false
-        },
-        {
-          id: '4',
-          title: 'Диван угловой раскладной',
-          desc: 'Ткань серого цвета, удобный, есть ящик для белья.',
-          price: 22000,
-          isFree: false,
-          category: 'Недвижимость',
-          phone: '+992 999 456 789',
-          village: 'Дехай Геран',
-          images: [],
-          date: Date.now() - 5000000,
-          userId: 'demo',
-          condition: 'new',
-          isVIP: false
-        },
-        {
-          id: '5',
-          title: 'Куртка зимняя мужская',
-          desc: 'Размер L, носилась один сезон, состояние отличное.',
-          price: 5000,
-          isFree: false,
-          category: 'Одежда',
-          phone: '+992 999 567 890',
-          village: 'Дехай Геран',
-          images: [],
-          date: Date.now() - 7000000,
-          userId: 'demo',
-          condition: 'used',
-          isVIP: false
-        }
+        { id: '1', title: 'Смартфон Samsung Galaxy A54', desc: 'Отличное состояние, полный комплект, коробка.', price: 18000, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Дехаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
+        { id: '2', title: 'Ноутбук Lenovo IdeaPad 3', desc: '15.6", Ryzen 5, 8GB RAM, SSD 256GB.', price: 32000, isFree: false, category: 'Компьютеры', phone: '+992 999 234 567', village: 'Дехаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'used', isVIP: true },
+        { id: '3', title: 'Дрель электрическая Makita', desc: 'Мощная, с регулировкой оборотов.', price: 4500, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Дехаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
+        { id: '4', title: 'Диван угловой раскладной', desc: 'Ткань серого цвета, удобный.', price: 22000, isFree: false, category: 'Недвижимость', phone: '+992 999 456 789', village: 'Дехаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
+        { id: '5', title: 'Куртка зимняя мужская', desc: 'Размер L, состояние отличное.', price: 5000, isFree: false, category: 'Одежда', phone: '+992 999 567 890', village: 'Дехаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'used', isVIP: false }
       ];
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
     }
 
-    const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'500\'%3E%3Crect width=\'400\' height=\'500\' fill=\'%23e5e7eb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'20\'%3EНет фото%3C/text%3E%3C/svg%3E';
+    const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'400\'%3E%3Crect width=\'400\' height=\'400\' fill=\'%23e5e7eb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'20\'%3EНет фото%3C/text%3E%3C/svg%3E';
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
-      if (state.user) {
-        localStorage.setItem('geran_user', JSON.stringify(state.user));
-      }
+      if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
     };
 
     const screens = {
@@ -848,11 +736,7 @@
     const mainHeader = document.getElementById('main-header');
 
     function updateNavVisibility(screenId) {
-      if (screenId === 'login') {
-        bottomNav.classList.add('hidden');
-      } else {
-        bottomNav.classList.remove('hidden');
-      }
+      bottomNav.classList.toggle('hidden', screenId === 'login');
     }
 
     function setActiveNavTab(screenId) {
@@ -862,16 +746,11 @@
     }
 
     function showScreen(id) {
-      if (id === 'profile' && !state.user) {
-        id = 'login';
-      }
-
+      if (id === 'profile' && !state.user) id = 'login';
       Object.values(screens).forEach(s => s.classList.remove('active'));
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
-
       mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
-
       updateNavVisibility(id);
       setActiveNavTab(id);
       renderScreen(id);
@@ -888,12 +767,9 @@
       }
     }
 
-    // Задача 2: Убираем счетчик просмотров (глазок) из карточек
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
-      // Задача 7: Меняем "₽" на "с."
       const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} с.`;
-      // Задача 6: используем загруженные фото или плейсхолдер
       const img = l.images?.[0] || PLACEHOLDER_IMG;
       const vipBadge = l.isVIP ? '<div class="card-badge" style="background:#1e4a3b;">VIP</div>' : '';
       return `
@@ -909,7 +785,7 @@
             <div class="card-price">${priceText}</div>
             <div class="card-title">${l.title}</div>
             <div class="card-meta">
-              <span>📍 ${l.village || 'Дехай Геран'}</span>
+              <span>📍 ${l.village || 'Дехаи Геран'}</span>
               <span>${new Date(l.date).toLocaleDateString()}</span>
             </div>
           </div>
@@ -919,44 +795,28 @@
     function renderCategories() {
       const categories = ['Электроника','Компьютеры','Бытовая техника','Авто','Мото','Недвижимость','Инструменты','Запчасти','Одежда','Игры','Книги','Детские','Животные','Работа','Услуги','Разное'];
       const icons = {
-        'Электроника':'smartphone', 'Компьютеры':'computer', 'Бытовая техника':'tv', 'Авто':'directions_car',
-        'Мото':'two_wheeler', 'Недвижимость':'home', 'Инструменты':'build', 'Запчасти':'build_circle',
-        'Одежда':'checkroom', 'Игры':'sports_esports', 'Книги':'book', 'Детские':'child_care',
-        'Животные':'pets', 'Работа':'work', 'Услуги':'handyman', 'Разное':'category'
+        'Электроника':'smartphone','Компьютеры':'computer','Бытовая техника':'tv','Авто':'directions_car',
+        'Мото':'two_wheeler','Недвижимость':'home','Инструменты':'build','Запчасти':'build_circle',
+        'Одежда':'checkroom','Игры':'sports_esports','Книги':'book','Детские':'child_care',
+        'Животные':'pets','Работа':'work','Услуги':'handyman','Разное':'category'
       };
       let html = '<div class="categories-row">';
-      html += `<div class="cat-chip ${!state.activeCategory ? 'active' : ''}" onclick="window._clearCategory()">
-        <span class="material-symbols-rounded">apps</span> Все
-      </div>`;
+      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> Все</div>`;
       categories.forEach(cat => {
-        html += `<div class="cat-chip ${state.activeCategory === cat ? 'active' : ''}" onclick="window._filterCategory('${cat}')">
-          <span class="material-symbols-rounded">${icons[cat] || 'label'}</span> ${cat}
-        </div>`;
+        html += `<div class="cat-chip ${state.activeCategory===cat?'active':''}" onclick="window._filterCategory('${cat}')"><span class="material-symbols-rounded">${icons[cat]||'label'}</span> ${cat}</div>`;
       });
-      html += '</div>';
-      return html;
+      return html + '</div>';
     }
 
     function renderHome() {
       let filtered = state.listings.filter(l => l.isActive !== false);
-      if (state.activeCategory) {
-        filtered = filtered.filter(l => l.category === state.activeCategory);
-      }
+      if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
       const gridHtml = filtered.length ? filtered.map(cardHTML).join('') : '<p style="padding:20px;text-align:center;">Нет объявлений</p>';
       screens.home.innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
     }
 
-    window._filterCategory = (cat) => {
-      state.activeCategory = cat;
-      renderHome();
-      window.scrollTo(0, 0);
-    };
-
-    window._clearCategory = () => {
-      state.activeCategory = null;
-      renderHome();
-      window.scrollTo(0, 0);
-    };
+    window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
+    window._clearCategory = () => { state.activeCategory = null; renderHome(); window.scrollTo(0,0); };
 
     function renderFavorites() {
       const favs = state.listings.filter(l => state.favorites.includes(l.id));
@@ -976,69 +836,59 @@
     }
 
     function renderProfile() {
-      if (!state.user) {
-        showScreen('login');
-        return;
-      }
+      if (!state.user) { showScreen('login'); return; }
       document.getElementById('profile-name').textContent = state.user?.name || 'Пользователь';
       document.getElementById('profile-phone').textContent = state.user?.phone || '';
+      document.getElementById('profile-village').textContent = '📍 ' + (state.user?.village || 'Дехаи Геран');
       document.getElementById('edit-name').value = state.user?.name || '';
       document.getElementById('edit-phone').value = state.user?.phone || '';
-      if (state.user?.avatar) {
-        document.getElementById('profile-avatar-img').src = state.user.avatar;
-      }
+      document.getElementById('edit-village').value = state.user?.village || 'Дехаи Геран';
+      if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('stat-listings').textContent = my.length;
       document.getElementById('stat-views').textContent = my.reduce((acc,l)=>acc+(l.views||0),0);
       document.getElementById('stat-favs').textContent = state.favorites.length;
     }
 
-    // Задача 1: рендер формы создания (сброс состояния)
+    // Задача 3: renderCreateForm НЕ стирает поля, если форма уже открыта
     function renderCreateForm() {
+      if (state.currentScreen === 'create' && !state.editId) return; // защита от сброса при переключении select
+      if (state.editId) return; // при редактировании заполняется отдельно
       document.getElementById('create-title').value = '';
       document.getElementById('create-desc').value = '';
       document.getElementById('create-price').value = '';
       document.getElementById('create-phone').value = state.user?.phone || '';
+      document.getElementById('create-village').value = state.user?.village || 'Дехаи Геран';
       state.selectedCondition = 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
         el.classList.toggle('active', el.dataset.condition === 'new');
       });
-      // Очистка загруженных фото
       state.uploadedPhotos = [];
       renderPhotoThumbs();
     }
 
-    // Задача 5: рендер миниатюр загруженных фото
     function renderPhotoThumbs() {
       const container = document.getElementById('photo-upload-area');
       if (!container) return;
-      // Удаляем старые миниатюры, оставляем кнопку загрузки
       container.querySelectorAll('.photo-thumb').forEach(el => el.remove());
       const uploadBtn = document.getElementById('photo-upload-btn');
-
       state.uploadedPhotos.forEach((photo, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'photo-thumb';
         thumb.style.position = 'relative';
-        thumb.innerHTML = `
-          <img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
-          <span class="photo-thumb-remove" data-index="${index}">×</span>
-        `;
+        thumb.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"><span class="photo-thumb-remove" data-index="${index}">×</span>`;
         container.insertBefore(thumb, uploadBtn);
       });
-
-      // Обработчики удаления
       container.querySelectorAll('.photo-thumb-remove').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const idx = parseInt(btn.dataset.index);
-          state.uploadedPhotos.splice(idx, 1);
+          state.uploadedPhotos.splice(parseInt(btn.dataset.index), 1);
           renderPhotoThumbs();
         });
       });
     }
 
-    // Задача 1: переключение состояния в форме
+    // Обработчики формы создания (Задача 5, 9)
     document.getElementById('condition-selector')?.addEventListener('click', (e) => {
       const option = e.target.closest('.condition-option');
       if (!option) return;
@@ -1047,75 +897,67 @@
       state.selectedCondition = option.dataset.condition;
     });
 
-    // Задача 5: обработка загрузки фото
-    document.getElementById('photo-upload-btn')?.addEventListener('click', () => {
-      document.getElementById('photo-file-input').click();
-    });
-
+    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('photo-file-input').click());
     document.getElementById('photo-file-input')?.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
-      files.forEach(file => {
+      Array.from(e.target.files).forEach(file => {
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          state.uploadedPhotos.push(ev.target.result);
-          renderPhotoThumbs();
-        };
+        reader.onload = (ev) => { state.uploadedPhotos.push(ev.target.result); renderPhotoThumbs(); };
         reader.readAsDataURL(file);
       });
-      e.target.value = ''; // Сброс, чтобы можно было выбрать тот же файл повторно
+      e.target.value = '';
     });
 
-    // Задача 3: редактирование аватарки
-    document.getElementById('avatar-edit-btn')?.addEventListener('click', () => {
-      document.getElementById('avatar-file-input').click();
-    });
-
+    // Редактирование аватарки
+    document.getElementById('avatar-edit-btn')?.addEventListener('click', () => document.getElementById('avatar-file-input').click());
     document.getElementById('avatar-file-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        if (state.user) {
-          state.user.avatar = ev.target.result;
-          save();
-          document.getElementById('profile-avatar-img').src = ev.target.result;
-        }
+        if (state.user) { state.user.avatar = ev.target.result; save(); document.getElementById('profile-avatar-img').src = ev.target.result; }
       };
       reader.readAsDataURL(file);
     });
 
-    // Задача 3: сохранение изменений профиля
+    // Сохранение профиля (Задача 1)
     document.getElementById('save-profile-btn')?.addEventListener('click', () => {
       if (!state.user) return;
-      const newName = document.getElementById('edit-name').value.trim();
-      const newPhone = document.getElementById('edit-phone').value.trim();
-      if (newName) state.user.name = newName;
-      if (newPhone) state.user.phone = newPhone;
+      state.user.name = document.getElementById('edit-name').value.trim() || state.user.name;
+      state.user.phone = document.getElementById('edit-phone').value.trim() || state.user.phone;
+      state.user.village = document.getElementById('edit-village').value;
       save();
       renderProfile();
       alert('Профиль обновлён!');
     });
 
+    // Задача 2: ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ КНОПКА ИЗБРАННОГО
+    window._toggleFav = (id) => {
+      if (!state.user) return alert('Войдите, чтобы добавлять в избранное');
+      if (state.favorites.includes(id)) {
+        state.favorites = state.favorites.filter(f => f !== id);
+      } else {
+        state.favorites.push(id);
+      }
+      save();
+      // Перерисовываем текущий экран — карточки и детальный просмотр обновятся
+      renderScreen(state.currentScreen);
+    };
+
     window._openDetail = (id) => {
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
       const img = l.images?.[0] || PLACEHOLDER_IMG;
-      // Задача 7: сомони
       const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} с.`;
-      // Задача 9: Кнопка "Позвонить" через tel:
+      const liked = state.favorites.includes(l.id);
       document.getElementById('detail-content').innerHTML = `
         <img src="${img}" class="detail-img">
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
-        <p>📍 ${l.village || 'Дехай Геран'} · ${l.category} · ${l.condition === 'new' ? 'Новый' : 'Б.у.'}</p>
+        <p>📍 ${l.village || 'Дехаи Геран'} · ${l.category} · ${l.condition==='new'?'Новый':'Б.у.'}</p>
         <div class="detail-actions">
-          <a href="tel:${l.phone.replace(/\s+/g, '')}" class="btn" style="text-decoration:none;">
-            <span class="material-symbols-rounded">call</span>Позвонить
-          </a>
-          <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')">
-            <span class="material-symbols-rounded">${state.favorites.includes(l.id)?'favorite':'favorite'}</span>
-          </button>
+          <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>Позвонить</a>
+          <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span></button>
         </div>`;
       showScreen('detail');
     };
@@ -1126,17 +968,6 @@
       document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : '<p>Ничего не найдено</p>';
     }
 
-    window._toggleFav = (id) => {
-      if (!state.user) return alert('Войдите, чтобы добавлять в избранное');
-      if (state.favorites.includes(id)) {
-        state.favorites = state.favorites.filter(f => f !== id);
-      } else {
-        state.favorites.push(id);
-      }
-      save();
-      renderScreen(state.currentScreen);
-    };
-
     window._editListing = (id) => {
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
@@ -1146,43 +977,35 @@
       document.getElementById('create-category').value = l.category;
       document.getElementById('create-price').value = l.price;
       document.getElementById('create-phone').value = l.phone;
+      document.getElementById('create-village').value = l.village || 'Дехаи Геран';
       state.selectedCondition = l.condition || 'new';
-      document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.condition === state.selectedCondition);
-      });
+      document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.toggle('active', el.dataset.condition === state.selectedCondition));
       state.uploadedPhotos = [...(l.images || [])];
       renderPhotoThumbs();
       showScreen('create');
     };
 
     window._deleteListing = (id) => {
-      if (confirm('Удалить объявление?')) {
-        state.listings = state.listings.filter(l => l.id !== id);
-        save();
-        renderMy();
-      }
+      if (confirm('Удалить объявление?')) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
-    // Обновленная отправка формы с учетом новых полей
+    // Отправка формы (Задача 3: данные НЕ теряются из-за select)
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert('Заполните название и телефон');
       const data = {
-        id: state.editId || 'id_'+Date.now(),
-        title,
+        id: state.editId || 'id_'+Date.now(), title,
         desc: document.getElementById('create-desc').value,
         category: document.getElementById('create-category').value,
         price: parseInt(document.getElementById('create-price').value) || 0,
-        isFree: false,
-        phone,
-        village: 'Дехай Геран',
-        images: [...state.uploadedPhotos], // Задача 6: только загруженные фото
+        isFree: false, phone,
+        village: document.getElementById('create-village').value,
+        images: [...state.uploadedPhotos],
         date: Date.now(),
         userId: state.user?.uid || 'demo',
-        condition: state.selectedCondition, // Задача 1
-        isActive: true,
-        isVIP: false
+        condition: state.selectedCondition,
+        isActive: true, isVIP: false
       };
       if (state.editId) {
         const idx = state.listings.findIndex(l => l.id === state.editId);
@@ -1191,67 +1014,35 @@
       } else {
         state.listings.unshift(data);
       }
-      // Сброс фото после публикации
       state.uploadedPhotos = [];
       save();
       showScreen('home');
     });
 
+    // Навигация
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
     document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      localStorage.removeItem('geran_user');
-      state.user = null;
-      showScreen('login');
-    });
-    // Задача 4: при логине сохраняем номер в профиль
+    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
       if (phone) {
-        state.user = { 
-          uid: 'user_'+Date.now(), 
-          phone: phone, 
-          name: 'Пользователь',
-          avatar: null
-        };
+        state.user = { uid: 'user_'+Date.now(), phone, name: 'Пользователь', avatar: null, village: 'Дехаи Геран' };
         localStorage.setItem('geran_user', JSON.stringify(state.user));
         showScreen('home');
       }
     });
 
     const themeCheckbox = document.getElementById('theme-checkbox');
-    themeCheckbox?.addEventListener('change', e => {
-      document.body.classList.toggle('dark', e.target.checked);
-      localStorage.setItem('geran_dark', e.target.checked);
-    });
+    themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
+    document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
+    document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
 
-    document.getElementById('search-input').addEventListener('input', e => {
-      state.searchQuery = e.target.value;
-      renderSearch();
-    });
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        const tab = item.dataset.tab;
-        if (tab) showScreen(tab);
-      });
-    });
-
-    if (localStorage.getItem('geran_dark') === 'true') {
-      document.body.classList.add('dark');
-      themeCheckbox.checked = true;
-    }
-
-    if (state.user) {
-      showScreen('home');
-    } else {
-      showScreen('login');
-    }
+    if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
+    state.user ? showScreen('home') : showScreen('login');
   })();
 </script>
 </body>
 </html>
-```

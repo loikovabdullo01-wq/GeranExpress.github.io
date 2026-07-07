@@ -302,10 +302,14 @@
     .condition-option.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
     .condition-option .material-symbols-rounded { font-size: 20px; }
 
+    /* СТИЛИ ДЛЯ ЗАГРУЗКИ ФОТО */
     .photo-upload-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .photo-thumb {
       width: 80px; height: 80px; border-radius: 12px; object-fit: cover;
       background: var(--border); position: relative;
+    }
+    .photo-thumb img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 12px;
     }
     .photo-thumb-remove {
       position: absolute; top: -4px; right: -4px; width: 22px; height: 22px;
@@ -458,6 +462,7 @@
       <input class="input-field" id="create-price" placeholder="Нарх (с.)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
       
+      <!-- ОБЛАСТЬ ЗАГРУЗКИ ФОТО -->
       <div class="photo-upload-area" id="photo-upload-area">
         <div class="photo-upload-btn" id="photo-upload-btn">
           <span class="material-symbols-rounded">add_a_photo</span>
@@ -637,7 +642,6 @@
       const searchEl = document.getElementById('search-placeholder');
       if (searchEl) searchEl.textContent = t('search');
 
-      // ПЕРЕВОД PLACEHOLDER В ПОИСКЕ
       const searchInput = document.getElementById('search-input');
       if (searchInput) searchInput.placeholder = t('search_placeholder');
 
@@ -722,13 +726,13 @@
       applyLanguage();
     });
 
-    // ========== ДЕФОЛТНЫЙ МАССИВ ТОВАРОВ (только для первого запуска) ==========
+    // ========== ИСПРАВЛЕННЫЙ МАССИВ ТОВАРОВ С РАБОЧИМИ ССЫЛКАМИ ==========
     const DEFAULT_LISTINGS = [
-      { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
-      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
-      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
-      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
-      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
+      { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: ['https://images.unsplash.com/photo-1657664078596-2b1e1b1e1b1e?w=400&h=400&fit=crop'], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=400&fit=crop'], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
+      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=400&fit=crop'], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
+      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: ['15.jpg'], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop'], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
     ];
 
     // ========== СОСТОЯНИЕ ==========
@@ -744,20 +748,16 @@
       uploadedPhotos: [],
     };
 
-    // ЗАДАЧА 1: ИСПРАВЛЕННАЯ ЛОГИКА ИНИЦИАЛИЗАЦИИ (НЕ ПЕРЕЗАПИСЫВАЕТ ДАННЫЕ)
     (function initListings() {
       const storedListings = localStorage.getItem('geran_listings');
       if (storedListings) {
-        // Данные уже есть — просто загружаем их
         try {
           state.listings = JSON.parse(storedListings);
         } catch (e) {
-          // Ошибка парсинга — записываем дефолтные
           state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
           localStorage.setItem('geran_listings', JSON.stringify(state.listings));
         }
       } else {
-        // Пусто — записываем дефолтные товары
         state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
         localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       }
@@ -765,7 +765,6 @@
 
     const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
 
-    // ЗАДАЧА 2: ФУНКЦИЯ СОХРАНЕНИЯ ГАРАНТИРОВАННО ПИШЕТ В LOCALSTORAGE
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
@@ -817,6 +816,7 @@
       }
     }
 
+    // Функция отрисовки карточек — берёт listing.images[0]
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
       const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
@@ -825,7 +825,7 @@
       return `
         <div class="card" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
-            <img src="${img}" alt="">
+            <img src="${img}" alt="" onerror="this.style.display='none'; this.parentElement.style.background='var(--border)';">
             ${vipBadge}
             <div class="card-heart ${liked?'liked':''}" onclick="event.stopPropagation(); window._toggleFav('${l.id}')">
               <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
@@ -932,7 +932,7 @@
         const thumb = document.createElement('div');
         thumb.className = 'photo-thumb';
         thumb.style.position = 'relative';
-        thumb.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"><span class="photo-thumb-remove" data-index="${index}">×</span>`;
+        thumb.innerHTML = `<img src="${photo}" alt=""><span class="photo-thumb-remove" data-index="${index}">×</span>`;
         container.insertBefore(thumb, uploadBtn);
       });
       container.querySelectorAll('.photo-thumb-remove').forEach(btn => {
@@ -954,9 +954,18 @@
 
     document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('photo-file-input').click());
     document.getElementById('photo-file-input')?.addEventListener('change', (e) => {
-      Array.from(e.target.files).forEach(file => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+      let loaded = 0;
+      files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (ev) => { state.uploadedPhotos.push(ev.target.result); renderPhotoThumbs(); };
+        reader.onload = (ev) => {
+          state.uploadedPhotos.push(ev.target.result);
+          loaded++;
+          if (loaded === files.length) {
+            renderPhotoThumbs();
+          }
+        };
         reader.readAsDataURL(file);
       });
       e.target.value = '';
@@ -1001,7 +1010,7 @@
       const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
       document.getElementById('detail-content').innerHTML = `
-        <img src="${img}" class="detail-img">
+        <img src="${img}" class="detail-img" onerror="this.style.display='none';">
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
@@ -1040,7 +1049,6 @@
       if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
-    // ЗАДАЧА 2: ПРИ ДОБАВЛЕНИИ ТОВАРА ВЫЗЫВАЕТСЯ save()
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
@@ -1066,7 +1074,7 @@
         state.listings.unshift(data);
       }
       state.uploadedPhotos = [];
-      save(); // <-- ГАРАНТИРОВАННОЕ СОХРАНЕНИЕ В LOCALSTORAGE
+      save();
       showScreen('home');
     });
 

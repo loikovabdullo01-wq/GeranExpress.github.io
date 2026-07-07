@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tg">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -102,10 +102,10 @@
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
 
-    /* ЗАДАЧА 1: ТЕКСТОВАЯ КНОПКА ЯЗЫКА TJ / RU */
+    /* ЗАДАЧА 2: УМЕНЬШЕННАЯ КНОПКА ЯЗЫКА */
     .lang-btn {
-      width: 28px;
-      height: 28px;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50%;
       background: var(--primary);
       color: white;
@@ -115,7 +115,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
       font-family: Arial, sans-serif;
       line-height: 1;
       padding: 0;
@@ -154,7 +154,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ЗАДАЧА 2: КАТЕГОРИИ СТРОГО В ОДИН РЯД С ГОРИЗОНТАЛЬНЫМ СКРОЛЛОМ */
+    /* КАТЕГОРИИ СТРОГО В ОДИН РЯД С ГОРИЗОНТАЛЬНЫМ СКРОЛЛОМ */
     .categories-row {
       display: flex !important;
       flex-wrap: nowrap !important;
@@ -229,19 +229,21 @@
     }
     .card-heart.liked { color: var(--accent-heart); }
 
-    .card-body { padding: 6px 8px; flex: 0 0 auto; display: flex; flex-direction: column; }
+    /* ЗАДАЧА 1: УВЕЛИЧЕННЫЕ ОТСТУПЫ В ТЕЛЕ КАРТОЧКИ */
+    .card-body { padding: 10px 10px; flex: 0 0 auto; display: flex; flex-direction: column; }
     .card-price {
       font-weight: 700; font-size: 0.95rem; color: var(--accent-price);
-      margin-bottom: 1px; line-height: 1.2;
+      margin-bottom: 3px; line-height: 1.3;
     }
     .card-title {
-      font-weight: 500; font-size: 0.75rem; color: var(--text-primary);
-      line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px;
+      font-weight: 500; font-size: 0.78rem; color: var(--text-primary);
+      line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px;
     }
     .card-meta {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.6rem; color: var(--text-tertiary); margin-top: auto;
+      font-size: 0.62rem; color: var(--text-tertiary); margin-top: auto;
+      padding-top: 2px;
     }
     .card-meta span { display: flex; align-items: center; gap: 2px; }
 
@@ -340,6 +342,16 @@
       color: var(--text-primary); margin-bottom: 8px;
     }
     .profile-location-section .select-field { margin-bottom: 0; }
+
+    /* ЗАДАЧА 3: ЛОГОТИП НА ЭКРАНЕ ЗАГРУЗКИ */
+    .login-logo {
+      width: 180px;
+      height: auto;
+      margin-bottom: 16px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
   </style>
 </head>
 <body>
@@ -355,8 +367,7 @@
     </div>
 
     <div class="header-actions">
-      <!-- ТЕКСТОВАЯ КНОПКА ЯЗЫКА TJ / RU -->
-      <button class="lang-btn" id="lang-switch-btn" title="Switch language">TJ</button>
+      <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
         <span class="badge-dot"></span>
@@ -465,9 +476,10 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
+    <!-- ЗАДАЧА 3: ЛОГОТИП НА ЭКРАНЕ ВХОДА -->
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
-        <h1 style="color:var(--primary)">🌿 Geran Express</h1>
+        <img src="123.png" alt="Geran Express" class="login-logo">
         <p style="margin:12px 0 32px;color:var(--text-secondary)" id="login-subtitle">Дар наздикӣ харед ва фурӯшед</p>
         <input class="input-field" id="login-phone" placeholder="+992 900 123 456">
         <button class="btn" id="login-btn" style="width:100%">Ворид</button>
@@ -493,6 +505,7 @@
     const translations = {
       tg: {
         search: 'ҷустуҷӯ',
+        search_placeholder: 'Ҷустуҷӯ аз рӯи ном...',
         home: 'Асосӣ',
         favorites: 'Интихобшуда',
         my: 'Эълонҳо',
@@ -548,6 +561,7 @@
       },
       ru: {
         search: 'поиск',
+        search_placeholder: 'Поиск по названию...',
         home: 'Главная',
         favorites: 'Избранное',
         my: 'Публикации',
@@ -603,18 +617,17 @@
       }
     };
 
-    let currentLang = localStorage.getItem('geran_lang') || 'tg';
-    function t(key) { return translations[currentLang]?.[key] || translations['tg']?.[key] || key; }
+    // ЗАДАЧА 4: ЯЗЫК ПО УМОЛЧАНИЮ — РУССКИЙ
+    let currentLang = localStorage.getItem('geran_lang') || 'ru';
+    function t(key) { return translations[currentLang]?.[key] || translations['ru']?.[key] || key; }
 
     function updateLangUI() {
       document.documentElement.lang = currentLang;
-      // Обновляем текст в кнопке языка
       const langBtn = document.getElementById('lang-switch-btn');
       if (langBtn) {
         langBtn.textContent = currentLang === 'tg' ? 'TJ' : 'RU';
         langBtn.title = currentLang === 'tg' ? 'Русский' : 'Тоҷикӣ';
       }
-      // Синхронизируем селект в профиле
       const langSelect = document.getElementById('edit-lang');
       if (langSelect) langSelect.value = currentLang;
     }
@@ -623,6 +636,10 @@
       updateLangUI();
       const searchEl = document.getElementById('search-placeholder');
       if (searchEl) searchEl.textContent = t('search');
+
+      // ЗАДАЧА 5: ПЕРЕВОД PLACEHOLDER В ПОИСКЕ
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.placeholder = t('search_placeholder');
 
       document.querySelectorAll('.nav-text').forEach(el => {
         const key = el.dataset.key;
@@ -705,10 +722,19 @@
       applyLanguage();
     });
 
+    // ========== НОВЫЙ МАССИВ ТОВАРОВ ==========
+    const NEW_LISTINGS = [
+      { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
+      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
+      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
+    ];
+
     // ========== СОСТОЯНИЕ ==========
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
-      listings: JSON.parse(localStorage.getItem('geran_listings')) || [],
+      listings: [],
       favorites: JSON.parse(localStorage.getItem('geran_favorites')) || [],
       currentScreen: 'home',
       editId: null,
@@ -718,16 +744,33 @@
       uploadedPhotos: [],
     };
 
-    if (!state.listings.length) {
-      state.listings = [
-        { id: '1', title: 'Смартфон Samsung Galaxy A54', desc: 'Отличное состояние, полный комплект.', price: 18000, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
-        { id: '2', title: 'Ноутбук Lenovo IdeaPad 3', desc: '15.6", Ryzen 5, 8GB RAM.', price: 32000, isFree: false, category: 'Компьютеры', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'used', isVIP: true },
-        { id: '3', title: 'Дрель Makita', desc: 'Мощная, с регулировкой оборотов.', price: 4500, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
-        { id: '4', title: 'Диван угловой', desc: 'Ткань серого цвета, удобный.', price: 22000, isFree: false, category: 'Недвижимость', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
-        { id: '5', title: 'Куртка зимняя', desc: 'Размер L, состояние отличное.', price: 5000, isFree: false, category: 'Одежда', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'used', isVIP: false }
-      ];
-      localStorage.setItem('geran_listings', JSON.stringify(state.listings));
-    }
+    (function initListings() {
+      const storedListings = localStorage.getItem('geran_listings');
+      if (storedListings) {
+        try {
+          const parsed = JSON.parse(storedListings);
+          const hasOldData = parsed.some(item => 
+            item.title === 'Смартфон Samsung Galaxy A54' || 
+            item.title === 'Ноутбук Lenovo IdeaPad 3' ||
+            item.title === 'Дрель Makita' ||
+            item.title === 'Диван угловой' ||
+            item.title === 'Куртка зимняя'
+          );
+          if (hasOldData || parsed.length === 0) {
+            localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
+            state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
+          } else {
+            state.listings = parsed;
+          }
+        } catch (e) {
+          localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
+          state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
+        }
+      } else {
+        localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
+        state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
+      }
+    })();
 
     const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
 
@@ -948,7 +991,6 @@
       alert(t('profile_updated'));
     });
 
-    // ЗАДАЧА 3: ИСПРАВЛЕННАЯ КНОПКА ИЗБРАННОГО
     window._toggleFav = (id) => {
       if (!state.user) return alert(t('login_required'));
       if (state.favorites.includes(id)) {

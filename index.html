@@ -102,7 +102,7 @@
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
 
-    /* ЗАДАЧА 2: УМЕНЬШЕННАЯ КНОПКА ЯЗЫКА */
+    /* УМЕНЬШЕННАЯ КНОПКА ЯЗЫКА */
     .lang-btn {
       width: 22px !important;
       height: 22px !important;
@@ -229,7 +229,7 @@
     }
     .card-heart.liked { color: var(--accent-heart); }
 
-    /* ЗАДАЧА 1: УВЕЛИЧЕННЫЕ ОТСТУПЫ В ТЕЛЕ КАРТОЧКИ */
+    /* УВЕЛИЧЕННЫЕ ОТСТУПЫ В ТЕЛЕ КАРТОЧКИ */
     .card-body { padding: 10px 10px; flex: 0 0 auto; display: flex; flex-direction: column; }
     .card-price {
       font-weight: 700; font-size: 0.95rem; color: var(--accent-price);
@@ -343,7 +343,7 @@
     }
     .profile-location-section .select-field { margin-bottom: 0; }
 
-    /* ЗАДАЧА 3: ЛОГОТИП НА ЭКРАНЕ ЗАГРУЗКИ */
+    /* ЛОГОТИП НА ЭКРАНЕ ЗАГРУЗКИ */
     .login-logo {
       width: 180px;
       height: auto;
@@ -476,7 +476,7 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
-    <!-- ЗАДАЧА 3: ЛОГОТИП НА ЭКРАНЕ ВХОДА -->
+    <!-- ЛОГОТИП НА ЭКРАНЕ ВХОДА -->
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <img src="123.png" alt="Geran Express" class="login-logo">
@@ -617,7 +617,7 @@
       }
     };
 
-    // ЗАДАЧА 4: ЯЗЫК ПО УМОЛЧАНИЮ — РУССКИЙ
+    // ЯЗЫК ПО УМОЛЧАНИЮ — РУССКИЙ
     let currentLang = localStorage.getItem('geran_lang') || 'ru';
     function t(key) { return translations[currentLang]?.[key] || translations['ru']?.[key] || key; }
 
@@ -637,7 +637,7 @@
       const searchEl = document.getElementById('search-placeholder');
       if (searchEl) searchEl.textContent = t('search');
 
-      // ЗАДАЧА 5: ПЕРЕВОД PLACEHOLDER В ПОИСКЕ
+      // ПЕРЕВОД PLACEHOLDER В ПОИСКЕ
       const searchInput = document.getElementById('search-input');
       if (searchInput) searchInput.placeholder = t('search_placeholder');
 
@@ -722,8 +722,8 @@
       applyLanguage();
     });
 
-    // ========== НОВЫЙ МАССИВ ТОВАРОВ ==========
-    const NEW_LISTINGS = [
+    // ========== ДЕФОЛТНЫЙ МАССИВ ТОВАРОВ (только для первого запуска) ==========
+    const DEFAULT_LISTINGS = [
       { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
       { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
       { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
@@ -744,36 +744,28 @@
       uploadedPhotos: [],
     };
 
+    // ЗАДАЧА 1: ИСПРАВЛЕННАЯ ЛОГИКА ИНИЦИАЛИЗАЦИИ (НЕ ПЕРЕЗАПИСЫВАЕТ ДАННЫЕ)
     (function initListings() {
       const storedListings = localStorage.getItem('geran_listings');
       if (storedListings) {
+        // Данные уже есть — просто загружаем их
         try {
-          const parsed = JSON.parse(storedListings);
-          const hasOldData = parsed.some(item => 
-            item.title === 'Смартфон Samsung Galaxy A54' || 
-            item.title === 'Ноутбук Lenovo IdeaPad 3' ||
-            item.title === 'Дрель Makita' ||
-            item.title === 'Диван угловой' ||
-            item.title === 'Куртка зимняя'
-          );
-          if (hasOldData || parsed.length === 0) {
-            localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
-            state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
-          } else {
-            state.listings = parsed;
-          }
+          state.listings = JSON.parse(storedListings);
         } catch (e) {
-          localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
-          state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
+          // Ошибка парсинга — записываем дефолтные
+          state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
+          localStorage.setItem('geran_listings', JSON.stringify(state.listings));
         }
       } else {
-        localStorage.setItem('geran_listings', JSON.stringify(NEW_LISTINGS));
-        state.listings = JSON.parse(JSON.stringify(NEW_LISTINGS));
+        // Пусто — записываем дефолтные товары
+        state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
+        localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       }
     })();
 
     const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
 
+    // ЗАДАЧА 2: ФУНКЦИЯ СОХРАНЕНИЯ ГАРАНТИРОВАННО ПИШЕТ В LOCALSTORAGE
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
@@ -1048,6 +1040,7 @@
       if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
+    // ЗАДАЧА 2: ПРИ ДОБАВЛЕНИИ ТОВАРА ВЫЗЫВАЕТСЯ save()
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
@@ -1073,7 +1066,7 @@
         state.listings.unshift(data);
       }
       state.uploadedPhotos = [];
-      save();
+      save(); // <-- ГАРАНТИРОВАННОЕ СОХРАНЕНИЕ В LOCALSTORAGE
       showScreen('home');
     });
 

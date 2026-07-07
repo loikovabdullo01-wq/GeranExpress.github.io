@@ -77,30 +77,152 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
+    /* ========== ИСПРАВЛЕННАЯ ШАПКА ========== */
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
+      
+      /* 1. Фон и рамка */
       background: var(--bg);
       border-bottom: 1px solid var(--border);
+      
+      /* 2. Растягиваем на всю ширину */
+      width: 100%;
+      
+      /* 3. Внутренние отступы и высота */
       padding: 0 16px;
       height: var(--header-height);
+      
+      /* 4. Flexbox для выравнивания:
+         - display: flex делает контейнер гибким
+         - align-items: center центрирует элементы по вертикали
+         - justify-content: space-between прижимает логотип к левому краю,
+           а блок с кнопками — к правому */
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      
+      /* 5. Эффект размытия фона (опционально) */
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
 
+    /* Логотип: ссылка с картинкой */
     .logo {
-      font-weight: 700;
-      font-size: 1.15rem;
-      letter-spacing: -0.3px;
-      color: var(--primary);
-      white-space: nowrap;
+      /* Никаких лишних отступов, flex не растягивает */
       display: flex;
       align-items: center;
+      
+      /* Убираем подчеркивание ссылки */
+      text-decoration: none;
+      
+      /* Не даем логотипу сжиматься, если места мало */
+      flex-shrink: 0;
     }
+
+    /* Картинка внутри логотипа */
+    .logo img {
+      /* Фиксированная высота, чтобы не ломать шапку */
+      height: 38px;
+      
+      /* Ширина подстраивается автоматически по пропорциям */
+      width: auto;
+      
+      /* Чтобы картинка не искажалась */
+      object-fit: contain;
+      
+      /* Убираем возможные отступы */
+      display: block;
+    }
+
+    /* Блок с кнопками действий (поиск, уведомления, профиль) */
+    .header-actions {
+      /* 1. Flex-контейнер для кнопок */
+      display: flex;
+      align-items: center;
+      
+      /* 2. Отступ между кнопками (gap) */
+      gap: 8px;
+      
+      /* 3. КРИТИЧЕСКИ ВАЖНО:
+         - Не даем блоку растягиваться */
+      flex-shrink: 0;       /* Не сжиматься */
+      flex-grow: 0;         /* Не расти */
+      
+      /* 4. Прижимаем к правому краю (уже сделано через space-between,
+         но дублируем для надежности) */
+      margin-left: auto;
+    }
+
+    /* Стилизация кнопок внутри header-actions */
+    .header-actions button,
+    .icon-btn {
+      /* 1. Убираем дефолтные стили кнопок */
+      background: transparent;
+      border: none;
+      outline: none;
+      
+      /* 2. Фиксированный размер, чтобы кнопки не растягивались */
+      width: 40px;
+      height: 40px;
+      
+      /* 3. Делаем круглые и центрируем иконку */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      /* 4. Курсор-указатель для кликабельности */
+      cursor: pointer;
+      
+      /* 5. Цвет иконок (наследуется или задается) */
+      color: var(--text-secondary);
+      
+      /* 6. Плавный переход для hover-эффекта */
+      transition: background var(--transition), color var(--transition);
+      
+      /* 7. Убираем возможные внутренние отступы */
+      padding: 0;
+      
+      /* 8. Не даем кнопке растягиваться */
+      flex-shrink: 0;
+      
+      /* 9. Позиционирование для бейджа (точки уведомлений) */
+      position: relative;
+    }
+
+    /* Hover-эффект: легкий серый фон при наведении */
+    .header-actions button:hover,
+    .icon-btn:hover {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    /* Размер иконок внутри кнопок */
+    .header-actions button .material-symbols-rounded,
+    .icon-btn .material-symbols-rounded {
+      font-size: 22px;
+      
+      /* Иконка точно по центру */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Бейдж (красная точка) для уведомлений */
+    .badge-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: var(--accent-heart);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    /* ========== ОСТАЛЬНЫЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ ========== */
 
     .search-bar {
       flex: 1;
@@ -114,6 +236,7 @@
       cursor: pointer;
       transition: background var(--transition);
       color: var(--text-secondary);
+      margin: 0 12px; /* Добавил отступы, чтобы не прилипало к логотипу и кнопкам */
     }
     .search-bar:hover { background: var(--border); }
     .search-bar .material-symbols-rounded {
@@ -124,38 +247,6 @@
       font-size: 0.9rem;
       color: var(--text-tertiary);
       font-weight: 400;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-    .icon-btn {
-      background: transparent;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-secondary);
-      position: relative;
-      transition: background var(--transition);
-    }
-    .icon-btn:hover { background: var(--surface); }
-    .icon-btn .material-symbols-rounded { font-size: 22px; }
-    .badge-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
-      background: var(--accent-heart);
-      border-radius: 50%;
-      border: 2px solid var(--bg);
     }
 
     .bottom-nav {
@@ -444,22 +535,38 @@
 </head>
 <body>
 <div id="app">
+  <!-- ========== ИСПРАВЛЕННЫЙ HTML ШАПКИ ========== -->
   <header class="header" id="main-header">
-    <div class="logo">🌿 Geran Express</div>
+    <!-- Логотип с картинкой -->
+    <a href="/" class="logo">
+      <img src="1.jpg" alt="Geran Express">
+    </a>
+
+    <!-- Поисковая строка (осталась как было) -->
     <div class="search-bar" id="search-trigger">
       <span class="material-symbols-rounded">search</span>
       <span>поиск</span>
     </div>
+
+    <!-- Кнопки действий: строго справа, не растягиваются -->
     <div class="header-actions">
-      <button class="icon-btn" id="notif-btn"><span class="material-symbols-rounded">notifications</span><span class="badge-dot"></span></button>
-      <button class="icon-btn" id="profile-btn"><span class="material-symbols-rounded">person</span></button>
+      <!-- Уведомления с бейджем -->
+      <button class="icon-btn" id="notif-btn">
+        <span class="material-symbols-rounded">notifications</span>
+        <span class="badge-dot"></span>
+      </button>
+      <!-- Профиль -->
+      <button class="icon-btn" id="profile-btn">
+        <span class="material-symbols-rounded">person</span>
+      </button>
     </div>
   </header>
 
+  <!-- Остальной HTML без изменений -->
   <main id="main-content">
     <div id="screen-home" class="screen active"></div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px">Избранное</h2><div id="favorites-container" class="listings-grid"></div></div>
-    <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px">Публикации</h2><div id="my-container"></div></div>
+    <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px">Мои публикации</h2><div id="my-container"></div></div>
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div style="width:70px;height:70px;border-radius:50%;background:var(--primary-soft);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>
@@ -510,11 +617,12 @@
     <div class="nav-item active" data-tab="home"><span class="material-symbols-rounded">home</span><span>Главная</span></div>
     <div class="nav-item" data-tab="favorites"><span class="material-symbols-rounded">favorite</span><span>Избранное</span></div>
     <div class="nav-item create-btn" data-tab="create"><span class="material-symbols-rounded">add</span></div>
-    <div class="nav-item" data-tab="my"><span class="material-symbols-rounded">list_alt</span><span>Мои</span></div>
+    <div class="nav-item" data-tab="my"><span class="material-symbols-rounded">list_alt</span><span>Публикации</span></div>
     <div class="nav-item" data-tab="profile"><span class="material-symbols-rounded">person</span><span>Профиль</span></div>
   </nav>
 </div>
 
+<!-- Скрипт без изменений -->
 <script>
   (() => {
     // ---------- Состояние ----------
@@ -528,7 +636,6 @@
       activeCategory: null
     };
 
-    // Стартовые 5 качественных объявлений, если массив пуст
     if (!state.listings.length) {
       state.listings = [
         {
@@ -610,13 +717,11 @@
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
     }
 
-    // ---------- Сохранение ----------
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
     };
 
-    // ---------- DOM элементы ----------
     const screens = {
       home: document.getElementById('screen-home'),
       favorites: document.getElementById('screen-favorites'),
@@ -630,9 +735,7 @@
     const bottomNav = document.getElementById('bottom-nav');
     const mainHeader = document.getElementById('main-header');
 
-    // ---------- Управление нижней панелью ----------
     function updateNavVisibility(screenId) {
-      // Панель скрыта только на экране логина
       if (screenId === 'login') {
         bottomNav.classList.add('hidden');
       } else {
@@ -646,10 +749,7 @@
       if (navItem) navItem.classList.add('active');
     }
 
-    // ---------- Переключение экранов ----------
     function showScreen(id) {
-      // Если пользователь не авторизован и пытается зайти в профиль,
-      // перенаправляем на экран логина
       if (id === 'profile' && !state.user) {
         id = 'login';
       }
@@ -658,7 +758,6 @@
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
 
-      // Заголовок видим везде, кроме логина
       mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
 
       updateNavVisibility(id);
@@ -673,11 +772,9 @@
         case 'my': renderMy(); break;
         case 'profile': renderProfile(); break;
         case 'search': renderSearch(); break;
-        // detail и create не требуют отдельной отрисовки вне своих обработчиков
       }
     }
 
-    // ---------- Карточка объявления ----------
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
       const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} ₽`;
@@ -704,7 +801,6 @@
         </div>`;
     }
 
-    // ---------- Категории ----------
     function renderCategories() {
       const categories = ['Электроника','Компьютеры','Бытовая техника','Авто','Мото','Недвижимость','Инструменты','Запчасти','Одежда','Игры','Книги','Детские','Животные','Работа','Услуги','Разное'];
       const icons = {
@@ -799,7 +895,6 @@
       document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : '<p>Ничего не найдено</p>';
     }
 
-    // ---------- Глобальные методы ----------
     window._toggleFav = (id) => {
       if (!state.user) return alert('Войдите, чтобы добавлять в избранное');
       if (state.favorites.includes(id)) {
@@ -831,7 +926,6 @@
       }
     };
 
-    // ---------- Функция для ручного добавления через консоль ----------
     window.addMyProduct = ({ title, desc, price, category, phone, images = [] }) => {
       if (!title || !phone) {
         console.error('addMyProduct: title и phone обязательны');
@@ -855,14 +949,12 @@
       };
       state.listings.unshift(newListing);
       save();
-      // Перерендерить текущий экран, если это главная или избранное
       if (state.currentScreen === 'home' || state.currentScreen === 'favorites') {
         renderScreen(state.currentScreen);
       }
       console.log('✅ Товар добавлен:', newListing);
     };
 
-    // ---------- Обработчики кнопок ----------
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
@@ -913,7 +1005,6 @@
       }
     });
 
-    // Тёмная тема
     const themeCheckbox = document.getElementById('theme-checkbox');
     themeCheckbox?.addEventListener('change', e => {
       document.body.classList.toggle('dark', e.target.checked);
@@ -925,7 +1016,6 @@
       renderSearch();
     });
 
-    // Нижняя навигация
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
         const tab = item.dataset.tab;
@@ -933,13 +1023,11 @@
       });
     });
 
-    // Инициализация темы
     if (localStorage.getItem('geran_dark') === 'true') {
       document.body.classList.add('dark');
       themeCheckbox.checked = true;
     }
 
-    // Стартовый экран
     if (state.user) {
       showScreen('home');
     } else {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Geran Express – Маркетплейс</title>
   
-  <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
+  <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА (Задача 8) -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -35,7 +35,8 @@
       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
     }
     .logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;cursor:pointer}
-    .logo img{height:38px;width:auto;object-fit:contain;display:block}
+    /* Задача 2: фиксированная высота логотипа */
+    .logo img{height:35px!important;width:auto!important;object-fit:contain!important;display:block}
     .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-grow:0;margin-left:auto}
     .header-actions button,.icon-btn{
       background:transparent;border:none;outline:none;width:40px;height:40px;
@@ -67,8 +68,8 @@
     }
     .material-symbols-rounded{font-display:block;visibility:hidden}
     .fonts-loaded .material-symbols-rounded{visibility:visible}
-    /* Логотип в тёмной теме */
-    body.dark .logo img{filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen}
+    /* Задача 2: Логотип в тёмной теме — инверсия */
+    body.dark .logo img{filter:invert(1) hue-rotate(180deg)!important;mix-blend-mode:screen}
   </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,58 +104,29 @@
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
 
-    /* МИНИАТЮРНАЯ КНОПКА-ФЛАГ (24x24px) */
+    /* Задача 3: Компактная кнопка-флаг */
     .lang-flag-btn {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 24px !important;
+      height: 24px !important;
+      border: none !important;
+      background-color: transparent;
       background-size: cover;
       background-position: center;
+      border-radius: 50%;
       cursor: pointer;
+      display: inline-block;
+      padding: 0 !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform 0.1s ease;
       flex-shrink: 0;
-      padding: 0;
-      outline: none;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .lang-flag-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .lang-flag-btn:active {
-      transform: scale(0.95);
-    }
-    /* Круглый флаг России */
+    .lang-flag-btn:active { transform: scale(0.95); }
     .lang-flag-btn.flag-ru {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3CclipPath id='a'%3E%3Ccircle cx='50' cy='50' r='50'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath fill='%23fff' d='M0 0h100v100H0z'/%3E%3Cpath fill='%230052b4' d='M0 33.3h100v33.4H0z'/%3E%3Cpath fill='%23d90000' d='M0 66.7h100V100H0z'/%3E%3C/g%3E%3C/svg%3E");
     }
-    /* Круглый флаг Таджикистана */
     .lang-flag-btn.flag-tj {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3CclipPath id='a'%3E%3Ccircle cx='50' cy='50' r='50'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath fill='%23fff' d='M0 0h100v100H0z'/%3E%3Cpath fill='%23d90000' d='M0 0h100v33.3H0z'/%3E%3Cpath fill='%23006000' d='M0 66.7h100V100H0z'/%3E%3Ccircle cx='50' cy='50' r='16.7' fill='%23f1c800'/%3E%3Ccircle cx='50' cy='50' r='12.5' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E");
     }
-
-    /* Жестко задаем размеры и сброс стилей для кнопки флага */
-.lang-flag-btn {
-    width: 24px !important;        /* Компактная ширина */
-    height: 24px !important;       /* Компактная высота */
-    border: none !important;       /* Убираем стандартную рамку */
-    background-color: transparent; /* Прозрачный фон под флагом */
-    background-size: cover;        /* Флаг полностью заполняет круг */
-    background-position: center;   /* Центрируем флаг */
-    border-radius: 50%;            /* Делаем кнопку идеально круглой */
-    cursor: pointer;               /* Указатель при наведении */
-    display: inline-block;         /* Позиционирование в ряд */
-    padding: 0 !important;         /* Сбрасываем внутренние отступы кнопки */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15); /* Легкая тень, чтобы флаг не сливался с белым фоном */
-    transition: transform 0.1s ease;
-}
-
-/* Ваш существующий эффект при клике теперь будет работать корректно */
-.lang-flag-btn:active {
-    transform: scale(0.95);
-}
-
 
     .search-bar:hover { background: var(--border); }
     .search-bar .material-symbols-rounded { font-size: 20px; color: var(--text-secondary); }
@@ -204,7 +176,7 @@
     @media (min-width: 900px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
     @media (min-width: 1100px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
 
-    /* Компактные карточки */
+    /* Задача 9: Компактные карточки */
     .card {
       background: var(--surface); border-radius: 12px; overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--border);
@@ -213,11 +185,14 @@
     }
     .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
+    /* Задача 1: ЖЁСТКАЯ фиксированная высота картинок */
     .card-img {
-      position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--border);
+      position: relative; width: 100%; height: 160px; background: var(--border);
+      overflow: hidden;
     }
     .card-img img {
-      width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.3s;
     }
     .card:hover .card-img img { transform: scale(1.02); }
 
@@ -352,8 +327,9 @@
 <body>
 <div id="app">
   <header class="header" id="main-header">
+    <!-- Задача 2: Правильный путь к логотипу -->
     <a href="/" class="logo" onclick="event.preventDefault(); window.location.reload();">
-      <img src="123.png" alt="Geran Express">
+      <img src="1.jpg" alt="Geran Express">
     </a>
 
     <div class="search-bar" id="search-trigger">
@@ -362,7 +338,7 @@
     </div>
 
     <div class="header-actions">
-      <!-- Миниатюрная кнопка переключения языка -->
+      <!-- Задача 3: Миниатюрная кнопка переключения языка -->
       <button class="lang-flag-btn flag-tj" id="lang-switch-btn" title="Switch language"></button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
@@ -379,6 +355,7 @@
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
     
+    <!-- Задача 4: Дубль адреса удалён -->
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div class="profile-avatar-wrapper">
@@ -395,7 +372,7 @@
         <input class="input-field" id="edit-phone" placeholder="Рақами телефон">
       </div>
 
-      <!-- Только селект, без дублирующего текста -->
+      <!-- Задача 5: Только селект выбора села -->
       <div class="profile-location-section">
         <label for="edit-village" id="village-label">📍 Деҳаи ман</label>
         <select class="select-field" id="edit-village">
@@ -403,6 +380,15 @@
           <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
           <option value="Деҳаи Севвум">Деҳаи Севвум</option>
           <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
+        </select>
+      </div>
+
+      <!-- Задача 3: Выбор языка в профиле -->
+      <div class="profile-location-section" style="margin-top:16px;">
+        <label for="edit-lang" id="lang-label">🌐 Забон / Язык</label>
+        <select class="select-field" id="edit-lang">
+          <option value="tg">Тоҷикӣ</option>
+          <option value="ru">Русский</option>
         </select>
       </div>
 
@@ -420,6 +406,7 @@
       <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Баромад</button>
     </div>
 
+    <!-- Задача 7: Форма создания товара -->
     <div id="screen-create" class="screen">
       <h2 style="margin:4px 0 12px" id="create-title-label">Эълони нав</h2>
       <input class="input-field" id="create-title" placeholder="Ном">
@@ -447,6 +434,7 @@
       <input class="input-field" id="create-price" placeholder="Нарх (с.)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
       
+      <!-- Задача 11: Загрузка фото -->
       <div class="photo-upload-area" id="photo-upload-area">
         <div class="photo-upload-btn" id="photo-upload-btn">
           <span class="material-symbols-rounded">add_a_photo</span>
@@ -503,6 +491,7 @@
         edit_name: 'Ном',
         edit_phone: 'Рақами телефон',
         village_label: '📍 Деҳаи ман',
+        lang_label: '🌐 Забон / Язык',
         save_btn: 'Тағйиротро захира кунед',
         listings_label: 'эълон',
         views_label: 'тамошо',
@@ -543,7 +532,8 @@
         user: 'Пользователь',
         edit_name: 'Имя',
         edit_phone: 'Номер телефона',
-        village_label: '📍 моё село',
+        village_label: '📍 Моё село',
+        lang_label: '🌐 Забон / Язык',
         save_btn: 'Сохранить изменения',
         listings_label: 'объявлений',
         views_label: 'просмотров',
@@ -578,16 +568,23 @@
     let currentLang = localStorage.getItem('geran_lang') || 'tg';
     function t(key) { return translations[currentLang]?.[key] || translations['tg']?.[key] || key; }
 
-    function applyLanguage() {
+    function updateLangUI() {
       document.documentElement.lang = currentLang;
-      const searchEl = document.getElementById('search-placeholder');
-      if (searchEl) searchEl.textContent = t('search');
-
+      // Кнопка-флаг в шапке
       const flagBtn = document.getElementById('lang-switch-btn');
       if (flagBtn) {
         flagBtn.className = 'lang-flag-btn ' + (currentLang === 'tg' ? 'flag-ru' : 'flag-tj');
         flagBtn.title = currentLang === 'tg' ? 'Русский' : 'Тоҷикӣ';
       }
+      // Селект языка в профиле
+      const langSelect = document.getElementById('edit-lang');
+      if (langSelect) langSelect.value = currentLang;
+    }
+
+    function applyLanguage() {
+      updateLangUI();
+      const searchEl = document.getElementById('search-placeholder');
+      if (searchEl) searchEl.textContent = t('search');
 
       document.querySelectorAll('.nav-text').forEach(el => {
         const key = el.dataset.key;
@@ -601,6 +598,8 @@
 
       const villageLabel = document.getElementById('village-label');
       if (villageLabel) villageLabel.textContent = t('village_label');
+      const langLabel = document.getElementById('lang-label');
+      if (langLabel) langLabel.textContent = t('lang_label');
       const saveBtn = document.getElementById('save-profile-btn');
       if (saveBtn) saveBtn.textContent = t('save_btn');
       const listingsLabel = document.getElementById('stat-listings-label');
@@ -656,8 +655,16 @@
       if (state.currentScreen) renderScreen(state.currentScreen);
     }
 
+    // Переключение языка через флаг в шапке
     document.getElementById('lang-switch-btn')?.addEventListener('click', () => {
       currentLang = currentLang === 'tg' ? 'ru' : 'tg';
+      localStorage.setItem('geran_lang', currentLang);
+      applyLanguage();
+    });
+
+    // Переключение языка через селект в профиле (Задача 3: синхронизация)
+    document.getElementById('edit-lang')?.addEventListener('change', (e) => {
+      currentLang = e.target.value;
       localStorage.setItem('geran_lang', currentLang);
       applyLanguage();
     });
@@ -686,7 +693,7 @@
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
     }
 
-    const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
+    const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
@@ -741,6 +748,7 @@
 
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
+      // Задача 10: сомони
       const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
       const img = l.images?.[0] || PLACEHOLDER_IMG;
       const vipBadge = l.isVIP ? '<div class="card-badge" style="background:#1e4a3b;">VIP</div>' : '';
@@ -809,6 +817,7 @@
       document.getElementById('edit-name').value = state.user?.name || '';
       document.getElementById('edit-phone').value = state.user?.phone || '';
       document.getElementById('edit-village').value = state.user?.village || 'Деҳаи Геран';
+      document.getElementById('edit-lang').value = currentLang;
       if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('stat-listings').textContent = my.length;
@@ -816,6 +825,7 @@
       document.getElementById('stat-favs').textContent = state.favorites.length;
     }
 
+    // Задача 7: renderCreateForm не стирает поля
     function renderCreateForm() {
       if (state.currentScreen === 'create' && !state.editId) return;
       if (state.editId) return;
@@ -861,6 +871,7 @@
       state.selectedCondition = option.dataset.condition;
     });
 
+    // Задача 11: Загрузка фото
     document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('photo-file-input').click());
     document.getElementById('photo-file-input')?.addEventListener('change', (e) => {
       Array.from(e.target.files).forEach(file => {
@@ -892,6 +903,7 @@
       alert(t('profile_updated'));
     });
 
+    // Задача 6: ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ КНОПКА ИЗБРАННОГО
     window._toggleFav = (id) => {
       if (!state.user) return alert(t('login_required'));
       if (state.favorites.includes(id)) {
@@ -916,6 +928,7 @@
         <p style="margin:10px 0">${l.desc}</p>
         <p>📍 ${l.village || 'Деҳаи Геран'} · ${l.category} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
         <div class="detail-actions">
+          <!-- Задача 12: Звонок через tel: -->
           <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>${t('call')}</a>
           <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span></button>
         </div>`;
@@ -984,6 +997,7 @@
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
+    // Задача 12: Авторизация сохраняет номер
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
       if (phone) {

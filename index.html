@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="tg">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Geran Express – Маркетплейс</title>
   
-  <!-- Задача 4: КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
+  <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
   <style>
-    /* Сброс и основа — рендерятся мгновенно */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --font:'Inter',system-ui,-apple-system,sans-serif;
@@ -28,8 +27,6 @@
       display:flex;flex-direction:column;position:relative;overflow:hidden;
       box-shadow:0 0 30px rgba(0,0,0,0.03)
     }
-    
-    /* ХЕДЕР — критический рендер */
     .header{
       position:sticky;top:0;z-index:100;background:var(--bg);
       border-bottom:1px solid var(--border);width:100%;padding:0 16px;
@@ -48,10 +45,8 @@
     .search-bar{
       flex:1;display:flex;align-items:center;background:var(--surface);
       border:1px solid var(--border);border-radius:40px;padding:8px 14px;
-      gap:6px;cursor:pointer;color:var(--text-secondary);margin:0 12px
+      gap:6px;cursor:pointer;color:var(--text-secondary);margin:0 8px
     }
-    
-    /* НИЖНЯЯ ПАНЕЛЬ — критический рендер */
     .bottom-nav{
       position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:1200px;
       background:var(--bg);border-top:1px solid var(--border);
@@ -70,20 +65,18 @@
       border-radius:50%;display:flex;align-items:center;justify-content:center;
       margin-top:-14px;box-shadow:0 4px 10px rgba(30,74,59,0.25)
     }
-    
-    /* Иконки — скрываем текст до загрузки шрифта */
     .material-symbols-rounded{font-display:block;visibility:hidden}
     .fonts-loaded .material-symbols-rounded{visibility:visible}
+    /* Логотип в тёмной теме */
+    body.dark .logo img{filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen}
   </style>
 
-  <!-- Предзагрузка шрифтов -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   
   <style>
-    /* Остальные стили */
     body.dark {
       --bg: #111827;
       --surface: #1f2937;
@@ -97,80 +90,88 @@
       --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
     }
 
-    body {
-      transition: background 0.3s, color 0.3s;
-    }
-
+    body { transition: background 0.3s, color 0.3s; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
-    .header-actions button:hover,
-    .icon-btn:hover {
-      background: var(--surface);
-      color: var(--text-primary);
-    }
-
-    .header-actions button .material-symbols-rounded,
-    .icon-btn .material-symbols-rounded {
-      font-size: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .header-actions button:hover, .icon-btn:hover { background: var(--surface); color: var(--text-primary); }
+    .header-actions button .material-symbols-rounded, .icon-btn .material-symbols-rounded { font-size: 22px; display: flex; align-items: center; justify-content: center; }
 
     .badge-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
-      background: var(--accent-heart);
-      border-radius: 50%;
-      border: 2px solid var(--bg);
+      position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
+      background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
+
+    /* МИНИАТЮРНАЯ КНОПКА-ФЛАГ (24x24px) */
+    .lang-flag-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      outline: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .lang-flag-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .lang-flag-btn:active {
+      transform: scale(0.95);
+    }
+    /* Круглый флаг России */
+    .lang-flag-btn.flag-ru {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3CclipPath id='a'%3E%3Ccircle cx='50' cy='50' r='50'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath fill='%23fff' d='M0 0h100v100H0z'/%3E%3Cpath fill='%230052b4' d='M0 33.3h100v33.4H0z'/%3E%3Cpath fill='%23d90000' d='M0 66.7h100V100H0z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    /* Круглый флаг Таджикистана */
+    .lang-flag-btn.flag-tj {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3CclipPath id='a'%3E%3Ccircle cx='50' cy='50' r='50'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath fill='%23fff' d='M0 0h100v100H0z'/%3E%3Cpath fill='%23d90000' d='M0 0h100v33.3H0z'/%3E%3Cpath fill='%23006000' d='M0 66.7h100V100H0z'/%3E%3Ccircle cx='50' cy='50' r='16.7' fill='%23f1c800'/%3E%3Ccircle cx='50' cy='50' r='12.5' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Жестко задаем размеры и сброс стилей для кнопки флага */
+.lang-flag-btn {
+    width: 24px !important;        /* Компактная ширина */
+    height: 24px !important;       /* Компактная высота */
+    border: none !important;       /* Убираем стандартную рамку */
+    background-color: transparent; /* Прозрачный фон под флагом */
+    background-size: cover;        /* Флаг полностью заполняет круг */
+    background-position: center;   /* Центрируем флаг */
+    border-radius: 50%;            /* Делаем кнопку идеально круглой */
+    cursor: pointer;               /* Указатель при наведении */
+    display: inline-block;         /* Позиционирование в ряд */
+    padding: 0 !important;         /* Сбрасываем внутренние отступы кнопки */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15); /* Легкая тень, чтобы флаг не сливался с белым фоном */
+    transition: transform 0.1s ease;
+}
+
+/* Ваш существующий эффект при клике теперь будет работать корректно */
+.lang-flag-btn:active {
+    transform: scale(0.95);
+}
+
 
     .search-bar:hover { background: var(--border); }
-    .search-bar .material-symbols-rounded {
-      font-size: 20px;
-      color: var(--text-secondary);
-    }
-    .search-bar span {
-      font-size: 0.9rem;
-      color: var(--text-tertiary);
-      font-weight: 400;
-    }
+    .search-bar .material-symbols-rounded { font-size: 20px; color: var(--text-secondary); }
+    .search-bar span { font-size: 0.9rem; color: var(--text-tertiary); font-weight: 400; }
 
-    .bottom-nav.hidden {
-      transform: translateY(100%);
-    }
-
-    .bottom-nav {
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: transform 0.2s;
-      transform: translateY(0);
-    }
+    .bottom-nav.hidden { transform: translateY(100%); }
+    .bottom-nav { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: transform 0.2s; transform: translateY(0); }
 
     .nav-item .material-symbols-rounded { font-size: 24px; }
     .nav-item.create-btn .material-symbols-rounded { font-size: 26px; }
 
-    main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 12px 80px;
-    }
-    .screen {
-      display: none;
-      padding: 8px 0 16px;
-      animation: fadeSlide 0.25s ease;
-    }
+    main { flex: 1; overflow-y: auto; padding: 0 12px 80px; }
+    .screen { display: none; padding: 8px 0 16px; animation: fadeSlide 0.25s ease; }
     .screen.active { display: block; }
 
     #screen-login.active {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       height: calc(100vh - var(--header-height) - var(--nav-height));
     }
 
@@ -180,28 +181,16 @@
     }
 
     .categories-row {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      padding: 10px 4px 6px;
-      scrollbar-width: none;
-      margin-bottom: 8px;
-      white-space: nowrap;
+      display: flex; overflow-x: auto; gap: 8px; padding: 10px 4px 6px;
+      scrollbar-width: none; margin-bottom: 8px; white-space: nowrap;
     }
     .categories-row::-webkit-scrollbar { display: none; }
     .cat-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 7px 14px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      transition: all var(--transition);
-      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px; padding: 7px 14px; font-size: 0.8rem;
+      font-weight: 500; color: var(--text-secondary);
+      transition: all var(--transition); cursor: pointer;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .cat-chip .material-symbols-rounded { font-size: 18px; }
@@ -209,190 +198,95 @@
     .cat-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
 
     .listings-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 8px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
     }
     @media (min-width: 600px) { .listings-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (min-width: 900px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
     @media (min-width: 1100px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
 
+    /* Компактные карточки */
     .card {
-      background: var(--surface);
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      border: 1px solid var(--border);
-      transition: all var(--transition);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
+      background: var(--surface); border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--border);
+      transition: all var(--transition); cursor: pointer;
+      display: flex; flex-direction: column;
     }
     .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
     .card-img {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background: var(--border);
+      position: relative; width: 100%; aspect-ratio: 1 / 1; background: var(--border);
     }
     .card-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s;
+      width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;
     }
     .card:hover .card-img img { transform: scale(1.02); }
 
     .card-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(4px);
-      color: white;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.65rem;
-      font-weight: 600;
+      position: absolute; top: 6px; left: 6px;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+      color: white; padding: 2px 6px; border-radius: 10px;
+      font-size: 0.6rem; font-weight: 600;
     }
     .card-heart {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(4px);
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #aaa;
-      transition: 0.2s;
-      font-size: 18px;
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+      border-radius: 50%; width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #aaa; transition: 0.2s; font-size: 16px;
     }
     .card-heart.liked { color: var(--accent-heart); }
 
-    .card-body {
-      padding: 8px 10px;
-      flex: 0 0 auto;
-      display: flex;
-      flex-direction: column;
-    }
+    .card-body { padding: 6px 8px; flex: 0 0 auto; display: flex; flex-direction: column; }
     .card-price {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--accent-price);
-      margin-bottom: 2px;
-      line-height: 1.2;
+      font-weight: 700; font-size: 0.95rem; color: var(--accent-price);
+      margin-bottom: 1px; line-height: 1.2;
     }
     .card-title {
-      font-weight: 500;
-      font-size: 0.8rem;
-      color: var(--text-primary);
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 4px;
+      font-weight: 500; font-size: 0.75rem; color: var(--text-primary);
+      line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px;
     }
     .card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.65rem;
-      color: var(--text-tertiary);
-      margin-top: auto;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.6rem; color: var(--text-tertiary); margin-top: auto;
     }
-    .card-meta span {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
+    .card-meta span { display: flex; align-items: center; gap: 2px; }
 
     .detail-img {
-      width: 100%;
-      max-height: 300px;
-      object-fit: contain;
-      border-radius: 14px;
-      margin: 12px 0;
-      background: var(--border);
+      width: 100%; max-height: 300px; object-fit: contain;
+      border-radius: 14px; margin: 12px 0; background: var(--border);
     }
-    .detail-actions {
-      display: flex;
-      gap: 10px;
-      margin: 16px 0;
-    }
+    .detail-actions { display: flex; gap: 10px; margin: 16px 0; }
     .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 12px 20px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      flex: 1;
-      transition: background var(--transition);
+      background: var(--primary); color: white; border: none;
+      border-radius: 30px; padding: 12px 20px; font-weight: 600;
+      font-size: 0.9rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 6px;
+      flex: 1; transition: background var(--transition);
     }
-    .btn-outline {
-      background: transparent;
-      border: 1.5px solid var(--primary);
-      color: var(--primary);
-    }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
     .btn:hover { filter: brightness(1.1); }
 
     .input-field {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      font-family: var(--font);
-      background: var(--surface);
-      color: var(--text-primary);
+      width: 100%; padding: 14px 16px; border: 1px solid var(--border);
+      border-radius: 14px; font-size: 0.95rem; margin-bottom: 12px;
+      font-family: var(--font); background: var(--surface); color: var(--text-primary);
     }
 
     .select-field {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      font-family: var(--font);
-      background: var(--surface);
-      color: var(--text-primary);
-      appearance: none;
-      -webkit-appearance: none;
+      width: 100%; padding: 14px 16px; border: 1px solid var(--border);
+      border-radius: 14px; font-size: 0.95rem; margin-bottom: 12px;
+      font-family: var(--font); background: var(--surface); color: var(--text-primary);
+      appearance: none; -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 20px;
-      cursor: pointer;
+      background-repeat: no-repeat; background-position: right 12px center;
+      background-size: 20px; cursor: pointer;
     }
 
-    .stats-row {
-      display: flex;
-      gap: 8px;
-      margin: 16px 0;
-    }
+    .stats-row { display: flex; gap: 8px; margin: 16px 0; }
     .stat-box {
-      flex: 1;
-      background: var(--surface);
-      border-radius: 14px;
-      padding: 12px 8px;
-      text-align: center;
-      font-weight: 600;
+      flex: 1; background: var(--surface); border-radius: 14px;
+      padding: 12px 8px; text-align: center; font-weight: 600;
     }
 
     .toggle { position: relative; display: inline-block; width: 48px; height: 26px; }
@@ -402,161 +296,74 @@
     input:checked + .slider { background: var(--primary); }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    .condition-selector {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+    .condition-selector { display: flex; gap: 12px; margin-bottom: 16px; }
     .condition-option {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 500;
-      color: var(--text-secondary);
-      transition: all var(--transition);
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 12px; border: 1.5px solid var(--border);
+      border-radius: 14px; cursor: pointer; font-weight: 500;
+      color: var(--text-secondary); transition: all var(--transition);
       background: var(--surface);
     }
-    .condition-option.active {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      color: var(--primary);
-    }
-    .condition-option .material-symbols-rounded {
-      font-size: 20px;
-    }
+    .condition-option.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .condition-option .material-symbols-rounded { font-size: 20px; }
 
-    .photo-upload-area {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
+    .photo-upload-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .photo-thumb {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      object-fit: cover;
-      background: var(--border);
-      position: relative;
+      width: 80px; height: 80px; border-radius: 12px; object-fit: cover;
+      background: var(--border); position: relative;
     }
     .photo-thumb-remove {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      width: 22px;
-      height: 22px;
-      background: var(--accent-heart);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      cursor: pointer;
+      position: absolute; top: -4px; right: -4px; width: 22px; height: 22px;
+      background: var(--accent-heart); color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer;
     }
     .photo-upload-btn {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      border: 2px dashed var(--border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      color: var(--text-tertiary);
-      background: var(--surface);
-      transition: all var(--transition);
-      font-size: 0.7rem;
+      width: 80px; height: 80px; border-radius: 12px; border: 2px dashed var(--border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; cursor: pointer; color: var(--text-tertiary);
+      background: var(--surface); transition: all var(--transition); font-size: 0.7rem;
     }
-    .photo-upload-btn:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .photo-upload-btn .material-symbols-rounded {
-      font-size: 24px;
-    }
+    .photo-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .photo-upload-btn .material-symbols-rounded { font-size: 24px; }
 
-    .profile-avatar-wrapper {
-      position: relative;
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 12px;
-    }
-    .profile-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--primary-soft);
-    }
+    .profile-avatar-wrapper { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--primary-soft); }
     .profile-avatar-edit {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 28px;
-      height: 28px;
-      background: var(--primary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      border: 2px solid var(--bg);
+      position: absolute; bottom: 0; right: 0; width: 28px; height: 28px;
+      background: var(--primary); border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; color: white;
+      cursor: pointer; font-size: 16px; border: 2px solid var(--bg);
     }
-    .profile-edit-form {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .profile-edit-form .btn {
-      margin-top: 4px;
-    }
-    .hidden-file-input {
-      display: none;
-    }
+    .profile-edit-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .profile-edit-form .btn { margin-top: 4px; }
+    .hidden-file-input { display: none; }
 
-    /* Задача 1: Секция локации в профиле — визуально отделена */
     .profile-location-section {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
+      margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
     }
     .profile-location-section label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
+      display: block; font-size: 0.85rem; font-weight: 600;
+      color: var(--text-primary); margin-bottom: 8px;
     }
-    .profile-location-section .select-field {
-      margin-bottom: 16px;
-    }
+    .profile-location-section .select-field { margin-bottom: 0; }
   </style>
 </head>
 <body>
 <div id="app">
   <header class="header" id="main-header">
     <a href="/" class="logo" onclick="event.preventDefault(); window.location.reload();">
-      <img src="1.jpg" alt="Geran Express">
+      <img src="123.png" alt="Geran Express">
     </a>
 
     <div class="search-bar" id="search-trigger">
       <span class="material-symbols-rounded">search</span>
-      <span>поиск</span>
+      <span id="search-placeholder">ҷустуҷӯ</span>
     </div>
 
     <div class="header-actions">
+      <!-- Миниатюрная кнопка переключения языка -->
+      <button class="lang-flag-btn flag-tj" id="lang-switch-btn" title="Switch language"></button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
         <span class="badge-dot"></span>
@@ -569,10 +376,9 @@
 
   <main id="main-content">
     <div id="screen-home" class="screen active"></div>
-    <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px">Избранное</h2><div id="favorites-container" class="listings-grid"></div></div>
-    <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px">Мои публикации</h2><div id="my-container"></div></div>
+    <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
+    <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
     
-    <!-- Профиль: село визуально отделено от телефона (Задача 1) -->
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div class="profile-avatar-wrapper">
@@ -580,117 +386,283 @@
           <span class="profile-avatar-edit material-symbols-rounded" id="avatar-edit-btn">edit</span>
           <input type="file" id="avatar-file-input" class="hidden-file-input" accept="image/*">
         </div>
-        <h3 id="profile-name" style="margin-top:8px">Пользователь</h3>
+        <h3 id="profile-name" style="margin-top:8px">Корбар</h3>
         <p id="profile-phone" style="color:var(--text-secondary)"></p>
       </div>
       
-      <!-- Форма: имя и телефон -->
       <div class="profile-edit-form">
-        <input class="input-field" id="edit-name" placeholder="Имя" value="">
-        <input class="input-field" id="edit-phone" placeholder="Номер телефона" value="">
+        <input class="input-field" id="edit-name" placeholder="Ном">
+        <input class="input-field" id="edit-phone" placeholder="Рақами телефон">
       </div>
 
-      <!-- Задача 1: Выбор села в ОТДЕЛЬНОЙ визуальной секции -->
+      <!-- Только селект, без дублирующего текста -->
       <div class="profile-location-section">
-        <label for="edit-village">📍 Моё село</label>
+        <label for="edit-village" id="village-label">📍 Деҳаи ман</label>
         <select class="select-field" id="edit-village">
-          <option value="Дехаи Геран">Дехаи Геран</option>
-          <option value="Дехаи Дуввум">Дехаи Дуввум</option>
-          <option value="Дехаи Севвум">Дехаи Севвум</option>
-          <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+          <option value="Деҳаи Геран">Деҳаи Геран</option>
+          <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
+          <option value="Деҳаи Севвум">Деҳаи Севвум</option>
+          <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
         </select>
-        <p id="profile-village" style="color:var(--primary);font-size:0.85rem;font-weight:500;margin-bottom:12px;"></p>
       </div>
 
-      <button class="btn" id="save-profile-btn">Сохранить изменения</button>
+      <button class="btn" id="save-profile-btn" style="margin-top:16px;">Тағйиротро захира кунед</button>
 
       <div class="stats-row">
-        <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400">объявлений</small></div>
-        <div class="stat-box"><span id="stat-views">0</span><br><small style="font-weight:400">просмотров</small></div>
-        <div class="stat-box"><span id="stat-favs">0</span><br><small style="font-weight:400">избранных</small></div>
+        <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400" id="stat-listings-label">эълон</small></div>
+        <div class="stat-box"><span id="stat-views">0</span><br><small style="font-weight:400" id="stat-views-label">тамошо</small></div>
+        <div class="stat-box"><span id="stat-favs">0</span><br><small style="font-weight:400" id="stat-favs-label">интихобшуда</small></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)">
-        <span>Тёмная тема</span>
+        <span id="dark-theme-label">Реҷаи торик</span>
         <label class="toggle"><input type="checkbox" id="theme-checkbox"><span class="slider"></span></label>
       </div>
-      <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Выйти</button>
+      <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Баромад</button>
     </div>
 
-    <!-- Форма создания товара -->
     <div id="screen-create" class="screen">
-      <h2 style="margin:4px 0 12px">Новое объявление</h2>
-      <input class="input-field" id="create-title" placeholder="Название">
-      <textarea class="input-field" id="create-desc" placeholder="Описание" rows="3"></textarea>
+      <h2 style="margin:4px 0 12px" id="create-title-label">Эълони нав</h2>
+      <input class="input-field" id="create-title" placeholder="Ном">
+      <textarea class="input-field" id="create-desc" placeholder="Тавсиф" rows="3"></textarea>
       <select class="input-field" id="create-category">
-        <option value="Электроника">Электроника</option><option value="Одежда">Одежда</option><option value="Авто">Авто</option><option value="Услуги">Услуги</option><option value="Другое">Другое</option>
+        <option value="Электроника">Электроника</option><option value="Либос">Либос</option><option value="Авто">Авто</option><option value="Хизмат">Хизмат</option><option value="Дигар">Дигар</option>
       </select>
       
       <div class="condition-selector" id="condition-selector">
         <div class="condition-option active" data-condition="new">
-          <span class="material-symbols-rounded">new_releases</span> Новый
+          <span class="material-symbols-rounded">new_releases</span> <span class="cond-new-text">Нав</span>
         </div>
         <div class="condition-option" data-condition="used">
-          <span class="material-symbols-rounded">history</span> Б.у.
+          <span class="material-symbols-rounded">history</span> <span class="cond-used-text">Истифодашуда</span>
         </div>
       </div>
       
-      <!-- Задача 3: select деревни НЕ сбрасывает остальные поля -->
       <select class="select-field" id="create-village">
-        <option value="Дехаи Геран">Дехаи Геран</option>
-        <option value="Дехаи Дуввум">Дехаи Дуввум</option>
-        <option value="Дехаи Севвум">Дехаи Севвум</option>
-        <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+        <option value="Деҳаи Геран">Деҳаи Геран</option>
+        <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
+        <option value="Деҳаи Севвум">Деҳаи Севвум</option>
+        <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
       </select>
       
-      <input class="input-field" id="create-price" placeholder="Цена (с.)" type="number">
+      <input class="input-field" id="create-price" placeholder="Нарх (с.)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
       
       <div class="photo-upload-area" id="photo-upload-area">
         <div class="photo-upload-btn" id="photo-upload-btn">
           <span class="material-symbols-rounded">add_a_photo</span>
-          <span>Фото</span>
+          <span id="photo-upload-text">Сурат</span>
         </div>
       </div>
       <input type="file" id="photo-file-input" class="hidden-file-input" accept="image/*" multiple>
-      <button class="btn" id="submit-create">Опубликовать</button>
+      <button class="btn" id="submit-create">Нашр кунед</button>
     </div>
 
     <div id="screen-detail" class="screen"><span class="material-symbols-rounded" id="back-detail" style="cursor:pointer;font-size:28px;margin-bottom:8px;display:inline-block">arrow_back</span><div id="detail-content"></div></div>
     <div id="screen-search" class="screen">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
         <span class="material-symbols-rounded" id="back-search" style="cursor:pointer">arrow_back</span>
-        <input class="input-field" id="search-input" placeholder="Поиск по названию..." autofocus style="flex:1;margin-bottom:0">
+        <input class="input-field" id="search-input" placeholder="Ҷустуҷӯ аз рӯи ном..." autofocus style="flex:1;margin-bottom:0">
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <h1 style="color:var(--primary)">🌿 Geran Express</h1>
-        <p style="margin:12px 0 32px;color:var(--text-secondary)">Покупайте и продавайте рядом</p>
+        <p style="margin:12px 0 32px;color:var(--text-secondary)" id="login-subtitle">Дар наздикӣ харед ва фурӯшед</p>
         <input class="input-field" id="login-phone" placeholder="+992 900 123 456">
-        <button class="btn" id="login-btn" style="width:100%">Войти</button>
+        <button class="btn" id="login-btn" style="width:100%">Ворид</button>
       </div>
     </div>
   </main>
 
   <nav class="bottom-nav" id="bottom-nav">
-    <div class="nav-item active" data-tab="home"><span class="material-symbols-rounded">home</span><span>Главная</span></div>
-    <div class="nav-item" data-tab="favorites"><span class="material-symbols-rounded">favorite</span><span>Избранное</span></div>
+    <div class="nav-item active" data-tab="home"><span class="material-symbols-rounded">home</span><span class="nav-text" data-key="home">Асосӣ</span></div>
+    <div class="nav-item" data-tab="favorites"><span class="material-symbols-rounded">favorite</span><span class="nav-text" data-key="favorites">Интихобшуда</span></div>
     <div class="nav-item create-btn" data-tab="create"><span class="material-symbols-rounded">add</span></div>
-    <div class="nav-item" data-tab="my"><span class="material-symbols-rounded">list_alt</span><span>Публикации</span></div>
-    <div class="nav-item" data-tab="profile"><span class="material-symbols-rounded">person</span><span>Профиль</span></div>
+    <div class="nav-item" data-tab="my"><span class="material-symbols-rounded">list_alt</span><span class="nav-text" data-key="my">Эълонҳо</span></div>
+    <div class="nav-item" data-tab="profile"><span class="material-symbols-rounded">person</span><span class="nav-text" data-key="profile">Профил</span></div>
   </nav>
 </div>
 
 <script>
   (() => {
-    // Моментальный рендер иконок
     document.documentElement.classList.add('fonts-loaded');
-    document.fonts.ready.then(() => {
-      document.body.classList.add('fonts-loaded');
+    document.fonts.ready.then(() => document.body.classList.add('fonts-loaded'));
+
+    // ========== СИСТЕМА ПЕРЕВОДОВ ==========
+    const translations = {
+      tg: {
+        search: 'ҷустуҷӯ',
+        home: 'Асосӣ',
+        favorites: 'Интихобшуда',
+        my: 'Эълонҳо',
+        profile: 'Профил',
+        fav_title: 'Интихобшуда',
+        my_title: 'Эълонҳои ман',
+        user: 'Корбар',
+        edit_name: 'Ном',
+        edit_phone: 'Рақами телефон',
+        village_label: '📍 Деҳаи ман',
+        save_btn: 'Тағйиротро захира кунед',
+        listings_label: 'эълон',
+        views_label: 'тамошо',
+        favs_label: 'интихобшуда',
+        dark_theme: 'Реҷаи торик',
+        logout: 'Баромад',
+        create_title: 'Эълони нав',
+        title_placeholder: 'Ном',
+        desc_placeholder: 'Тавсиф',
+        cond_new: 'Нав',
+        cond_used: 'Истифодашуда',
+        price_placeholder: 'Нарх (с.)',
+        phone_placeholder: 'Телефон',
+        photo_btn: 'Сурат',
+        submit_btn: 'Нашр кунед',
+        login_subtitle: 'Дар наздикӣ харед ва фурӯшед',
+        login_btn: 'Ворид',
+        no_listings: 'Эълон нест',
+        no_favs: 'Интихобшуда нест',
+        no_my: 'Эълон нест',
+        no_search: 'Ҳеҷ чиз ёфт нашуд',
+        free: 'Ройгон',
+        call: 'Занг занед',
+        no_photo: 'Сурат нест',
+        profile_updated: 'Профил навсозӣ шуд!',
+        login_required: 'Барои илова ба интихобшуда ворид шавед',
+        fill_fields: 'Ном ва телефонро пур кунед',
+        delete_confirm: 'Эълонро нест кунед?',
+      },
+      ru: {
+        search: 'поиск',
+        home: 'Главная',
+        favorites: 'Избранное',
+        my: 'Публикации',
+        profile: 'Профиль',
+        fav_title: 'Избранное',
+        my_title: 'Мои публикации',
+        user: 'Пользователь',
+        edit_name: 'Имя',
+        edit_phone: 'Номер телефона',
+        village_label: '📍 моё село',
+        save_btn: 'Сохранить изменения',
+        listings_label: 'объявлений',
+        views_label: 'просмотров',
+        favs_label: 'избранных',
+        dark_theme: 'Тёмная тема',
+        logout: 'Выйти',
+        create_title: 'Новое объявление',
+        title_placeholder: 'Название',
+        desc_placeholder: 'Описание',
+        cond_new: 'Новый',
+        cond_used: 'Б.у.',
+        price_placeholder: 'Цена (с.)',
+        phone_placeholder: 'Телефон',
+        photo_btn: 'Фото',
+        submit_btn: 'Опубликовать',
+        login_subtitle: 'Покупайте и продавайте рядом',
+        login_btn: 'Войти',
+        no_listings: 'Нет объявлений',
+        no_favs: 'Нет избранных',
+        no_my: 'Нет публикаций',
+        no_search: 'Ничего не найдено',
+        free: 'Бесплатно',
+        call: 'Позвонить',
+        no_photo: 'Нет фото',
+        profile_updated: 'Профиль обновлён!',
+        login_required: 'Войдите, чтобы добавлять в избранное',
+        fill_fields: 'Заполните название и телефон',
+        delete_confirm: 'Удалить объявление?',
+      }
+    };
+
+    let currentLang = localStorage.getItem('geran_lang') || 'tg';
+    function t(key) { return translations[currentLang]?.[key] || translations['tg']?.[key] || key; }
+
+    function applyLanguage() {
+      document.documentElement.lang = currentLang;
+      const searchEl = document.getElementById('search-placeholder');
+      if (searchEl) searchEl.textContent = t('search');
+
+      const flagBtn = document.getElementById('lang-switch-btn');
+      if (flagBtn) {
+        flagBtn.className = 'lang-flag-btn ' + (currentLang === 'tg' ? 'flag-ru' : 'flag-tj');
+        flagBtn.title = currentLang === 'tg' ? 'Русский' : 'Тоҷикӣ';
+      }
+
+      document.querySelectorAll('.nav-text').forEach(el => {
+        const key = el.dataset.key;
+        if (key && t(key)) el.textContent = t(key);
+      });
+
+      const favTitle = document.getElementById('fav-title');
+      if (favTitle) favTitle.textContent = t('fav_title');
+      const myTitle = document.getElementById('my-title');
+      if (myTitle) myTitle.textContent = t('my_title');
+
+      const villageLabel = document.getElementById('village-label');
+      if (villageLabel) villageLabel.textContent = t('village_label');
+      const saveBtn = document.getElementById('save-profile-btn');
+      if (saveBtn) saveBtn.textContent = t('save_btn');
+      const listingsLabel = document.getElementById('stat-listings-label');
+      if (listingsLabel) listingsLabel.textContent = t('listings_label');
+      const viewsLabel = document.getElementById('stat-views-label');
+      if (viewsLabel) viewsLabel.textContent = t('views_label');
+      const favsLabel = document.getElementById('stat-favs-label');
+      if (favsLabel) favsLabel.textContent = t('favs_label');
+      const darkLabel = document.getElementById('dark-theme-label');
+      if (darkLabel) darkLabel.textContent = t('dark_theme');
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.textContent = t('logout');
+      const profileName = document.getElementById('profile-name');
+      if (profileName && !state.user?.name) profileName.textContent = t('user');
+      const editName = document.getElementById('edit-name');
+      if (editName) editName.placeholder = t('edit_name');
+      const editPhone = document.getElementById('edit-phone');
+      if (editPhone) editPhone.placeholder = t('edit_phone');
+
+      const createTitleLabel = document.getElementById('create-title-label');
+      if (createTitleLabel) createTitleLabel.textContent = t('create_title');
+      const createTitle = document.getElementById('create-title');
+      if (createTitle) createTitle.placeholder = t('title_placeholder');
+      const createDesc = document.getElementById('create-desc');
+      if (createDesc) createDesc.placeholder = t('desc_placeholder');
+      document.querySelectorAll('.cond-new-text').forEach(el => el.textContent = t('cond_new'));
+      document.querySelectorAll('.cond-used-text').forEach(el => el.textContent = t('cond_used'));
+      const createPrice = document.getElementById('create-price');
+      if (createPrice) createPrice.placeholder = t('price_placeholder');
+      const createPhone = document.getElementById('create-phone');
+      if (createPhone) createPhone.placeholder = t('phone_placeholder');
+      const photoText = document.getElementById('photo-upload-text');
+      if (photoText) photoText.textContent = t('photo_btn');
+      const submitBtn = document.getElementById('submit-create');
+      if (submitBtn) submitBtn.textContent = t('submit_btn');
+
+      const loginSub = document.getElementById('login-subtitle');
+      if (loginSub) loginSub.textContent = t('login_subtitle');
+      const loginBtn = document.getElementById('login-btn');
+      if (loginBtn) loginBtn.textContent = t('login_btn');
+
+      const villageNames = {
+        'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
+        'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
+        'Деҳаи Севвум': { tg: 'Деҳаи Севвум', ru: 'Дехаи Севвум' },
+        'Деҳаи Чахорум': { tg: 'Деҳаи Чахорум', ru: 'Дехаи Чахорум' },
+      };
+      document.querySelectorAll('#edit-village option, #create-village option').forEach(opt => {
+        const names = villageNames[opt.value];
+        if (names) opt.textContent = names[currentLang] || opt.value;
+      });
+
+      if (state.currentScreen) renderScreen(state.currentScreen);
+    }
+
+    document.getElementById('lang-switch-btn')?.addEventListener('click', () => {
+      currentLang = currentLang === 'tg' ? 'ru' : 'tg';
+      localStorage.setItem('geran_lang', currentLang);
+      applyLanguage();
     });
 
-    // Состояние
+    // ========== СОСТОЯНИЕ ==========
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
       listings: JSON.parse(localStorage.getItem('geran_listings')) || [],
@@ -705,16 +677,16 @@
 
     if (!state.listings.length) {
       state.listings = [
-        { id: '1', title: 'Смартфон Samsung Galaxy A54', desc: 'Отличное состояние, полный комплект, коробка.', price: 18000, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Дехаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
-        { id: '2', title: 'Ноутбук Lenovo IdeaPad 3', desc: '15.6", Ryzen 5, 8GB RAM, SSD 256GB.', price: 32000, isFree: false, category: 'Компьютеры', phone: '+992 999 234 567', village: 'Дехаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'used', isVIP: true },
-        { id: '3', title: 'Дрель электрическая Makita', desc: 'Мощная, с регулировкой оборотов.', price: 4500, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Дехаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
-        { id: '4', title: 'Диван угловой раскладной', desc: 'Ткань серого цвета, удобный.', price: 22000, isFree: false, category: 'Недвижимость', phone: '+992 999 456 789', village: 'Дехаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
-        { id: '5', title: 'Куртка зимняя мужская', desc: 'Размер L, состояние отличное.', price: 5000, isFree: false, category: 'Одежда', phone: '+992 999 567 890', village: 'Дехаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'used', isVIP: false }
+        { id: '1', title: 'Смартфон Samsung Galaxy A54', desc: 'Отличное состояние, полный комплект.', price: 18000, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: [], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
+        { id: '2', title: 'Ноутбук Lenovo IdeaPad 3', desc: '15.6", Ryzen 5, 8GB RAM.', price: 32000, isFree: false, category: 'Компьютеры', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: [], date: Date.now() - 2000000, userId: 'demo', condition: 'used', isVIP: true },
+        { id: '3', title: 'Дрель Makita', desc: 'Мощная, с регулировкой оборотов.', price: 4500, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: [], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
+        { id: '4', title: 'Диван угловой', desc: 'Ткань серого цвета, удобный.', price: 22000, isFree: false, category: 'Недвижимость', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: [], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
+        { id: '5', title: 'Куртка зимняя', desc: 'Размер L, состояние отличное.', price: 5000, isFree: false, category: 'Одежда', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: [], date: Date.now() - 7000000, userId: 'demo', condition: 'used', isVIP: false }
       ];
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
     }
 
-    const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'400\'%3E%3Crect width=\'400\' height=\'400\' fill=\'%23e5e7eb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-size=\'20\'%3EНет фото%3C/text%3E%3C/svg%3E';
+    const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
@@ -769,7 +741,7 @@
 
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
-      const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} с.`;
+      const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
       const img = l.images?.[0] || PLACEHOLDER_IMG;
       const vipBadge = l.isVIP ? '<div class="card-badge" style="background:#1e4a3b;">VIP</div>' : '';
       return `
@@ -785,7 +757,7 @@
             <div class="card-price">${priceText}</div>
             <div class="card-title">${l.title}</div>
             <div class="card-meta">
-              <span>📍 ${l.village || 'Дехаи Геран'}</span>
+              <span>📍 ${l.village || 'Деҳаи Геран'}</span>
               <span>${new Date(l.date).toLocaleDateString()}</span>
             </div>
           </div>
@@ -793,15 +765,10 @@
     }
 
     function renderCategories() {
-      const categories = ['Электроника','Компьютеры','Бытовая техника','Авто','Мото','Недвижимость','Инструменты','Запчасти','Одежда','Игры','Книги','Детские','Животные','Работа','Услуги','Разное'];
-      const icons = {
-        'Электроника':'smartphone','Компьютеры':'computer','Бытовая техника':'tv','Авто':'directions_car',
-        'Мото':'two_wheeler','Недвижимость':'home','Инструменты':'build','Запчасти':'build_circle',
-        'Одежда':'checkroom','Игры':'sports_esports','Книги':'book','Детские':'child_care',
-        'Животные':'pets','Работа':'work','Услуги':'handyman','Разное':'category'
-      };
+      const categories = ['Электроника','Либос','Авто','Хизмат','Дигар'];
+      const icons = { 'Электроника':'smartphone','Либос':'checkroom','Авто':'directions_car','Хизмат':'handyman','Дигар':'category' };
       let html = '<div class="categories-row">';
-      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> Все</div>`;
+      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> ${t('home')}</div>`;
       categories.forEach(cat => {
         html += `<div class="cat-chip ${state.activeCategory===cat?'active':''}" onclick="window._filterCategory('${cat}')"><span class="material-symbols-rounded">${icons[cat]||'label'}</span> ${cat}</div>`;
       });
@@ -811,7 +778,7 @@
     function renderHome() {
       let filtered = state.listings.filter(l => l.isActive !== false);
       if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
-      const gridHtml = filtered.length ? filtered.map(cardHTML).join('') : '<p style="padding:20px;text-align:center;">Нет объявлений</p>';
+      const gridHtml = filtered.length ? filtered.map(cardHTML).join('') : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
       screens.home.innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
     }
 
@@ -820,29 +787,28 @@
 
     function renderFavorites() {
       const favs = state.listings.filter(l => state.favorites.includes(l.id));
-      document.getElementById('favorites-container').innerHTML = favs.length ? favs.map(cardHTML).join('') : '<p>Нет избранных</p>';
+      document.getElementById('favorites-container').innerHTML = favs.length ? favs.map(cardHTML).join('') : `<p>${t('no_favs')}</p>`;
     }
 
     function renderMy() {
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('my-container').innerHTML = my.length ? my.map(l => `
         <div class="card" style="padding:14px;margin-bottom:10px">
-          <b>${l.title}</b> - ${l.isFree?'Бесплатно':l.price.toLocaleString()+' с.'}
+          <b>${l.title}</b> - ${l.isFree ? t('free') : l.price.toLocaleString()+' с.'}
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn btn-outline" style="flex:0;padding:8px 12px" onclick="window._editListing('${l.id}')">✏️</button>
             <button class="btn btn-outline" style="flex:0;padding:8px 12px;color:red;border-color:red" onclick="window._deleteListing('${l.id}')">🗑️</button>
           </div>
-        </div>`).join('') : '<p>Нет публикаций</p>';
+        </div>`).join('') : `<p>${t('no_my')}</p>`;
     }
 
     function renderProfile() {
       if (!state.user) { showScreen('login'); return; }
-      document.getElementById('profile-name').textContent = state.user?.name || 'Пользователь';
+      document.getElementById('profile-name').textContent = state.user?.name || t('user');
       document.getElementById('profile-phone').textContent = state.user?.phone || '';
-      document.getElementById('profile-village').textContent = '📍 ' + (state.user?.village || 'Дехаи Геран');
       document.getElementById('edit-name').value = state.user?.name || '';
       document.getElementById('edit-phone').value = state.user?.phone || '';
-      document.getElementById('edit-village').value = state.user?.village || 'Дехаи Геран';
+      document.getElementById('edit-village').value = state.user?.village || 'Деҳаи Геран';
       if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('stat-listings').textContent = my.length;
@@ -850,15 +816,14 @@
       document.getElementById('stat-favs').textContent = state.favorites.length;
     }
 
-    // Задача 3: renderCreateForm НЕ стирает поля, если форма уже открыта
     function renderCreateForm() {
-      if (state.currentScreen === 'create' && !state.editId) return; // защита от сброса при переключении select
-      if (state.editId) return; // при редактировании заполняется отдельно
+      if (state.currentScreen === 'create' && !state.editId) return;
+      if (state.editId) return;
       document.getElementById('create-title').value = '';
       document.getElementById('create-desc').value = '';
       document.getElementById('create-price').value = '';
       document.getElementById('create-phone').value = state.user?.phone || '';
-      document.getElementById('create-village').value = state.user?.village || 'Дехаи Геран';
+      document.getElementById('create-village').value = state.user?.village || 'Деҳаи Геран';
       state.selectedCondition = 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
         el.classList.toggle('active', el.dataset.condition === 'new');
@@ -888,7 +853,6 @@
       });
     }
 
-    // Обработчики формы создания (Задача 5, 9)
     document.getElementById('condition-selector')?.addEventListener('click', (e) => {
       const option = e.target.closest('.condition-option');
       if (!option) return;
@@ -907,7 +871,6 @@
       e.target.value = '';
     });
 
-    // Редактирование аватарки
     document.getElementById('avatar-edit-btn')?.addEventListener('click', () => document.getElementById('avatar-file-input').click());
     document.getElementById('avatar-file-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -919,7 +882,6 @@
       reader.readAsDataURL(file);
     });
 
-    // Сохранение профиля (Задача 1)
     document.getElementById('save-profile-btn')?.addEventListener('click', () => {
       if (!state.user) return;
       state.user.name = document.getElementById('edit-name').value.trim() || state.user.name;
@@ -927,19 +889,17 @@
       state.user.village = document.getElementById('edit-village').value;
       save();
       renderProfile();
-      alert('Профиль обновлён!');
+      alert(t('profile_updated'));
     });
 
-    // Задача 2: ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ КНОПКА ИЗБРАННОГО
     window._toggleFav = (id) => {
-      if (!state.user) return alert('Войдите, чтобы добавлять в избранное');
+      if (!state.user) return alert(t('login_required'));
       if (state.favorites.includes(id)) {
         state.favorites = state.favorites.filter(f => f !== id);
       } else {
         state.favorites.push(id);
       }
       save();
-      // Перерисовываем текущий экран — карточки и детальный просмотр обновятся
       renderScreen(state.currentScreen);
     };
 
@@ -947,16 +907,16 @@
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
       const img = l.images?.[0] || PLACEHOLDER_IMG;
-      const priceText = l.isFree ? 'Бесплатно' : `${l.price.toLocaleString()} с.`;
+      const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
       document.getElementById('detail-content').innerHTML = `
         <img src="${img}" class="detail-img">
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
-        <p>📍 ${l.village || 'Дехаи Геран'} · ${l.category} · ${l.condition==='new'?'Новый':'Б.у.'}</p>
+        <p>📍 ${l.village || 'Деҳаи Геран'} · ${l.category} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
         <div class="detail-actions">
-          <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>Позвонить</a>
+          <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>${t('call')}</a>
           <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span></button>
         </div>`;
       showScreen('detail');
@@ -965,7 +925,7 @@
     function renderSearch() {
       const q = state.searchQuery.toLowerCase();
       const results = state.listings.filter(l => l.title.toLowerCase().includes(q));
-      document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : '<p>Ничего не найдено</p>';
+      document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : `<p>${t('no_search')}</p>`;
     }
 
     window._editListing = (id) => {
@@ -977,7 +937,7 @@
       document.getElementById('create-category').value = l.category;
       document.getElementById('create-price').value = l.price;
       document.getElementById('create-phone').value = l.phone;
-      document.getElementById('create-village').value = l.village || 'Дехаи Геран';
+      document.getElementById('create-village').value = l.village || 'Деҳаи Геран';
       state.selectedCondition = l.condition || 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.toggle('active', el.dataset.condition === state.selectedCondition));
       state.uploadedPhotos = [...(l.images || [])];
@@ -986,14 +946,13 @@
     };
 
     window._deleteListing = (id) => {
-      if (confirm('Удалить объявление?')) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
+      if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
-    // Отправка формы (Задача 3: данные НЕ теряются из-за select)
     document.getElementById('submit-create').addEventListener('click', () => {
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
-      if (!title || !phone) return alert('Заполните название и телефон');
+      if (!title || !phone) return alert(t('fill_fields'));
       const data = {
         id: state.editId || 'id_'+Date.now(), title,
         desc: document.getElementById('create-desc').value,
@@ -1019,7 +978,6 @@
       showScreen('home');
     });
 
-    // Навигация
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
     document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
@@ -1029,7 +987,7 @@
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
       if (phone) {
-        state.user = { uid: 'user_'+Date.now(), phone, name: 'Пользователь', avatar: null, village: 'Дехаи Геран' };
+        state.user = { uid: 'user_'+Date.now(), phone, name: '', avatar: null, village: 'Деҳаи Геран' };
         localStorage.setItem('geran_user', JSON.stringify(state.user));
         showScreen('home');
       }
@@ -1041,6 +999,8 @@
     document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
 
     if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
+
+    applyLanguage();
     state.user ? showScreen('home') : showScreen('login');
   })();
 </script>

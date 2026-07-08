@@ -8,6 +8,7 @@
   <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     :root{
       --font:'Inter',system-ui,-apple-system,sans-serif;
       --bg:#ffffff;--surface:#f7f7f9;--text-primary:#1a1a1a;
@@ -631,9 +632,12 @@
         login_required: 'Барои илова ба интихобшуда ворид шавед',
         fill_fields: 'Ном ва телефонро пур кунед',
         delete_confirm: 'Эълонро нест кунед?',
-        min_photos: 'Илтимос, ҳадди ақал 5 сурат бор кунед!',
+        min_photos: 'Илтимос, ҳадди ақал 1 сурат бор кунед (максимум 5)!',
+        max_photos: 'Шумо метавонед ҳадди аксар 5 сурат бор кунед!',
         upload_error: 'Хатогӣ дар боргузории суратҳо!',
         cloud_save_error: 'Хатогӣ дар сабти абрӣ!',
+        publishing: 'Нашр шуда истодааст...',
+        published: 'Тайёр! 🎉',
         // Категории
         cat_all: 'Ҳама',
         cat_electronics: 'Электроника',
@@ -690,9 +694,12 @@
         login_required: 'Войдите, чтобы добавлять в избранное',
         fill_fields: 'Заполните название и телефон',
         delete_confirm: 'Удалить объявление?',
-        min_photos: 'Пожалуйста, загрузите минимум 5 изображений!',
+        min_photos: 'Пожалуйста, загрузите хотя бы 1 фотографию (максимум 5)!',
+        max_photos: 'Вы можете загрузить не более 5 изображений!',
         upload_error: 'Ошибка загрузки изображений!',
         cloud_save_error: 'Ошибка сохранения в облаке!',
+        publishing: 'Публикация...',
+        published: 'Готово! 🎉',
         // Категории
         cat_all: 'Все',
         cat_electronics: 'Электроника',
@@ -1089,9 +1096,15 @@
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          selectedImages.push(ev.target.result);
+          if (selectedImages.length < 5) {
+            selectedImages.push(ev.target.result);
+          }
           loaded++;
           if (loaded === files.length) {
+            if (selectedImages.length > 5) {
+              selectedImages = selectedImages.slice(0, 5);
+              alert(t('max_photos'));
+            }
             renderSelectedPhotos();
           }
         };
@@ -1232,13 +1245,24 @@
     }
 
     document.getElementById('submit-create').addEventListener('click', async () => {
-      if (selectedImages.length < 5) {
+      const submitBtn = document.getElementById('submit-create');
+      
+      // Валидация: минимум 1 фото, максимум 5
+      if (selectedImages.length < 1) {
         alert(t('min_photos'));
         return;
       }
+
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert(t('fill_fields'));
+
+      // Блокируем кнопку и показываем анимацию загрузки
+      submitBtn.setAttribute('disabled', 'true');
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.pointerEvents = 'none';
+      submitBtn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;">sync</span> ' + t('publishing');
+
       const data = {
         id: state.editId || 'id_'+Date.now(), title,
         desc: document.getElementById('create-desc').value,
@@ -1252,23 +1276,49 @@
         condition: state.selectedCondition,
         isActive: true, isVIP: false
       };
-      if (state.editId) {
-        const idx = state.listings.findIndex(l => l.id === state.editId);
-        if (idx !== -1) state.listings[idx] = { ...state.listings[idx], ...data };
-        state.editId = null;
-      } else {
-        state.listings.unshift(data);
-      }
 
-      // Сохраняем в Firestore если доступен
-      if (firebaseReady && db) {
-        await saveProductToCloud(data);
-      }
+      try {
+        if (state.editId) {
+          const idx = state.listings.findIndex(l => l.id === state.editId);
+          if (idx !== -1) state.listings[idx] = { ...state.listings[idx], ...data };
+          state.editId = null;
+        } else {
+          state.listings.unshift(data);
+        }
 
-      selectedImages = [];
-      renderSelectedPhotos();
-      save();
-      showScreen('home');
+        // Сохраняем в Firestore если доступен
+        if (firebaseReady && db) {
+          await saveProductToCloud(data);
+        }
+
+        // Успешная публикация
+        submitBtn.innerHTML = t('published');
+        submitBtn.style.backgroundColor = '#4CAF50';
+        
+        selectedImages = [];
+        renderSelectedPhotos();
+        save();
+        
+        setTimeout(() => {
+          showScreen('home');
+          // Восстанавливаем кнопку для следующего использования
+          submitBtn.removeAttribute('disabled');
+          submitBtn.style.opacity = '1';
+          submitBtn.style.pointerEvents = 'auto';
+          submitBtn.style.backgroundColor = '';
+          submitBtn.innerHTML = t('submit_btn');
+        }, 1500);
+
+      } catch (error) {
+        console.error('Ошибка при публикации:', error);
+        alert(t('cloud_save_error'));
+        // Восстанавливаем кнопку при ошибке
+        submitBtn.removeAttribute('disabled');
+        submitBtn.style.opacity = '1';
+        submitBtn.style.pointerEvents = 'auto';
+        submitBtn.style.backgroundColor = '';
+        submitBtn.innerHTML = t('submit_btn');
+      }
     });
 
     // ========== ВАЛИДАЦИЯ И БЛОКИРОВКА КНОПКИ ВХОДА ==========

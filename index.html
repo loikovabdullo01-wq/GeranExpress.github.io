@@ -515,7 +515,8 @@
           <span id="photo-upload-text">Сурат</span>
         </div>
       </div>
-      <input type="file" id="photo-file-input" class="hidden-file-input" accept="image/*" multiple>
+      <input type="file" id="create-photo-input" accept="image/*" multiple style="display:none;">
+      <div id="photo-previews-container" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;"></div>
       <button class="btn" id="submit-create">Нашр кунед</button>
     </div>
 
@@ -552,6 +553,8 @@
   </nav>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
   (() => {
     // Отслеживание загрузки шрифтов для предотвращения FOIT
@@ -561,6 +564,27 @@
       });
     } else {
       document.documentElement.classList.add('fonts-loaded');
+    }
+
+    // ========== FIREBASE КОНФИГУРАЦИЯ ==========
+    const firebaseConfig = {
+      apiKey: "AIzaSyDummyKeyForDevPurposes",
+      authDomain: "geran-express-dev.firebaseapp.com",
+      projectId: "geran-express-dev",
+      storageBucket: "geran-express-dev.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcdef1234567890abcdef"
+    };
+
+    // Инициализация Firebase
+    let db = null;
+    let firebaseReady = false;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      firebaseReady = true;
+    } catch (e) {
+      console.warn('Firebase инициализирован в оффлайн-режиме или с ошибкой:', e.message);
     }
 
     // ========== СИСТЕМА ПЕРЕВОДОВ ==========
@@ -607,6 +631,9 @@
         login_required: 'Барои илова ба интихобшуда ворид шавед',
         fill_fields: 'Ном ва телефонро пур кунед',
         delete_confirm: 'Эълонро нест кунед?',
+        min_photos: 'Илтимос, ҳадди ақал 5 сурат бор кунед!',
+        upload_error: 'Хатогӣ дар боргузории суратҳо!',
+        cloud_save_error: 'Хатогӣ дар сабти абрӣ!',
         // Категории
         cat_all: 'Ҳама',
         cat_electronics: 'Электроника',
@@ -663,6 +690,9 @@
         login_required: 'Войдите, чтобы добавлять в избранное',
         fill_fields: 'Заполните название и телефон',
         delete_confirm: 'Удалить объявление?',
+        min_photos: 'Пожалуйста, загрузите минимум 5 изображений!',
+        upload_error: 'Ошибка загрузки изображений!',
+        cloud_save_error: 'Ошибка сохранения в облаке!',
         // Категории
         cat_all: 'Все',
         cat_electronics: 'Электроника',
@@ -790,13 +820,13 @@
       applyLanguage();
     });
 
-    // ========== ИСПРАВЛЕННЫЙ МАССИВ ТОВАРОВ С РАБОЧИМИ ССЫЛКАМИ ==========
+    // ========== МАССИВ ТОВАРОВ С ЛОКАЛЬНЫМИ КАРТИНКАМИ ==========
     const DEFAULT_LISTINGS = [
-      { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: ['https://images.unsplash.com/photo-1657664078596-2b1e1b1e1b1e?w=400&h=400&fit=crop'], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
-      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=400&fit=crop'], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
-      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=400&fit=crop'], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
-      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: ['15.jpg'], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
-      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop'], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
+      { id: '1', title: 'USB флешка', desc: 'Высокоскоростная флешка на 64 ГБ, металлическая.', price: 120, isFree: false, category: 'Электроника', phone: '+992 999 123 456', village: 'Деҳаи Геран', images: ['1.jpg'], date: Date.now() - 1000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Дуввум', images: ['2.jpg'], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
+      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Севвум', images: ['15.jpg'], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
+      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Чахорум', images: ['11.png'], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
+      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: ['33.jpg'], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
     ];
 
     // ========== СОСТОЯНИЕ ==========
@@ -811,6 +841,23 @@
       selectedCondition: 'new',
       uploadedPhotos: [],
     };
+
+    let selectedImages = [];
+
+    // ========== УМНЫЙ АНАЛИЗАТОР ПУТИ К КАРТИНКЕ ==========
+    function getFinalImageSrc(rawImg) {
+      let finalSrc = 'картинки/123.png';
+      if (rawImg) {
+        if (rawImg.startsWith('data:image/') || rawImg.startsWith('http://') || rawImg.startsWith('https://')) {
+          finalSrc = rawImg;
+        } else if (rawImg.startsWith('картинки/')) {
+          finalSrc = rawImg;
+        } else {
+          finalSrc = 'картинки/' + rawImg;
+        }
+      }
+      return finalSrc;
+    }
 
     (function initListings() {
       const storedListings = localStorage.getItem('geran_listings');
@@ -827,7 +874,7 @@
       }
     })();
 
-    const PLACEHOLDER_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="#e5e7eb"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-size="20">Нет фото</text></svg>');
+    const PLACEHOLDER_IMG = 'картинки/123.png';
 
     const save = () => {
       localStorage.setItem('geran_listings', JSON.stringify(state.listings));
@@ -880,16 +927,20 @@
       }
     }
 
-    // Функция отрисовки карточек — берёт listing.images[0]
+    // Функция отрисовки карточек с умным анализатором пути
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
       const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
-      const img = l.images?.[0] || PLACEHOLDER_IMG;
+      let rawImg = (l.images && l.images.length > 0) ? l.images[0] : '';
+      let finalSrc = getFinalImageSrc(rawImg);
+      if (!rawImg && l.image) {
+        finalSrc = getFinalImageSrc(l.image);
+      }
       const vipBadge = l.isVIP ? '<div class="card-badge" style="background:#1e4a3b;">VIP</div>' : '';
       return `
         <div class="card" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
-            <img src="${img}" alt="" onerror="this.style.display='none'; this.parentElement.style.background='var(--border)';">
+            <img src="${finalSrc}" class="card-img" alt="${l.title}" onerror="this.src='${PLACEHOLDER_IMG}'">
             ${vipBadge}
             <div class="card-heart ${liked?'liked':''}" onclick="event.stopPropagation(); window._toggleFav('${l.id}')">
               <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
@@ -983,8 +1034,30 @@
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
         el.classList.toggle('active', el.dataset.condition === 'new');
       });
-      state.uploadedPhotos = [];
-      renderPhotoThumbs();
+      selectedImages = [];
+      renderSelectedPhotos();
+    }
+
+    function renderSelectedPhotos() {
+      const container = document.getElementById('photo-previews-container');
+      if (!container) return;
+      container.innerHTML = '';
+      selectedImages.forEach((photo, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+        thumb.style.position = 'relative';
+        thumb.style.width = '60px';
+        thumb.style.height = '60px';
+        thumb.innerHTML = `<img src="${photo}" alt=""><span class="photo-thumb-remove" data-index="${index}">×</span>`;
+        container.appendChild(thumb);
+      });
+      container.querySelectorAll('.photo-thumb-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedImages.splice(parseInt(btn.dataset.index), 1);
+          renderSelectedPhotos();
+        });
+      });
     }
 
     function renderPhotoThumbs() {
@@ -1016,18 +1089,19 @@
       state.selectedCondition = option.dataset.condition;
     });
 
-    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('photo-file-input').click());
-    document.getElementById('photo-file-input')?.addEventListener('change', (e) => {
+    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('create-photo-input').click());
+
+    document.getElementById('create-photo-input')?.addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
       let loaded = 0;
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          state.uploadedPhotos.push(ev.target.result);
+          selectedImages.push(ev.target.result);
           loaded++;
           if (loaded === files.length) {
-            renderPhotoThumbs();
+            renderSelectedPhotos();
           }
         };
         reader.readAsDataURL(file);
@@ -1070,11 +1144,22 @@
     window._openDetail = (id) => {
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
-      const img = l.images?.[0] || PLACEHOLDER_IMG;
+      let rawImg = (l.images && l.images.length > 0) ? l.images[0] : '';
+      let finalSrc = getFinalImageSrc(rawImg);
+      if (!rawImg && l.image) {
+        finalSrc = getFinalImageSrc(l.image);
+      }
       const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
+      let allImagesHtml = '';
+      if (l.images && l.images.length > 0) {
+        allImagesHtml = l.images.map(img => {
+          let imgFinal = getFinalImageSrc(img);
+          return `<img src="${imgFinal}" class="detail-img" onerror="this.style.display='none';" style="margin-bottom:8px;">`;
+        }).join('');
+      }
       document.getElementById('detail-content').innerHTML = `
-        <img src="${img}" class="detail-img" onerror="this.style.display='none';">
+        ${allImagesHtml || `<img src="${finalSrc}" class="detail-img" onerror="this.style.display='none';">`}
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
@@ -1104,8 +1189,8 @@
       document.getElementById('create-village').value = l.village || 'Деҳаи Геран';
       state.selectedCondition = l.condition || 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.toggle('active', el.dataset.condition === state.selectedCondition));
-      state.uploadedPhotos = [...(l.images || [])];
-      renderPhotoThumbs();
+      selectedImages = [...(l.images || [])];
+      renderSelectedPhotos();
       showScreen('create');
     };
 
@@ -1113,7 +1198,48 @@
       if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
-    document.getElementById('submit-create').addEventListener('click', () => {
+    // ========== СОХРАНЕНИЕ В FIREBASE FIRESTORE ==========
+    async function saveProductToCloud(productData) {
+      if (!db || !firebaseReady) {
+        console.warn('Firebase не доступен, сохраняем локально');
+        return null;
+      }
+      try {
+        const docRef = await firebase.firestore().collection('geran_products').add(productData);
+        console.log('Продукт сохранен в Firestore с ID:', docRef.id);
+        return docRef.id;
+      } catch (error) {
+        console.error('Ошибка сохранения в Firestore:', error);
+        alert(t('cloud_save_error'));
+        return null;
+      }
+    }
+
+    // ========== ЗАГРУЗКА ПРОДУКТОВ ИЗ FIREBASE FIRESTORE ==========
+    async function loadProductsFromCloud() {
+      if (!db || !firebaseReady) {
+        console.warn('Firebase не доступен, используются локальные данные');
+        return [];
+      }
+      try {
+        const querySnapshot = await firebase.firestore().collection('geran_products').get();
+        const cloudProducts = [];
+        querySnapshot.forEach((doc) => {
+          cloudProducts.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('Загружено продуктов из облака:', cloudProducts.length);
+        return cloudProducts;
+      } catch (error) {
+        console.error('Ошибка загрузки из Firestore:', error);
+        return [];
+      }
+    }
+
+    document.getElementById('submit-create').addEventListener('click', async () => {
+      if (selectedImages.length < 5) {
+        alert(t('min_photos'));
+        return;
+      }
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert(t('fill_fields'));
@@ -1124,7 +1250,7 @@
         price: parseInt(document.getElementById('create-price').value) || 0,
         isFree: false, phone,
         village: document.getElementById('create-village').value,
-        images: [...state.uploadedPhotos],
+        images: [...selectedImages],
         date: Date.now(),
         userId: state.user?.uid || 'demo',
         condition: state.selectedCondition,
@@ -1137,7 +1263,14 @@
       } else {
         state.listings.unshift(data);
       }
-      state.uploadedPhotos = [];
+
+      // Сохраняем в Firestore если доступен
+      if (firebaseReady && db) {
+        await saveProductToCloud(data);
+      }
+
+      selectedImages = [];
+      renderSelectedPhotos();
       save();
       showScreen('home');
     });
@@ -1198,8 +1331,24 @@
 
     if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
 
-    applyLanguage();
-    state.user ? showScreen('home') : showScreen('login');
+    // ========== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ==========
+    async function initializeApp() {
+      applyLanguage();
+
+      // Загружаем продукты из облака
+      const cloudProducts = await loadProductsFromCloud();
+      if (cloudProducts.length > 0) {
+        // Объединяем с локальными (облачные имеют приоритет)
+        const localIds = new Set(state.listings.map(l => l.id));
+        const newCloudProducts = cloudProducts.filter(p => !localIds.has(p.id));
+        state.listings = [...state.listings, ...newCloudProducts];
+        save();
+      }
+
+      state.user ? showScreen('home') : showScreen('login');
+    }
+
+    initializeApp();
   })();
 </script>
 </body>

@@ -68,6 +68,17 @@
     .material-symbols-rounded{font-display:block;visibility:hidden}
     .fonts-loaded .material-symbols-rounded{visibility:visible}
     body.dark .logo img{filter:invert(1) hue-rotate(180deg)!important;mix-blend-mode:screen}
+    
+    /* Прячем текст иконок по умолчанию, пока шрифт загружается */
+    .material-symbols-rounded {
+      color: transparent !important;
+      font-size: 0px !important;
+      overflow: hidden;
+    }
+    .fonts-loaded .material-symbols-rounded {
+      color: inherit !important;
+      font-size: 24px !important;
+    }
   </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -356,6 +367,17 @@
       margin-left: auto;
       margin-right: auto;
     }
+
+    /* Прячем текст иконок по умолчанию, пока шрифт загружается */
+    .material-symbols-rounded {
+      color: transparent !important;
+      overflow: hidden;
+    }
+
+    /* Показываем иконки только тогда, когда класс шрифта успешно добавлен */
+    .fonts-loaded .material-symbols-rounded {
+      color: inherit !important;
+    }
   </style>
 </head>
 <body>
@@ -459,7 +481,7 @@
         <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
       </select>
       
-      <input class="input-field" id="create-price" placeholder="Нарх (с.)" type="number">
+      <input class="input-field" id="create-price" placeholder="Нарх (с)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
       
       <!-- ОБЛАСТЬ ЗАГРУЗКИ ФОТО -->
@@ -485,9 +507,12 @@
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <img src="123.png" alt="Geran Express" class="login-logo">
-        <p style="margin:12px 0 32px;color:var(--text-secondary)" id="login-subtitle">Дар наздикӣ харед ва фурӯшед</p>
-        <input class="input-field" id="login-phone" placeholder="+992 900 123 456">
-        <button class="btn" id="login-btn" style="width:100%">Ворид</button>
+        <p style="margin:12px 0 32px;color:var(--text-secondary)" id="login-subtitle">дар наздикӣ харед е</p>
+        <input type="text" inputmode="numeric" maxlength="10" class="input-field" id="login-phone" placeholder="971 220 800">
+        <button class="btn" id="login-btn" style="width:100%">Войти</button>
+        <div style="margin-top: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+          From Loikov Project © компания Geran Express. Все права защищены 2026
+        </div>
       </div>
     </div>
   </main>
@@ -503,8 +528,14 @@
 
 <script>
   (() => {
-    document.documentElement.classList.add('fonts-loaded');
-    document.fonts.ready.then(() => document.body.classList.add('fonts-loaded'));
+    // Отслеживание загрузки шрифтов для предотвращения FOIT
+    if ('fonts' in document) {
+      document.fonts.ready.then(() => {
+        document.documentElement.classList.add('fonts-loaded');
+      });
+    } else {
+      document.documentElement.classList.add('fonts-loaded');
+    }
 
     // ========== СИСТЕМА ПЕРЕВОДОВ ==========
     const translations = {
@@ -1077,6 +1108,40 @@
       save();
       showScreen('home');
     });
+
+    // ========== ВАЛИДАЦИЯ И БЛОКИРОВКА КНОПКИ ВХОДА ==========
+    function validateLoginPhone() {
+      const phoneInput = document.getElementById('login-phone');
+      const loginBtn = document.getElementById('login-btn');
+      if (!phoneInput || !loginBtn) return;
+      
+      const digitsCount = phoneInput.value.length;
+      
+      if (digitsCount < 6 || digitsCount > 10) {
+        loginBtn.disabled = true;
+        loginBtn.style.opacity = '0.5';
+        loginBtn.style.pointerEvents = 'none';
+      } else {
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = '1';
+        loginBtn.style.pointerEvents = 'auto';
+      }
+    }
+
+    // Обработчик ввода в поле телефона
+    document.getElementById('login-phone').addEventListener('input', function (e) {
+      // Мгновенно удаляет всё, кроме цифр
+      this.value = this.value.replace(/\D/g, '');
+      // Обрезаем длину до 10 цифр
+      if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10);
+      }
+      // Проверяем валидацию
+      validateLoginPhone();
+    });
+
+    // Блокируем кнопку при загрузке, если поле пустое
+    validateLoginPhone();
 
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));

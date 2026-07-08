@@ -378,6 +378,19 @@
     .fonts-loaded .material-symbols-rounded {
       color: inherit !important;
     }
+
+.categories-row > div, 
+.categories-row > button {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    gap: 6px !important;
+}
+
+.categories-row .material-symbols-rounded {
+    font-size: 18px !important;
+}
+
+
   </style>
 </head>
 <body>
@@ -413,7 +426,8 @@
       <div style="text-align:center;margin:20px 0">
         <div class="profile-avatar-wrapper">
           <img id="profile-avatar-img" class="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23e6f0eb'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%231e4a3b' font-size='32' dy='.1em'%3E👤%3C/text%3E%3C/svg%3E" alt="Аватар">
-          <span class="profile-avatar-edit material-symbols-rounded" id="avatar-edit-btn">edit</span>
+       <span class="profile-avatar-edit material-symbols-rounded" id="avatar-edit-btn" style="background-color: #4CAF50 !important; color: #ffffff !important;">edit</span>
+
           <input type="file" id="avatar-file-input" class="hidden-file-input" accept="image/*">
         </div>
         <h3 id="profile-name" style="margin-top:8px">Корбар</h3>
@@ -461,8 +475,18 @@
       <h2 style="margin:4px 0 12px" id="create-title-label">Эълони нав</h2>
       <input class="input-field" id="create-title" placeholder="Ном">
       <textarea class="input-field" id="create-desc" placeholder="Тавсиф" rows="3"></textarea>
-      <select class="input-field" id="create-category">
-        <option value="Электроника">Электроника</option><option value="Либос">Либос</option><option value="Авто">Авто</option><option value="Хизмат">Хизмат</option><option value="Дигар">Дигар</option>
+      <select id="create-category" class="input-field">
+        <option value="electronics">Электроника</option>
+        <option value="computers">Компьютеры</option>
+        <option value="appliances">Бытовая техника</option>
+        <option value="auto">Авто</option>
+        <option value="moto">Мото</option>
+        <option value="realestate">Недвижимость</option>
+        <option value="tools">Инструменты</option>
+        <option value="parts">Запчасти</option>
+        <option value="clothes">Одежда</option>
+        <option value="services">Услуги</option>
+        <option value="other">Другое</option>
       </select>
       
       <div class="condition-selector" id="condition-selector">
@@ -742,6 +766,13 @@
       document.querySelectorAll('#edit-village option, #create-village option').forEach(opt => {
         const names = villageNames[opt.value];
         if (names) opt.textContent = names[currentLang] || opt.value;
+      });
+
+      document.querySelectorAll('#create-category option').forEach(opt => {
+        const translationKey = 'cat_' + opt.value;
+        if (translations[currentLang] && translations[currentLang][translationKey]) {
+          opt.textContent = translations[currentLang][translationKey];
+        }
       });
 
       if (state.currentScreen) renderScreen(state.currentScreen);

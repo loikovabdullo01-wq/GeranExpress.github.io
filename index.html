@@ -8,7 +8,6 @@
   <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     :root{
       --font:'Inter',system-ui,-apple-system,sans-serif;
       --bg:#ffffff;--surface:#f7f7f9;--text-primary:#1a1a1a;
@@ -406,6 +405,23 @@
       <span id="search-placeholder">ҷустуҷӯ</span>
     </div>
 
+<!-- 1. Для старых версий Internet Explorer и базовой поддержки -->
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+<!-- 2. Главная иконка в современном формате SVG (отлично масштабируется) -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+<!-- 3. Стандартная иконка в формате PNG для большинства браузеров -->
+<link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+
+<!-- 4. Для устройств Apple (iOS / Safari) при добавлении на главный экран -->
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<!-- 5. Для Android и веб-приложений (PWA) -->
+<link rel="manifest" href="/site.webmanifest">
+
+
     <div class="header-actions">
       <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
@@ -632,12 +648,9 @@
         login_required: 'Барои илова ба интихобшуда ворид шавед',
         fill_fields: 'Ном ва телефонро пур кунед',
         delete_confirm: 'Эълонро нест кунед?',
-        min_photos: 'Илтимос, ҳадди ақал 1 сурат бор кунед (максимум 5)!',
-        max_photos: 'Шумо метавонед ҳадди аксар 5 сурат бор кунед!',
+        min_photos: 'Илтимос, ҳадди ақал 5 сурат бор кунед!',
         upload_error: 'Хатогӣ дар боргузории суратҳо!',
         cloud_save_error: 'Хатогӣ дар сабти абрӣ!',
-        publishing: 'Нашр шуда истодааст...',
-        published: 'Тайёр! 🎉',
         // Категории
         cat_all: 'Ҳама',
         cat_electronics: 'Электроника',
@@ -694,12 +707,9 @@
         login_required: 'Войдите, чтобы добавлять в избранное',
         fill_fields: 'Заполните название и телефон',
         delete_confirm: 'Удалить объявление?',
-        min_photos: 'Пожалуйста, загрузите хотя бы 1 фотографию (максимум 5)!',
-        max_photos: 'Вы можете загрузить не более 5 изображений!',
+        min_photos: 'Пожалуйста, загрузите минимум 5 изображений!',
         upload_error: 'Ошибка загрузки изображений!',
         cloud_save_error: 'Ошибка сохранения в облаке!',
-        publishing: 'Публикация...',
-        published: 'Готово! 🎉',
         // Категории
         cat_all: 'Все',
         cat_electronics: 'Электроника',
@@ -829,11 +839,10 @@
 
     // ========== МАССИВ ТОВАРОВ С ЛОКАЛЬНЫМИ КАРТИНКАМИ ==========
     const DEFAULT_LISTINGS = [
-      { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-      { id: '2', title: 'Зарядник', desc: 'Быстрая зарядка Type-C мощностью 33W.', price: 90, isFree: false, category: 'Электроника', phone: '+992 999 234 567', village: 'Деҳаи Геран', images: ['77.jpg'], date: Date.now() - 2000000, userId: 'demo', condition: 'new', isVIP: true },
-      { id: '3', title: 'Шуруповерт', desc: 'Аккумуляторный, с двумя батареями.', price: 450, isFree: false, category: 'Инструменты', phone: '+992 999 345 678', village: 'Деҳаи Геран', images: ['77.jpg'], date: Date.now() - 3000000, userId: 'demo', condition: 'used', isVIP: false },
-      { id: '4', title: 'Мышка', desc: 'Беспроводная компьютерная мышь, тихая.', price: 85, isFree: false, category: 'Компьютеры', phone: '+992 999 456 789', village: 'Деҳаи Геран', images: ['15.jpg'], date: Date.now() - 5000000, userId: 'demo', condition: 'new', isVIP: false },
-      { id: '5', title: 'Наушники', desc: 'Блютуз наушники с отличным басом.', price: 250, isFree: false, category: 'Электроника', phone: '+992 999 567 890', village: 'Деҳаи Геран', images: ['77.jpg'], date: Date.now() - 7000000, userId: 'demo', condition: 'new', isVIP: false }
+      { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['31.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
+      { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: 50, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['32.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
+
+
     ];
 
     // ========== СОСТОЯНИЕ ==========
@@ -1096,15 +1105,9 @@
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          if (selectedImages.length < 5) {
-            selectedImages.push(ev.target.result);
-          }
+          selectedImages.push(ev.target.result);
           loaded++;
           if (loaded === files.length) {
-            if (selectedImages.length > 5) {
-              selectedImages = selectedImages.slice(0, 5);
-              alert(t('max_photos'));
-            }
             renderSelectedPhotos();
           }
         };
@@ -1245,24 +1248,13 @@
     }
 
     document.getElementById('submit-create').addEventListener('click', async () => {
-      const submitBtn = document.getElementById('submit-create');
-      
-      // Валидация: минимум 1 фото, максимум 5
-      if (selectedImages.length < 1) {
+      if (selectedImages.length < 5) {
         alert(t('min_photos'));
         return;
       }
-
       const title = document.getElementById('create-title').value.trim();
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert(t('fill_fields'));
-
-      // Блокируем кнопку и показываем анимацию загрузки
-      submitBtn.setAttribute('disabled', 'true');
-      submitBtn.style.opacity = '0.6';
-      submitBtn.style.pointerEvents = 'none';
-      submitBtn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;">sync</span> ' + t('publishing');
-
       const data = {
         id: state.editId || 'id_'+Date.now(), title,
         desc: document.getElementById('create-desc').value,
@@ -1276,49 +1268,23 @@
         condition: state.selectedCondition,
         isActive: true, isVIP: false
       };
-
-      try {
-        if (state.editId) {
-          const idx = state.listings.findIndex(l => l.id === state.editId);
-          if (idx !== -1) state.listings[idx] = { ...state.listings[idx], ...data };
-          state.editId = null;
-        } else {
-          state.listings.unshift(data);
-        }
-
-        // Сохраняем в Firestore если доступен
-        if (firebaseReady && db) {
-          await saveProductToCloud(data);
-        }
-
-        // Успешная публикация
-        submitBtn.innerHTML = t('published');
-        submitBtn.style.backgroundColor = '#4CAF50';
-        
-        selectedImages = [];
-        renderSelectedPhotos();
-        save();
-        
-        setTimeout(() => {
-          showScreen('home');
-          // Восстанавливаем кнопку для следующего использования
-          submitBtn.removeAttribute('disabled');
-          submitBtn.style.opacity = '1';
-          submitBtn.style.pointerEvents = 'auto';
-          submitBtn.style.backgroundColor = '';
-          submitBtn.innerHTML = t('submit_btn');
-        }, 1500);
-
-      } catch (error) {
-        console.error('Ошибка при публикации:', error);
-        alert(t('cloud_save_error'));
-        // Восстанавливаем кнопку при ошибке
-        submitBtn.removeAttribute('disabled');
-        submitBtn.style.opacity = '1';
-        submitBtn.style.pointerEvents = 'auto';
-        submitBtn.style.backgroundColor = '';
-        submitBtn.innerHTML = t('submit_btn');
+      if (state.editId) {
+        const idx = state.listings.findIndex(l => l.id === state.editId);
+        if (idx !== -1) state.listings[idx] = { ...state.listings[idx], ...data };
+        state.editId = null;
+      } else {
+        state.listings.unshift(data);
       }
+
+      // Сохраняем в Firestore если доступен
+      if (firebaseReady && db) {
+        await saveProductToCloud(data);
+      }
+
+      selectedImages = [];
+      renderSelectedPhotos();
+      save();
+      showScreen('home');
     });
 
     // ========== ВАЛИДАЦИЯ И БЛОКИРОВКА КНОПКИ ВХОДА ==========

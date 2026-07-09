@@ -584,15 +584,14 @@
     }
 
     // ========== FIREBASE КОНФИГУРАЦИЯ ==========
-    const firebaseConfig = {
-      apiKey: "AIzaSyDummyKeyForDevPurposes",
-      authDomain: "geran-express-dev.firebaseapp.com",
-      projectId: "geran-express-dev",
-      storageBucket: "geran-express-dev.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdef1234567890abcdef"
-    };
-
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+    authDomain: "geran-express.firebaseapp.com",
+    projectId: "geran-express",
+    storageBucket: "geran-express.firebasestorage.app",
+    messagingSenderId: "100329986906",
+    appId: "1:100329986906:web:4998c36eecc975b46bf163"
+  };
     // Инициализация Firebase
     let db = null;
     let firebaseReady = false;
@@ -603,6 +602,91 @@
     } catch (e) {
       console.warn('Firebase инициализирован в оффлайн-режиме или с ошибкой:', e.message);
     }
+
+  // СВЯЗЫВАЕМ ТВОЮ ФОРМУ И КНОПКУ ПУБЛИКАЦИИ С БАЗОЙ ДАННЫХ
+  // Укажи здесь реальные id твоей формы и кнопки публикации из файла finish.html
+  const myForm = document.getElementById('create-form'); // Замени 'create-form' на свой id формы, если он другой
+  const submitBtn = document.getElementById('submit-btn'); // Замени 'submit-btn' на свой id кнопки, если он другой
+
+  if (myForm && typeof firebase !== 'undefined') {
+    myForm.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Защита от перезагрузки страницы
+      
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Загрузка фото и публикация...";
+      }
+
+      // Собираем данные из твоих полей ввода. Проверь их id в кавычках и замени на свои!
+      const titleVal = document.getElementById('create-title')?.value || '';
+      const descVal = document.getElementById('create-desc')?.value || '';
+      const priceVal = document.getElementById('create-price')?.value || 0;
+      const phoneVal = document.getElementById('create-phone')?.value || '';
+      const villageVal = document.getElementById('create-village')?.value || 'Деҳаи Геран';
+      const fileInput = document.getElementById('create-image')?.files[0]; // Первый файл из инпута
+
+      let imageUrl = "https://unsplash.com"; // Дефолтная заглушка
+
+      // Если пользователь прикрепил файл, загружаем его на бесплатный ImgBB
+      if (fileInput) {
+        const apiKey = "6d99df854930b8d2d6199bc181e18d66"; // Бесплатный ключ ImgBB
+        const formData = new FormData();
+        formData.append("image", fileInput);
+
+        try {
+          const response = await fetch(`https://imgbb.com{apiKey}`, {
+            method: "POST",
+            body: formData
+          });
+          const result = await response.json();
+          if (result.success) {
+            imageUrl = result.data.url; // Получаем прямую ссылку
+          }
+        } catch (err) {
+          console.error("Не удалось загрузить картинку:", err);
+        }
+      }
+
+      // Собираем объект для базы данных
+      const newListing = {
+        title: titleVal,
+        desc: descVal,
+        price: Number(priceVal),
+        isFree: Number(priceVal) === 0,
+        category: 'Услуги',
+        phone: phoneVal,
+        village: villageVal,
+        images: [imageUrl], // Ссылка улетает в массив
+        date: firebase.firestore.FieldValue.serverTimestamp(), // Серверное время для старого синтаксиса compat
+        userId: 'demo',
+        condition: 'new',
+        isVIP: false
+      };
+
+      try {
+        // Отправляем объект в живую базу Firebase Firestore (через старый синтаксис db)
+        if (db) {
+          await db.collection("listings").add(newListing);
+          alert("Объявление успешно опубликовано в Firebase!");
+          myForm.reset(); // Очищаем форму
+          
+          // Возврат на главный экран (если у тебя есть функция showScreen)
+          if (typeof window.showScreen === 'function') {
+            window.showScreen('home'); 
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка сохранения объявления в Firebase:", error);
+        alert("Произошла ошибка при отправке в базу данных.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Опубликовать";
+        }
+      }
+    });
+  }
+
 
     // ========== СИСТЕМА ПЕРЕВОДОВ ==========
     const translations = {

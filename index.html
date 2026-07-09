@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Geran Express – Маркетплейс</title>
-  
-  <!-- КРИТИЧЕСКИЙ CSS ДЛЯ МОМЕНТАЛЬНОГО РЕНДЕРА -->
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -68,8 +66,6 @@
     .material-symbols-rounded{font-display:block;visibility:hidden}
     .fonts-loaded .material-symbols-rounded{visibility:visible}
     body.dark .logo img{filter:invert(1) hue-rotate(180deg)!important;mix-blend-mode:screen}
-    
-    /* Прячем текст иконок по умолчанию, пока шрифт загружается */
     .material-symbols-rounded {
       color: transparent !important;
       font-size: 0px !important;
@@ -80,12 +76,10 @@
       font-size: 24px !important;
     }
   </style>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
-  
   <style>
     body.dark {
       --bg: #111827;
@@ -99,21 +93,16 @@
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
     }
-
     body { transition: background 0.3s, color 0.3s; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-
     .header-actions button:hover, .icon-btn:hover { background: var(--surface); color: var(--text-primary); }
     .header-actions button .material-symbols-rounded, .icon-btn .material-symbols-rounded { font-size: 22px; display: flex; align-items: center; justify-content: center; }
-
     .badge-dot {
       position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
-
-    /* УМЕНЬШЕННАЯ КНОПКА ЯЗЫКА */
     .lang-btn {
       width: 22px !important;
       height: 22px !important;
@@ -134,38 +123,26 @@
       transition: background var(--transition), transform 0.1s ease;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
-    .lang-btn:hover {
-      filter: brightness(1.1);
-    }
-    .lang-btn:active {
-      transform: scale(0.95);
-    }
-
+    .lang-btn:hover { filter: brightness(1.1); }
+    .lang-btn:active { transform: scale(0.95); }
     .search-bar:hover { background: var(--border); }
     .search-bar .material-symbols-rounded { font-size: 20px; color: var(--text-secondary); }
     .search-bar span { font-size: 0.9rem; color: var(--text-tertiary); font-weight: 400; }
-
     .bottom-nav.hidden { transform: translateY(100%); }
     .bottom-nav { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: transform 0.2s; transform: translateY(0); }
-
     .nav-item .material-symbols-rounded { font-size: 24px; }
     .nav-item.create-btn .material-symbols-rounded { font-size: 26px; }
-
     main { flex: 1; overflow-y: auto; padding: 0 12px 80px; }
     .screen { display: none; padding: 8px 0 16px; animation: fadeSlide 0.25s ease; }
     .screen.active { display: block; }
-
     #screen-login.active {
       display: flex; align-items: center; justify-content: center;
       height: calc(100vh - var(--header-height) - var(--nav-height));
     }
-
     @keyframes fadeSlide {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    /* КАТЕГОРИИ СТРОГО В ОДИН РЯД С ГОРИЗОНТАЛЬНЫМ СКРОЛЛОМ */
     .categories-row {
       display: flex !important;
       flex-wrap: nowrap !important;
@@ -197,26 +174,25 @@
     .cat-chip .material-symbols-rounded { font-size: 18px; }
     .cat-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
     .cat-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
-
     .listings-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
     }
     @media (min-width: 600px) { .listings-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (min-width: 900px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
     @media (min-width: 1100px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
-
-    /* Компактные карточки */
     .card {
       background: var(--surface); border-radius: 12px; overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--border);
       transition: all var(--transition); cursor: pointer;
       display: flex; flex-direction: column;
     }
+    .card.vip-card {
+      border: 2px solid #d4a017;
+      box-shadow: 0 4px 14px rgba(212,160,23,0.25);
+    }
     .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-
-    /* Фиксированная высота картинок */
     .card-img {
-      position: relative; width: 100%; height: 160px; background: var(--border);
+      position: relative; width: 100%; height: 200px; background: var(--border);
       overflow: hidden;
     }
     .card-img img {
@@ -224,12 +200,14 @@
       transition: transform 0.3s;
     }
     .card:hover .card-img img { transform: scale(1.02); }
-
     .card-badge {
       position: absolute; top: 6px; left: 6px;
       background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
       color: white; padding: 2px 6px; border-radius: 10px;
       font-size: 0.6rem; font-weight: 600;
+    }
+    .card-badge.vip-badge {
+      background: #d4a017; color: #0b2b26; left: auto; right: 6px; font-weight: 700;
     }
     .card-heart {
       position: absolute; top: 6px; right: 6px;
@@ -239,13 +217,12 @@
       cursor: pointer; color: #aaa; transition: 0.2s; font-size: 16px;
     }
     .card-heart.liked { color: var(--accent-heart); }
-
-    /* УВЕЛИЧЕННЫЕ ОТСТУПЫ В ТЕЛЕ КАРТОЧКИ */
     .card-body { padding: 10px 10px; flex: 0 0 auto; display: flex; flex-direction: column; }
     .card-price {
       font-weight: 700; font-size: 0.95rem; color: var(--accent-price);
       margin-bottom: 3px; line-height: 1.3;
     }
+    .card-price.free { color: #00a86b; }
     .card-title {
       font-weight: 500; font-size: 0.78rem; color: var(--text-primary);
       line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
@@ -257,7 +234,6 @@
       padding-top: 2px;
     }
     .card-meta span { display: flex; align-items: center; gap: 2px; }
-
     .detail-img {
       width: 100%; max-height: 300px; object-fit: contain;
       border-radius: 14px; margin: 12px 0; background: var(--border);
@@ -270,15 +246,14 @@
       align-items: center; justify-content: center; gap: 6px;
       flex: 1; transition: background var(--transition);
     }
+    .btn:disabled { opacity: 0.5; pointer-events: none; }
     .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
     .btn:hover { filter: brightness(1.1); }
-
     .input-field {
       width: 100%; padding: 14px 16px; border: 1px solid var(--border);
       border-radius: 14px; font-size: 0.95rem; margin-bottom: 12px;
       font-family: var(--font); background: var(--surface); color: var(--text-primary);
     }
-
     .select-field {
       width: 100%; padding: 14px 16px; border: 1px solid var(--border);
       border-radius: 14px; font-size: 0.95rem; margin-bottom: 12px;
@@ -288,20 +263,17 @@
       background-repeat: no-repeat; background-position: right 12px center;
       background-size: 20px; cursor: pointer;
     }
-
     .stats-row { display: flex; gap: 8px; margin: 16px 0; }
     .stat-box {
       flex: 1; background: var(--surface); border-radius: 14px;
       padding: 12px 8px; text-align: center; font-weight: 600;
     }
-
     .toggle { position: relative; display: inline-block; width: 48px; height: 26px; }
     .toggle input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 26px; transition: .4s; }
     .slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .4s; }
     input:checked + .slider { background: var(--primary); }
     input:checked + .slider:before { transform: translateX(22px); }
-
     .condition-selector { display: flex; gap: 12px; margin-bottom: 16px; }
     .condition-option {
       flex: 1; display: flex; align-items: center; justify-content: center;
@@ -312,16 +284,12 @@
     }
     .condition-option.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
     .condition-option .material-symbols-rounded { font-size: 20px; }
-
-    /* СТИЛИ ДЛЯ ЗАГРУЗКИ ФОТО */
     .photo-upload-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .photo-thumb {
       width: 80px; height: 80px; border-radius: 12px; object-fit: cover;
       background: var(--border); position: relative;
     }
-    .photo-thumb img {
-      width: 100%; height: 100%; object-fit: cover; border-radius: 12px;
-    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
     .photo-thumb-remove {
       position: absolute; top: -4px; right: -4px; width: 22px; height: 22px;
       background: var(--accent-heart); color: white; border-radius: 50%;
@@ -336,7 +304,6 @@
     }
     .photo-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
     .photo-upload-btn .material-symbols-rounded { font-size: 24px; }
-
     .profile-avatar-wrapper { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
     .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--primary-soft); }
     .profile-avatar-edit {
@@ -348,7 +315,6 @@
     .profile-edit-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
     .profile-edit-form .btn { margin-top: 4px; }
     .hidden-file-input { display: none; }
-
     .profile-location-section {
       margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
     }
@@ -357,8 +323,6 @@
       color: var(--text-primary); margin-bottom: 8px;
     }
     .profile-location-section .select-field { margin-bottom: 0; }
-
-    /* ЛОГОТИП НА ЭКРАНЕ ЗАГРУЗКИ */
     .login-logo {
       width: 180px;
       height: auto;
@@ -367,30 +331,26 @@
       margin-left: auto;
       margin-right: auto;
     }
-
-    /* Прячем текст иконок по умолчанию, пока шрифт загружается */
     .material-symbols-rounded {
       color: transparent !important;
       overflow: hidden;
     }
-
-    /* Показываем иконки только тогда, когда класс шрифта успешно добавлен */
     .fonts-loaded .material-symbols-rounded {
       color: inherit !important;
     }
-
-.categories-row > div, 
-.categories-row > button {
-    padding: 6px 12px !important;
-    font-size: 13px !important;
-    gap: 6px !important;
-}
-
-.categories-row .material-symbols-rounded {
-    font-size: 18px !important;
-}
-
-
+    .categories-row > div, 
+    .categories-row > button {
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+        gap: 6px !important;
+    }
+    .categories-row .material-symbols-rounded {
+        font-size: 18px !important;
+    }
+    .error-message {
+      background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 14px;
+      margin: 16px 0; font-weight: 500; text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -399,29 +359,16 @@
     <a href="/" class="logo" onclick="event.preventDefault(); window.location.reload();">
       <img src="1.jpg" alt="Geran Express">
     </a>
-
     <div class="search-bar" id="search-trigger">
       <span class="material-symbols-rounded">search</span>
       <span id="search-placeholder">ҷустуҷӯ</span>
     </div>
-
-<!-- 1. Для старых версий Internet Explorer и базовой поддержки -->
-<link rel="shortcut icon" href="icon.jpg" type="image/x-icon">
-
-<!-- 2. Главная иконка в современном формате SVG (отлично масштабируется) -->
-<link rel="icon" href="icon.jpg" type="image/svg+xml">
-
-<!-- 3. Стандартная иконка в формате PNG для большинства браузеров -->
-<link rel="icon" href="icon.jpg" type="image/png" sizes="32x32">
-<link rel="icon" href="icon.jpg" type="image/png" sizes="16x16">
-
-<!-- 4. Для устройств Apple (iOS / Safari) при добавлении на главный экран -->
-<link rel="apple-touch-icon" sizes="180x180" href="icon.jpg">
-
-<!-- 5. Для Android и веб-приложений (PWA) -->
-<link rel="manifest" href="icon.jpg">
-
-
+    <link rel="shortcut icon" href="icon.jpg" type="image/x-icon">
+    <link rel="icon" href="icon.jpg" type="image/svg+xml">
+    <link rel="icon" href="icon.jpg" type="image/png" sizes="32x32">
+    <link rel="icon" href="icon.jpg" type="image/png" sizes="16x16">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.jpg">
+    <link rel="manifest" href="icon.jpg">
     <div class="header-actions">
       <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
@@ -433,29 +380,24 @@
       </button>
     </div>
   </header>
-
   <main id="main-content">
     <div id="screen-home" class="screen active"></div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
-    
     <div id="screen-profile" class="screen">
       <div style="text-align:center;margin:20px 0">
         <div class="profile-avatar-wrapper">
           <img id="profile-avatar-img" class="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23e6f0eb'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%231e4a3b' font-size='32' dy='.1em'%3E👤%3C/text%3E%3C/svg%3E" alt="Аватар">
-       <span class="profile-avatar-edit material-symbols-rounded" id="avatar-edit-btn" style="background-color: #4CAF50 !important; color: #ffffff !important;">edit</span>
-
+          <span class="profile-avatar-edit material-symbols-rounded" id="avatar-edit-btn" style="background-color: #4CAF50 !important; color: #ffffff !important;">edit</span>
           <input type="file" id="avatar-file-input" class="hidden-file-input" accept="image/*">
         </div>
         <h3 id="profile-name" style="margin-top:8px">Корбар</h3>
         <p id="profile-phone" style="color:var(--text-secondary)"></p>
       </div>
-      
       <div class="profile-edit-form">
         <input class="input-field" id="edit-name" placeholder="Ном">
         <input class="input-field" id="edit-phone" placeholder="Рақами телефон">
       </div>
-
       <div class="profile-location-section">
         <label for="edit-village" id="village-label">📍 Деҳаи ман</label>
         <select class="select-field" id="edit-village">
@@ -465,7 +407,6 @@
           <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
         </select>
       </div>
-
       <div class="profile-location-section" style="margin-top:16px;">
         <label for="edit-lang" id="lang-label">🌐 Забон / Язык</label>
         <select class="select-field" id="edit-lang">
@@ -473,9 +414,7 @@
           <option value="ru">Русский</option>
         </select>
       </div>
-
       <button class="btn" id="save-profile-btn" style="margin-top:16px;">Тағйиротро захира кунед</button>
-
       <div class="stats-row">
         <div class="stat-box"><span id="stat-listings">0</span><br><small style="font-weight:400" id="stat-listings-label">эълон</small></div>
         <div class="stat-box"><span id="stat-views">0</span><br><small style="font-weight:400" id="stat-views-label">тамошо</small></div>
@@ -487,7 +426,6 @@
       </div>
       <button class="btn btn-outline" style="margin-top:20px" id="logout-btn">Баромад</button>
     </div>
-
     <div id="screen-create" class="screen">
       <h2 style="margin:4px 0 12px" id="create-title-label">Эълони нав</h2>
       <input class="input-field" id="create-title" placeholder="Ном">
@@ -505,7 +443,6 @@
         <option value="services">Услуги</option>
         <option value="other">Другое</option>
       </select>
-      
       <div class="condition-selector" id="condition-selector">
         <div class="condition-option active" data-condition="new">
           <span class="material-symbols-rounded">new_releases</span> <span class="cond-new-text">Нав</span>
@@ -514,18 +451,22 @@
           <span class="material-symbols-rounded">history</span> <span class="cond-used-text">Истифодашуда</span>
         </div>
       </div>
-      
       <select class="select-field" id="create-village">
         <option value="Деҳаи Геран">Деҳаи Геран</option>
         <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
         <option value="Деҳаи Севвум">Деҳаи Севвум</option>
         <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
       </select>
-      
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="create-free"> <span>Отдам даром</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="create-vip"> <span style="color:#d4a017;font-weight:600">VIP</span>
+        </label>
+      </div>
       <input class="input-field" id="create-price" placeholder="Нарх (с)" type="number">
       <input class="input-field" id="create-phone" placeholder="Телефон">
-      
-      <!-- ОБЛАСТЬ ЗАГРУЗКИ ФОТО -->
       <div class="photo-upload-area" id="photo-upload-area">
         <div class="photo-upload-btn" id="photo-upload-btn">
           <span class="material-symbols-rounded">add_a_photo</span>
@@ -536,7 +477,6 @@
       <div id="photo-previews-container" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;"></div>
       <button class="btn" id="submit-create">Нашр кунед</button>
     </div>
-
     <div id="screen-detail" class="screen"><span class="material-symbols-rounded" id="back-detail" style="cursor:pointer;font-size:28px;margin-bottom:8px;display:inline-block">arrow_back</span><div id="detail-content"></div></div>
     <div id="screen-search" class="screen">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
@@ -545,7 +485,6 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
-    <!-- ЛОГОТИП НА ЭКРАНЕ ВХОДА -->
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <img src="123.png" alt="Geran Express" class="login-logo">
@@ -555,12 +494,11 @@
         <div style="margin-top: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
           From Loikov Project <br>
           © Geran Express 2026 <br>
-            Все права защищены 
+          Все права защищены 
         </div>
       </div>
     </div>
   </main>
-  
   <nav class="bottom-nav" id="bottom-nav">
     <div class="nav-item active" data-tab="home"><span class="material-symbols-rounded">home</span><span class="nav-text" data-key="home">Асосӣ</span></div>
     <div class="nav-item" data-tab="favorites"><span class="material-symbols-rounded">favorite</span><span class="nav-text" data-key="favorites">Интихобшуда</span></div>
@@ -574,25 +512,21 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
   (() => {
-    // Отслеживание загрузки шрифтов для предотвращения FOIT
     if ('fonts' in document) {
-      document.fonts.ready.then(() => {
-        document.documentElement.classList.add('fonts-loaded');
-      });
+      document.fonts.ready.then(() => document.documentElement.classList.add('fonts-loaded'));
     } else {
       document.documentElement.classList.add('fonts-loaded');
     }
 
-    // ========== FIREBASE КОНФИГУРАЦИЯ ==========
-  const firebaseConfig = {
-    apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
-    authDomain: "geran-express.firebaseapp.com",
-    projectId: "geran-express",
-    storageBucket: "geran-express.firebasestorage.app",
-    messagingSenderId: "100329986906",
-    appId: "1:100329986906:web:4998c36eecc975b46bf163"
-  };
-    // Инициализация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+      authDomain: "geran-express.firebaseapp.com",
+      projectId: "geran-express",
+      storageBucket: "geran-express.firebasestorage.app",
+      messagingSenderId: "100329986906",
+      appId: "1:100329986906:web:4998c36eecc975b46bf163"
+    };
+
     let db = null;
     let firebaseReady = false;
     try {
@@ -600,217 +534,46 @@
       db = firebase.firestore();
       firebaseReady = true;
     } catch (e) {
-      console.warn('Firebase инициализирован в оффлайн-режиме или с ошибкой:', e.message);
+      console.warn('Firebase init error:', e.message);
     }
 
-  // СВЯЗЫВАЕМ ТВОЮ ФОРМУ И КНОПКУ ПУБЛИКАЦИИ С БАЗОЙ ДАННЫХ
-  // Укажи здесь реальные id твоей формы и кнопки публикации из файла finish.html
-  const myForm = document.getElementById('create-form'); // Замени 'create-form' на свой id формы, если он другой
-  const submitBtn = document.getElementById('submit-btn'); // Замени 'submit-btn' на свой id кнопки, если он другой
-
-  if (myForm && typeof firebase !== 'undefined') {
-    myForm.addEventListener('submit', async (e) => {
-      e.preventDefault(); // Защита от перезагрузки страницы
-      
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Загрузка фото и публикация...";
-      }
-
-      // Собираем данные из твоих полей ввода. Проверь их id в кавычках и замени на свои!
-      const titleVal = document.getElementById('create-title')?.value || '';
-      const descVal = document.getElementById('create-desc')?.value || '';
-      const priceVal = document.getElementById('create-price')?.value || 0;
-      const phoneVal = document.getElementById('create-phone')?.value || '';
-      const villageVal = document.getElementById('create-village')?.value || 'Деҳаи Геран';
-      const fileInput = document.getElementById('create-image')?.files[0]; // Первый файл из инпута
-
-      let imageUrl = "https://unsplash.com"; // Дефолтная заглушка
-
-      // Если пользователь прикрепил файл, загружаем его на бесплатный ImgBB
-      if (fileInput) {
-        const apiKey = "6d99df854930b8d2d6199bc181e18d66"; // Бесплатный ключ ImgBB
-        const formData = new FormData();
-        formData.append("image", fileInput);
-
-        try {
-          const response = await fetch(`https://imgbb.com{apiKey}`, {
-            method: "POST",
-            body: formData
-          });
-          const result = await response.json();
-          if (result.success) {
-            imageUrl = result.data.url; // Получаем прямую ссылку
-          }
-        } catch (err) {
-          console.error("Не удалось загрузить картинку:", err);
-        }
-      }
-
-      // Собираем объект для базы данных
-      const newListing = {
-        title: titleVal,
-        desc: descVal,
-        price: Number(priceVal),
-        isFree: Number(priceVal) === 0,
-        category: 'Услуги',
-        phone: phoneVal,
-        village: villageVal,
-        images: [imageUrl], // Ссылка улетает в массив
-        date: firebase.firestore.FieldValue.serverTimestamp(), // Серверное время для старого синтаксиса compat
-        userId: 'demo',
-        condition: 'new',
-        isVIP: false
-      };
-
-      try {
-        // Отправляем объект в живую базу Firebase Firestore (через старый синтаксис db)
-        if (db) {
-          await db.collection("listings").add(newListing);
-          alert("Объявление успешно опубликовано в Firebase!");
-          myForm.reset(); // Очищаем форму
-          
-          // Возврат на главный экран (если у тебя есть функция showScreen)
-          if (typeof window.showScreen === 'function') {
-            window.showScreen('home'); 
-          }
-        }
-      } catch (error) {
-        console.error("Ошибка сохранения объявления в Firebase:", error);
-        alert("Произошла ошибка при отправке в базу данных.");
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerText = "Опубликовать";
-        }
-      }
-    });
-  }
-
-
-    // ========== СИСТЕМА ПЕРЕВОДОВ ==========
     const translations = {
       tg: {
-        search: 'ҷустуҷӯ',
-        search_placeholder: 'Ҷустуҷӯ аз рӯи ном...',
-        home: 'Асосӣ',
-        favorites: 'Интихобшуда',
-        my: 'Эълонҳо',
-        profile: 'Профил',
-        fav_title: 'Интихобшуда',
-        my_title: 'Эълонҳои ман',
-        user: 'Корбар',
-        edit_name: 'Ном',
-        edit_phone: 'Рақами телефон',
-        village_label: '📍 Деҳаи ман',
-        lang_label: '🌐 Забон / Язык',
-        save_btn: 'Тағйиротро захира кунед',
-        listings_label: 'эълон',
-        views_label: 'тамошо',
-        favs_label: 'интихобшуда',
-        dark_theme: 'Реҷаи торик',
-        logout: 'Баромад',
-        create_title: 'Эълони нав',
-        title_placeholder: 'Ном',
-        desc_placeholder: 'Тавсиф',
-        cond_new: 'Нав',
-        cond_used: 'Истифодашуда',
-        price_placeholder: 'Нарх (с.)',
-        phone_placeholder: 'Телефон',
-        photo_btn: 'Сурат',
-        submit_btn: 'Нашр кунед',
-        login_subtitle: 'Дар наздикӣ харед ва фурӯшед',
-        login_btn: 'Ворид',
-        no_listings: 'Эълон нест',
-        no_favs: 'Интихобшуда нест',
-        no_my: 'Эълон нест',
-        no_search: 'Ҳеҷ чиз ёфт нашуд',
-        free: 'Ройгон',
-        call: 'Занг занед',
-        no_photo: 'Сурат нест',
-        profile_updated: 'Профил навсозӣ шуд!',
-        login_required: 'Барои илова ба интихобшуда ворид шавед',
-        fill_fields: 'Ном ва телефонро пур кунед',
-        delete_confirm: 'Эълонро нест кунед?',
-        min_photos: 'Илтимос, ҳадди ақал 5 сурат бор кунед!',
-        upload_error: 'Хатогӣ дар боргузории суратҳо!',
-        cloud_save_error: 'Хатогӣ дар сабти абрӣ!',
-        // Категории
-        cat_all: 'Ҳама',
-        cat_electronics: 'Электроника',
-        cat_computers: 'Компютерҳо',
-        cat_appliances: 'Техникаи маишӣ',
-        cat_auto: 'Авто',
-        cat_moto: 'Мото',
-        cat_realestate: 'Кӯчонанда',
-        cat_tools: 'Асбобҳо',
-        cat_parts: 'Қисмҳои эҳтиётӣ',
-        cat_clothes: 'Либос',
-        cat_services: 'Хизматрасониҳо',
-        cat_other: 'Дигар',
+        search: 'ҷустуҷӯ', search_placeholder: 'Ҷустуҷӯ аз рӯи ном...', home: 'Асосӣ', favorites: 'Интихобшуда',
+        my: 'Эълонҳо', profile: 'Профил', fav_title: 'Интихобшуда', my_title: 'Эълонҳои ман', user: 'Корбар',
+        edit_name: 'Ном', edit_phone: 'Рақами телефон', village_label: '📍 Деҳаи ман', lang_label: '🌐 Забон / Язык',
+        save_btn: 'Тағйиротро захира кунед', listings_label: 'эълон', views_label: 'тамошо', favs_label: 'интихобшуда',
+        dark_theme: 'Реҷаи торик', logout: 'Баромад', create_title: 'Эълони нав', title_placeholder: 'Ном',
+        desc_placeholder: 'Тавсиф', cond_new: 'Нав', cond_used: 'Истифодашуда', price_placeholder: 'Нарх (с.)',
+        phone_placeholder: 'Телефон', photo_btn: 'Сурат', submit_btn: 'Нашр кунед', login_subtitle: 'Дар наздикӣ харед ва фурӯшед',
+        login_btn: 'Ворид', no_listings: 'Эълон нест', no_favs: 'Интихобшуда нест', no_my: 'Эълон нест',
+        no_search: 'Ҳеҷ чиз ёфт нашуд', free: 'Ройгон', call: 'Занг занед', profile_updated: 'Профил навсозӣ шуд!',
+        login_required: 'Барои илова ба интихобшуда ворид шавед', fill_fields: 'Ном ва телефонро пур кунед',
+        delete_confirm: 'Эълонро нест кунед?', min_photos: 'Илтимос, ҳадди ақал 5 сурат бор кунед!',
+        upload_error: 'Хатогӣ дар боргузории суратҳо!', cloud_save_error: 'Хатогӣ дар сабти абрӣ!',
+        cat_all: 'Ҳама', cat_electronics: 'Электроника', cat_computers: 'Компютерҳо', cat_appliances: 'Техникаи маишӣ',
+        cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Кӯчонанда', cat_tools: 'Асбобҳо', cat_parts: 'Қисмҳои эҳтиётӣ',
+        cat_clothes: 'Либос', cat_services: 'Хизматрасониҳо', cat_other: 'Дигар',
       },
       ru: {
-        search: 'поиск',
-        search_placeholder: 'Поиск по названию...',
-        home: 'Главная',
-        favorites: 'Избранное',
-        my: 'Публикации',
-        profile: 'Профиль',
-        fav_title: 'Избранное',
-        my_title: 'Мои публикации',
-        user: 'Пользователь',
-        edit_name: 'Имя',
-        edit_phone: 'Номер телефона',
-        village_label: '📍 Моё село',
-        lang_label: '🌐 Забон / Язык',
-        save_btn: 'Сохранить изменения',
-        listings_label: 'объявлений',
-        views_label: 'просмотров',
-        favs_label: 'избранных',
-        dark_theme: 'Тёмная тема',
-        logout: 'Выйти',
-        create_title: 'Новое объявление',
-        title_placeholder: 'Название',
-        desc_placeholder: 'Описание',
-        cond_new: 'Новый',
-        cond_used: 'Б.у.',
-        price_placeholder: 'Цена (с.)',
-        phone_placeholder: 'Телефон',
-        photo_btn: 'Фото',
-        submit_btn: 'Опубликовать',
-        login_subtitle: 'Покупайте и продавайте рядом',
-        login_btn: 'Войти',
-        no_listings: 'Нет объявлений',
-        no_favs: 'Нет избранных',
-        no_my: 'Нет публикаций',
-        no_search: 'Ничего не найдено',
-        free: 'Бесплатно',
-        call: 'Позвонить',
-        no_photo: 'Нет фото',
-        profile_updated: 'Профиль обновлён!',
-        login_required: 'Войдите, чтобы добавлять в избранное',
-        fill_fields: 'Заполните название и телефон',
-        delete_confirm: 'Удалить объявление?',
-        min_photos: 'Пожалуйста, загрузите минимум 5 изображений!',
-        upload_error: 'Ошибка загрузки изображений!',
-        cloud_save_error: 'Ошибка сохранения в облаке!',
-        // Категории
-        cat_all: 'Все',
-        cat_electronics: 'Электроника',
-        cat_computers: 'Компьютеры',
-        cat_appliances: 'Бытовая техника',
-        cat_auto: 'Авто',
-        cat_moto: 'Мото',
-        cat_realestate: 'Недвижимость',
-        cat_tools: 'Инструменты',
-        cat_parts: 'Запчасти',
-        cat_clothes: 'Одежда',
-        cat_services: 'Услуги',
-        cat_other: 'Другое',
+        search: 'поиск', search_placeholder: 'Поиск по названию...', home: 'Главная', favorites: 'Избранное',
+        my: 'Публикации', profile: 'Профиль', fav_title: 'Избранное', my_title: 'Мои публикации', user: 'Пользователь',
+        edit_name: 'Имя', edit_phone: 'Номер телефона', village_label: '📍 Моё село', lang_label: '🌐 Забон / Язык',
+        save_btn: 'Сохранить изменения', listings_label: 'объявлений', views_label: 'просмотров', favs_label: 'избранных',
+        dark_theme: 'Тёмная тема', logout: 'Выйти', create_title: 'Новое объявление', title_placeholder: 'Название',
+        desc_placeholder: 'Описание', cond_new: 'Новый', cond_used: 'Б.у.', price_placeholder: 'Цена (с.)',
+        phone_placeholder: 'Телефон', photo_btn: 'Фото', submit_btn: 'Опубликовать', login_subtitle: 'Покупайте и продавайте рядом',
+        login_btn: 'Войти', no_listings: 'Нет объявлений', no_favs: 'Нет избранных', no_my: 'Нет публикаций',
+        no_search: 'Ничего не найдено', free: 'Бесплатно', call: 'Позвонить', profile_updated: 'Профиль обновлён!',
+        login_required: 'Войдите, чтобы добавлять в избранное', fill_fields: 'Заполните название и телефон',
+        delete_confirm: 'Удалить объявление?', min_photos: 'Пожалуйста, загрузите минимум 5 изображений!',
+        upload_error: 'Ошибка загрузки изображений!', cloud_save_error: 'Ошибка сохранения в облаке!',
+        cat_all: 'Все', cat_electronics: 'Электроника', cat_computers: 'Компьютеры', cat_appliances: 'Бытовая техника',
+        cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Недвижимость', cat_tools: 'Инструменты', cat_parts: 'Запчасти',
+        cat_clothes: 'Одежда', cat_services: 'Услуги', cat_other: 'Другое',
       }
     };
 
-    // ЯЗЫК ПО УМОЛЧАНИЮ — РУССКИЙ
     let currentLang = localStorage.getItem('geran_lang') || 'ru';
     function t(key) { return translations[currentLang]?.[key] || translations['ru']?.[key] || key; }
 
@@ -829,20 +592,16 @@
       updateLangUI();
       const searchEl = document.getElementById('search-placeholder');
       if (searchEl) searchEl.textContent = t('search');
-
       const searchInput = document.getElementById('search-input');
       if (searchInput) searchInput.placeholder = t('search_placeholder');
-
       document.querySelectorAll('.nav-text').forEach(el => {
         const key = el.dataset.key;
         if (key && t(key)) el.textContent = t(key);
       });
-
       const favTitle = document.getElementById('fav-title');
       if (favTitle) favTitle.textContent = t('fav_title');
       const myTitle = document.getElementById('my-title');
       if (myTitle) myTitle.textContent = t('my_title');
-
       const villageLabel = document.getElementById('village-label');
       if (villageLabel) villageLabel.textContent = t('village_label');
       const langLabel = document.getElementById('lang-label');
@@ -865,7 +624,6 @@
       if (editName) editName.placeholder = t('edit_name');
       const editPhone = document.getElementById('edit-phone');
       if (editPhone) editPhone.placeholder = t('edit_phone');
-
       const createTitleLabel = document.getElementById('create-title-label');
       if (createTitleLabel) createTitleLabel.textContent = t('create_title');
       const createTitle = document.getElementById('create-title');
@@ -882,12 +640,10 @@
       if (photoText) photoText.textContent = t('photo_btn');
       const submitBtn = document.getElementById('submit-create');
       if (submitBtn) submitBtn.textContent = t('submit_btn');
-
       const loginSub = document.getElementById('login-subtitle');
       if (loginSub) loginSub.textContent = t('login_subtitle');
       const loginBtn = document.getElementById('login-btn');
       if (loginBtn) loginBtn.textContent = t('login_btn');
-
       const villageNames = {
         'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
         'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
@@ -898,43 +654,24 @@
         const names = villageNames[opt.value];
         if (names) opt.textContent = names[currentLang] || opt.value;
       });
-
       document.querySelectorAll('#create-category option').forEach(opt => {
         const translationKey = 'cat_' + opt.value;
         if (translations[currentLang] && translations[currentLang][translationKey]) {
           opt.textContent = translations[currentLang][translationKey];
         }
       });
-
       if (state.currentScreen) renderScreen(state.currentScreen);
     }
 
-    document.getElementById('lang-switch-btn')?.addEventListener('click', () => {
-      currentLang = currentLang === 'tg' ? 'ru' : 'tg';
-      localStorage.setItem('geran_lang', currentLang);
-      applyLanguage();
-    });
-
-    document.getElementById('edit-lang')?.addEventListener('change', (e) => {
-      currentLang = e.target.value;
-      localStorage.setItem('geran_lang', currentLang);
-      applyLanguage();
-    });
-
-    // ========== МАССИВ ТОВАРОВ С ЛОКАЛЬНЫМИ КАРТИНКАМИ ==========
     const DEFAULT_LISTINGS = [
       { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
       { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: 50, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['34.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
       { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-
-
-
     ];
 
-    // ========== СОСТОЯНИЕ ==========
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
-      listings: [],
+      listings: [...DEFAULT_LISTINGS],
       favorites: JSON.parse(localStorage.getItem('geran_favorites')) || [],
       currentScreen: 'home',
       editId: null,
@@ -945,79 +682,16 @@
     };
 
     let selectedImages = [];
-
-    (function initListings() {
-      const storedListings = localStorage.getItem('geran_listings');
-      if (storedListings) {
-        try {
-          state.listings = JSON.parse(storedListings);
-        } catch (e) {
-          state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
-          localStorage.setItem('geran_listings', JSON.stringify(state.listings));
-        }
-      } else {
-        state.listings = JSON.parse(JSON.stringify(DEFAULT_LISTINGS));
-        localStorage.setItem('geran_listings', JSON.stringify(state.listings));
-      }
-    })();
-
-    const PLACEHOLDER_IMG = '123.png';
+    const PLACEHOLDER_IMG = 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png';
 
     const save = () => {
-      localStorage.setItem('geran_listings', JSON.stringify(state.listings));
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
       if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
     };
 
-    const screens = {
-      home: document.getElementById('screen-home'),
-      favorites: document.getElementById('screen-favorites'),
-      my: document.getElementById('screen-my'),
-      profile: document.getElementById('screen-profile'),
-      create: document.getElementById('screen-create'),
-      detail: document.getElementById('screen-detail'),
-      search: document.getElementById('screen-search'),
-      login: document.getElementById('screen-login'),
-    };
-    const bottomNav = document.getElementById('bottom-nav');
-    const mainHeader = document.getElementById('main-header');
-
-    function updateNavVisibility(screenId) {
-      bottomNav.classList.toggle('hidden', screenId === 'login');
-    }
-
-    function setActiveNavTab(screenId) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      const navItem = document.querySelector(`.nav-item[data-tab="${screenId}"]`);
-      if (navItem) navItem.classList.add('active');
-    }
-
-    function showScreen(id) {
-      if (id === 'profile' && !state.user) id = 'login';
-      Object.values(screens).forEach(s => s.classList.remove('active'));
-      if (screens[id]) screens[id].classList.add('active');
-      state.currentScreen = id;
-      mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
-      updateNavVisibility(id);
-      setActiveNavTab(id);
-      renderScreen(id);
-    }
-
-    function renderScreen(id) {
-      switch (id) {
-        case 'home': renderHome(); break;
-        case 'favorites': renderFavorites(); break;
-        case 'my': renderMy(); break;
-        case 'profile': renderProfile(); break;
-        case 'search': renderSearch(); break;
-        case 'create': renderCreateForm(); break;
-      }
-    }
-
-    // Функция отрисовки карточек — БЕЗ onerror, чистое чтение массива
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
-      const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
+      const priceText = l.isFree ? `<div class="card-price free">${t('free')}</div>` : `<div class="card-price">${(l.price || 0).toLocaleString()} с.</div>`;
       let finalSrc = PLACEHOLDER_IMG;
       if (l.images && l.images.length > 0) {
         let raw = l.images[0];
@@ -1026,25 +700,24 @@
         } else if (raw) {
           finalSrc = raw;
         }
-      } else if (l.image) {
-        finalSrc = l.image;
       }
-      const vipBadge = l.isVIP ? '<div class="card-badge" style="background:#1e4a3b;">VIP</div>' : '';
+      const vipClass = l.isVIP ? 'vip-card' : '';
+      const vipBadge = l.isVIP ? '<div class="card-badge vip-badge">VIP</div>' : '';
       return `
-        <div class="card" onclick="window._openDetail('${l.id}')">
+        <div class="card ${vipClass}" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
-            <img src="${finalSrc}" class="card-img" alt="${l.title}">
+            <img src="${finalSrc}" alt="${l.title}">
             ${vipBadge}
             <div class="card-heart ${liked?'liked':''}" onclick="event.stopPropagation(); window._toggleFav('${l.id}')">
               <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-price">${priceText}</div>
+            ${priceText}
             <div class="card-title">${l.title}</div>
             <div class="card-meta">
               <span>📍 ${l.village || 'Деҳаи Геран'}</span>
-              <span>${new Date(l.date).toLocaleDateString()}</span>
+              <span>${l.condition === 'new' ? t('cond_new') : t('cond_used')}</span>
             </div>
           </div>
         </div>`;
@@ -1073,11 +746,30 @@
       return html + '</div>';
     }
 
-    function renderHome() {
+    async function loadFirestoreListings() {
+      if (!db || !firebaseReady) return [];
+      try {
+        const snapshot = await db.collection("listings").orderBy("date", "desc").get();
+        const cloud = [];
+        snapshot.forEach(doc => cloud.push({ id: doc.id, ...doc.data() }));
+        return cloud;
+      } catch (e) {
+        console.error('Firestore read error:', e);
+        return [];
+      }
+    }
+
+    async function renderHome() {
+      const cloudListings = await loadFirestoreListings();
+      const merged = [...DEFAULT_LISTINGS];
+      cloudListings.forEach(cl => {
+        if (!merged.some(l => l.id === cl.id)) merged.unshift(cl);
+      });
+      state.listings = merged;
       let filtered = state.listings.filter(l => l.isActive !== false);
       if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
       const gridHtml = filtered.length ? filtered.map(cardHTML).join('') : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
-      screens.home.innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
+      document.getElementById('screen-home').innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
     }
 
     window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
@@ -1092,7 +784,7 @@
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('my-container').innerHTML = my.length ? my.map(l => `
         <div class="card" style="padding:14px;margin-bottom:10px">
-          <b>${l.title}</b> - ${l.isFree ? t('free') : l.price.toLocaleString()+' с.'}
+          <b>${l.title}</b> - ${l.isFree ? t('free') : (l.price||0).toLocaleString()+' с.'}
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn btn-outline" style="flex:0;padding:8px 12px" onclick="window._editListing('${l.id}')">✏️</button>
             <button class="btn btn-outline" style="flex:0;padding:8px 12px;color:red;border-color:red" onclick="window._deleteListing('${l.id}')">🗑️</button>
@@ -1153,74 +845,85 @@
       });
     }
 
-    function renderPhotoThumbs() {
-      const container = document.getElementById('photo-upload-area');
-      if (!container) return;
-      container.querySelectorAll('.photo-thumb').forEach(el => el.remove());
-      const uploadBtn = document.getElementById('photo-upload-btn');
-      state.uploadedPhotos.forEach((photo, index) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'photo-thumb';
-        thumb.style.position = 'relative';
-        thumb.innerHTML = `<img src="${photo}" alt=""><span class="photo-thumb-remove" data-index="${index}">×</span>`;
-        container.insertBefore(thumb, uploadBtn);
-      });
-      container.querySelectorAll('.photo-thumb-remove').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          state.uploadedPhotos.splice(parseInt(btn.dataset.index), 1);
-          renderPhotoThumbs();
-        });
-      });
+    async function uploadImagesToImgBB(files) {
+      const urls = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+          const res = await fetch('https://api.imgbb.com/1/upload?key=6d99df854930b8d2d6199bc181e18d66', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) urls.push(data.data.url);
+        } catch (e) {
+          console.error('ImgBB upload error:', e);
+        }
+      }
+      return urls;
     }
 
-    document.getElementById('condition-selector')?.addEventListener('click', (e) => {
-      const option = e.target.closest('.condition-option');
-      if (!option) return;
-      document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.remove('active'));
-      option.classList.add('active');
-      state.selectedCondition = option.dataset.condition;
-    });
-
-    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('create-photo-input').click());
-
-    document.getElementById('create-photo-input')?.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
-      if (!files.length) return;
-      let loaded = 0;
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          selectedImages.push(ev.target.result);
-          loaded++;
-          if (loaded === files.length) {
-            renderSelectedPhotos();
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      e.target.value = '';
-    });
-
-    document.getElementById('avatar-edit-btn')?.addEventListener('click', () => document.getElementById('avatar-file-input').click());
-    document.getElementById('avatar-file-input')?.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (state.user) { state.user.avatar = ev.target.result; save(); document.getElementById('profile-avatar-img').src = ev.target.result; }
+    document.getElementById('submit-create').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('create-title').value.trim();
+      const phone = document.getElementById('create-phone').value.trim();
+      if (!title || !phone) return alert(t('fill_fields'));
+      
+      const btn = document.getElementById('submit-create');
+      btn.disabled = true;
+      btn.textContent = 'Загрузка и публикация...';
+      
+      const fileInput = document.getElementById('create-photo-input');
+      let imageUrls = ['https://cdn-icons-png.flaticon.com/512/2922/2922510.png'];
+      if (fileInput && fileInput.files.length > 0) {
+        const files = Array.from(fileInput.files).slice(0, 5);
+        const uploaded = await uploadImagesToImgBB(files);
+        if (uploaded.length > 0) imageUrls = uploaded;
+      }
+      
+      const isFree = document.getElementById('create-free')?.checked || false;
+      const priceInput = document.getElementById('create-price');
+      const activeCondition = document.querySelector('#condition-selector .condition-option.active');
+      
+      const listingData = {
+        title: title,
+        desc: document.getElementById('create-desc').value.trim(),
+        price: isFree ? 0 : (parseInt(priceInput?.value) || 0),
+        isFree: isFree,
+        category: document.getElementById('create-category').value,
+        phone: phone,
+        village: document.getElementById('create-village').value.trim() || 'Деҳаи Геран',
+        images: imageUrls,
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        userId: state.user?.uid || 'demo',
+        condition: activeCondition?.dataset.condition || 'new',
+        isVIP: document.getElementById('create-vip')?.checked || false
       };
-      reader.readAsDataURL(file);
-    });
-
-    document.getElementById('save-profile-btn')?.addEventListener('click', () => {
-      if (!state.user) return;
-      state.user.name = document.getElementById('edit-name').value.trim() || state.user.name;
-      state.user.phone = document.getElementById('edit-phone').value.trim() || state.user.phone;
-      state.user.village = document.getElementById('edit-village').value;
-      save();
-      renderProfile();
-      alert(t('profile_updated'));
+      
+      try {
+        if (db && firebaseReady) {
+          await db.collection("listings").add(listingData);
+          alert("Объявление успешно опубликовано в Firebase Firestore!");
+          document.getElementById('create-title').value = '';
+          document.getElementById('create-desc').value = '';
+          if(priceInput) priceInput.value = '';
+          document.getElementById('create-phone').value = '+992 ';
+          document.getElementById('create-village').value = 'Деҳаи Геран';
+          document.getElementById('create-free').checked = false;
+          document.getElementById('create-vip').checked = false;
+          if(fileInput) fileInput.value = '';
+          selectedImages = [];
+          renderSelectedPhotos();
+          showScreen('home');
+        }
+      } catch (error) {
+        console.error('Ошибка публикации:', error);
+        alert('Ошибка при отправке в базу данных.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Нашр кунед';
+      }
     });
 
     window._toggleFav = (id) => {
@@ -1245,19 +948,11 @@
         } else if (raw) {
           finalSrc = raw;
         }
-      } else if (l.image) {
-        finalSrc = l.image;
       }
-      const priceText = l.isFree ? t('free') : `${l.price.toLocaleString()} с.`;
+      const priceText = l.isFree ? t('free') : `${(l.price||0).toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
-      let allImagesHtml = '';
-      if (l.images && l.images.length > 0) {
-        allImagesHtml = l.images.map(img => {
-          return `<img src="${img}" class="detail-img" style="margin-bottom:8px;">`;
-        }).join('');
-      }
       document.getElementById('detail-content').innerHTML = `
-        ${allImagesHtml || `<img src="${finalSrc}" class="detail-img">`}
+        <img src="${finalSrc}" class="detail-img">
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
@@ -1296,117 +991,99 @@
       if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
     };
 
-    // ========== СОХРАНЕНИЕ В FIREBASE FIRESTORE ==========
-    async function saveProductToCloud(productData) {
-      if (!db || !firebaseReady) {
-        console.warn('Firebase не доступен, сохраняем локально');
-        return null;
-      }
-      try {
-        const docRef = await firebase.firestore().collection('geran_products').add(productData);
-        console.log('Продукт сохранен в Firestore с ID:', docRef.id);
-        return docRef.id;
-      } catch (error) {
-        console.error('Ошибка сохранения в Firestore:', error);
-        alert(t('cloud_save_error'));
-        return null;
+    const screens = {
+      home: document.getElementById('screen-home'), favorites: document.getElementById('screen-favorites'),
+      my: document.getElementById('screen-my'), profile: document.getElementById('screen-profile'),
+      create: document.getElementById('screen-create'), detail: document.getElementById('screen-detail'),
+      search: document.getElementById('screen-search'), login: document.getElementById('screen-login'),
+    };
+    const bottomNav = document.getElementById('bottom-nav');
+    const mainHeader = document.getElementById('main-header');
+
+    function showScreen(id) {
+      if (id === 'profile' && !state.user) id = 'login';
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      if (screens[id]) screens[id].classList.add('active');
+      state.currentScreen = id;
+      mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
+      bottomNav.classList.toggle('hidden', id === 'login');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navItem = document.querySelector(`.nav-item[data-tab="${id}"]`);
+      if (navItem) navItem.classList.add('active');
+      renderScreen(id);
+    }
+
+    function renderScreen(id) {
+      switch (id) {
+        case 'home': renderHome(); break;
+        case 'favorites': renderFavorites(); break;
+        case 'my': renderMy(); break;
+        case 'profile': renderProfile(); break;
+        case 'search': renderSearch(); break;
+        case 'create': renderCreateForm(); break;
       }
     }
 
-    // ========== ЗАГРУЗКА ПРОДУКТОВ ИЗ FIREBASE FIRESTORE ==========
-    async function loadProductsFromCloud() {
-      if (!db || !firebaseReady) {
-        console.warn('Firebase не доступен, используются локальные данные');
-        return [];
-      }
-      try {
-        const querySnapshot = await firebase.firestore().collection('geran_products').get();
-        const cloudProducts = [];
-        querySnapshot.forEach((doc) => {
-          cloudProducts.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('Загружено продуктов из облака:', cloudProducts.length);
-        return cloudProducts;
-      } catch (error) {
-        console.error('Ошибка загрузки из Firestore:', error);
-        return [];
-      }
-    }
+    document.getElementById('condition-selector')?.addEventListener('click', (e) => {
+      const option = e.target.closest('.condition-option');
+      if (!option) return;
+      document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.remove('active'));
+      option.classList.add('active');
+      state.selectedCondition = option.dataset.condition;
+    });
 
-    document.getElementById('submit-create').addEventListener('click', async () => {
-      if (selectedImages.length < 5) {
-        alert(t('min_photos'));
-        return;
-      }
-      const title = document.getElementById('create-title').value.trim();
-      const phone = document.getElementById('create-phone').value.trim();
-      if (!title || !phone) return alert(t('fill_fields'));
-      const data = {
-        id: state.editId || 'id_'+Date.now(), title,
-        desc: document.getElementById('create-desc').value,
-        category: document.getElementById('create-category').value,
-        price: parseInt(document.getElementById('create-price').value) || 0,
-        isFree: false, phone,
-        village: document.getElementById('create-village').value,
-        images: [...selectedImages],
-        date: Date.now(),
-        userId: state.user?.uid || 'demo',
-        condition: state.selectedCondition,
-        isActive: true, isVIP: false
+    document.getElementById('create-free')?.addEventListener('change', function() {
+      const priceInput = document.getElementById('create-price');
+      if (this.checked) { priceInput.value = 0; priceInput.disabled = true; }
+      else { priceInput.disabled = false; priceInput.value = ''; }
+    });
+
+    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('create-photo-input').click());
+    document.getElementById('create-photo-input')?.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files).slice(0, 5);
+      if (!files.length) return;
+      let loaded = 0;
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          selectedImages.push(ev.target.result);
+          loaded++;
+          if (loaded === files.length) renderSelectedPhotos();
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    });
+
+    document.getElementById('lang-switch-btn')?.addEventListener('click', () => {
+      currentLang = currentLang === 'tg' ? 'ru' : 'tg';
+      localStorage.setItem('geran_lang', currentLang);
+      applyLanguage();
+    });
+    document.getElementById('edit-lang')?.addEventListener('change', (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem('geran_lang', currentLang);
+      applyLanguage();
+    });
+    document.getElementById('avatar-edit-btn')?.addEventListener('click', () => document.getElementById('avatar-file-input').click());
+    document.getElementById('avatar-file-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (state.user) { state.user.avatar = ev.target.result; save(); document.getElementById('profile-avatar-img').src = ev.target.result; }
       };
-      if (state.editId) {
-        const idx = state.listings.findIndex(l => l.id === state.editId);
-        if (idx !== -1) state.listings[idx] = { ...state.listings[idx], ...data };
-        state.editId = null;
-      } else {
-        state.listings.unshift(data);
-      }
-
-      // Сохраняем в Firestore если доступен
-      if (firebaseReady && db) {
-        await saveProductToCloud(data);
-      }
-
-      selectedImages = [];
-      renderSelectedPhotos();
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('save-profile-btn')?.addEventListener('click', () => {
+      if (!state.user) return;
+      state.user.name = document.getElementById('edit-name').value.trim() || state.user.name;
+      state.user.phone = document.getElementById('edit-phone').value.trim() || state.user.phone;
+      state.user.village = document.getElementById('edit-village').value;
       save();
-      showScreen('home');
+      renderProfile();
+      alert(t('profile_updated'));
     });
-
-    // ========== ВАЛИДАЦИЯ И БЛОКИРОВКА КНОПКИ ВХОДА ==========
-    function validateLoginPhone() {
-      const phoneInput = document.getElementById('login-phone');
-      const loginBtn = document.getElementById('login-btn');
-      if (!phoneInput || !loginBtn) return;
-      
-      const digitsCount = phoneInput.value.length;
-      
-      if (digitsCount < 6 || digitsCount > 10) {
-        loginBtn.disabled = true;
-        loginBtn.style.opacity = '0.5';
-        loginBtn.style.pointerEvents = 'none';
-      } else {
-        loginBtn.disabled = false;
-        loginBtn.style.opacity = '1';
-        loginBtn.style.pointerEvents = 'auto';
-      }
-    }
-
-    // Обработчик ввода в поле телефона
-    document.getElementById('login-phone').addEventListener('input', function (e) {
-      // Мгновенно удаляет всё, кроме цифр
-      this.value = this.value.replace(/\D/g, '');
-      // Обрезаем длину до 10 цифр
-      if (this.value.length > 10) {
-        this.value = this.value.slice(0, 10);
-      }
-      // Проверяем валидацию
-      validateLoginPhone();
-    });
-
-    // Блокируем кнопку при загрузке, если поле пустое
-    validateLoginPhone();
-
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
     document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
@@ -1421,17 +1098,18 @@
         showScreen('home');
       }
     });
-
     const themeCheckbox = document.getElementById('theme-checkbox');
     themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
     document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
     document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
-
     if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ (БЕЗ ВЫЗОВА FIREBASE) ==========
     applyLanguage();
-    state.user ? showScreen('home') : showScreen('login');
+    if (state.user) {
+      showScreen('home');
+    } else {
+      showScreen('login');
+    }
   })();
 </script>
 </body>

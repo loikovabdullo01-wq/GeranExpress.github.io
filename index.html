@@ -846,19 +846,20 @@
     }
 
    async function uploadImagesToImgBB(files) {
-    const apiKey = '044c84fb33e068293052ead694715174';
-    const urls = [];
+    var apiKey = '044c84fb33e068293052ead694715174';
+    var urls = [];
 
-    for (const file of files) {
-        const formData = new FormData();
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var formData = new FormData();
         formData.append('image', file);
 
         try {
-            const res = await fetch(`https://imgbb.com{apiKey}`, {
+            var res = await fetch('https://imgbb.com' + apiKey, {
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
+            var data = await res.json();
 
             if (data && data.success) {
                 urls.push(data.data.display_url);
@@ -871,6 +872,7 @@
     }
     return urls;
 }
+
 
 
 

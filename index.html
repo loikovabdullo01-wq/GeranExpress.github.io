@@ -104,8 +104,8 @@
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
     .lang-btn {
-      width: 22px !important;
-      height: 22px !important;
+      width: 30px !important;
+      height: 30px !important;
       border-radius: 50%;
       background: var(--primary);
       color: white;
@@ -115,7 +115,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 10px;
+      font-size: 14px;
       font-family: Arial, sans-serif;
       line-height: 1;
       padding: 0;
@@ -276,8 +276,8 @@
     input:checked + .slider:before { transform: translateX(22px); }
     .condition-selector { display: flex; gap: 12px; margin-bottom: 16px; }
     .condition-option {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      gap: 6px; padding: 12px; border: 1.5px solid var(--border);
+      flex: 0 1 auto; display: flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 12px 24px; border: 1.5px solid var(--border);
       border-radius: 14px; cursor: pointer; font-weight: 500;
       color: var(--text-secondary); transition: all var(--transition);
       background: var(--surface);
@@ -431,17 +431,17 @@
       <input class="input-field" id="create-title" placeholder="Ном">
       <textarea class="input-field" id="create-desc" placeholder="Тавсиф" rows="3"></textarea>
       <select id="create-category" class="input-field">
-        <option value="electronics">Электроника</option>
-        <option value="computers">Компьютеры</option>
-        <option value="appliances">Бытовая техника</option>
-        <option value="auto">Авто</option>
-        <option value="moto">Мото</option>
-        <option value="realestate">Недвижимость</option>
-        <option value="tools">Инструменты</option>
-        <option value="parts">Запчасти</option>
-        <option value="clothes">Одежда</option>
-        <option value="services">Услуги</option>
-        <option value="other">Другое</option>
+        <option value="Электроника">Электроника</option>
+        <option value="Компьютеры">Компьютеры</option>
+        <option value="Бытовая техника">Бытовая техника</option>
+        <option value="Авто">Авто</option>
+        <option value="Мото">Мото</option>
+        <option value="Недвижимость">Недвижимость</option>
+        <option value="Инструменты">Инструменты</option>
+        <option value="Запчасти">Запчасти</option>
+        <option value="Одежда">Одежда</option>
+        <option value="Услуги">Услуги</option>
+        <option value="Другое">Другое</option>
       </select>
       <div class="condition-selector" id="condition-selector">
         <div class="condition-option active" data-condition="new">
@@ -655,7 +655,8 @@
         if (names) opt.textContent = names[currentLang] || opt.value;
       });
       document.querySelectorAll('#create-category option').forEach(opt => {
-        const translationKey = 'cat_' + opt.value;
+        const catKey = opt.value;
+        const translationKey = categoryTransKeys[catKey] || ('cat_' + catKey);
         if (translations[currentLang] && translations[currentLang][translationKey]) {
           opt.textContent = translations[currentLang][translationKey];
         }
@@ -663,11 +664,13 @@
       if (state.currentScreen) renderScreen(state.currentScreen);
     }
 
-    const DEFAULT_LISTINGS = [
+    const SHOW_DEFAULT_LISTINGS = false;
+
+    const DEFAULT_LISTINGS = SHOW_DEFAULT_LISTINGS ? [
       { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
       { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: 50, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['34.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-      { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-    ];
+      { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false }
+    ] : [];
 
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
@@ -706,7 +709,7 @@
       return `
         <div class="card ${vipClass}" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
-            <img src="${finalSrc}" alt="${l.title}">
+            <img src="${finalSrc}" alt="${l.title}" onerror="this.style.display='none';" onload="this.style.display='block';">
             ${vipBadge}
             <div class="card-heart ${liked?'liked':''}" onclick="event.stopPropagation(); window._toggleFav('${l.id}')">
               <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
@@ -815,6 +818,7 @@
       document.getElementById('create-price').value = '';
       document.getElementById('create-phone').value = state.user?.phone || '';
       document.getElementById('create-village').value = state.user?.village || 'Деҳаи Геран';
+      document.getElementById('create-category').value = 'Электроника';
       state.selectedCondition = 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
         el.classList.toggle('active', el.dataset.condition === 'new');
@@ -912,7 +916,14 @@ document.getElementById('submit-create').addEventListener('click', async functio
         let imageUrls = [];
 
         if (Array.isArray(selectedImages) && selectedImages.length > 0) {
-            imageUrls = await uploadImagesToImgBB(selectedImages.slice(0, 5));
+            const newImages = selectedImages.filter(img => img.startsWith('data:'));
+            const existingImages = selectedImages.filter(img => !img.startsWith('data:'));
+            if (newImages.length > 0) {
+                const uploadedUrls = await uploadImagesToImgBB(newImages.slice(0, 5));
+                imageUrls = [...existingImages, ...uploadedUrls];
+            } else {
+                imageUrls = [...existingImages];
+            }
         }
 
         const isFree = document.getElementById('create-free')?.checked || false;
@@ -929,10 +940,16 @@ document.getElementById('submit-create').addEventListener('click', async functio
             date: firebase.firestore.FieldValue.serverTimestamp(),
             userId: state.user?.uid || 'demo',
             condition: activeCondition?.dataset.condition || 'new',
-            isVIP: document.getElementById('create-vip')?.checked || false
+            isVIP: document.getElementById('create-vip')?.checked || false,
+            category: document.getElementById('create-category').value
         };
 
-        await db.collection('listings').add(listingData);
+        if (state.editId) {
+            await db.collection('listings').doc(state.editId).update(listingData);
+            state.editId = null;
+        } else {
+            await db.collection('listings').add(listingData);
+        }
 
         alert('Объявление успешно опубликовано!');
 
@@ -945,6 +962,7 @@ document.getElementById('submit-create').addEventListener('click', async functio
 
         document.getElementById('create-phone').value = '+992 ';
         document.getElementById('create-village').value = 'Деҳаи Геран';
+        document.getElementById('create-category').value = 'Электроника';
         document.getElementById('create-free').checked = false;
         document.getElementById('create-vip').checked = false;
 
@@ -989,12 +1007,13 @@ document.getElementById('submit-create').addEventListener('click', async functio
       }
       const priceText = l.isFree ? t('free') : `${(l.price||0).toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
+      const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
       document.getElementById('detail-content').innerHTML = `
-        <img src="${finalSrc}" class="detail-img">
+        <img src="${finalSrc}" class="detail-img" onerror="this.style.display='none';" onload="this.style.display='block';">
         <h2>${l.title}</h2>
         <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
         <p style="margin:10px 0">${l.desc}</p>
-        <p>📍 ${l.village || 'Деҳаи Геран'} · ${l.category} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
+        <p>📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
         <div class="detail-actions">
           <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>${t('call')}</a>
           <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span></button>
@@ -1025,8 +1044,19 @@ document.getElementById('submit-create').addEventListener('click', async functio
       showScreen('create');
     };
 
-    window._deleteListing = (id) => {
-      if (confirm(t('delete_confirm'))) { state.listings = state.listings.filter(l => l.id !== id); save(); renderMy(); }
+    window._deleteListing = async (id) => {
+      if (confirm(t('delete_confirm'))) {
+        if (db && firebaseReady) {
+          try {
+            await db.collection('listings').doc(id).delete();
+          } catch (e) {
+            console.error('Ошибка удаления из Firestore:', e);
+          }
+        }
+        state.listings = state.listings.filter(l => l.id !== id);
+        save();
+        renderMy();
+      }
     };
 
     const screens = {

@@ -726,18 +726,56 @@
         </div>`;
     }
 
-    const categoryKeys = ['Электроника','Компьютеры','Бытовая техника','Авто','Мото','Недвижимость','Инструменты','Запчасти','Одежда','Услуги','Другое'];
-    const categoryIcons = {
-      'Электроника':'smartphone','Компьютеры':'computer','Бытовая техника':'tv','Авто':'directions_car',
-      'Мото':'two_wheeler','Недвижимость':'home','Инструменты':'build','Запчасти':'build_circle',
-      'Одежда':'checkroom','Услуги':'handyman','Другое':'category'
-    };
-    const categoryTransKeys = {
-      'Электроника':'cat_electronics','Компьютеры':'cat_computers','Бытовая техника':'cat_appliances',
-      'Авто':'cat_auto','Мото':'cat_moto','Недвижимость':'cat_realestate','Инструменты':'cat_tools',
-      'Запчасти':'cat_parts','Одежда':'cat_clothes','Услуги':'cat_services','Другое':'cat_other'
-    };
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
+const categoryKeys = [
+  'Услуги',
+  'Электроника',
+  'Бытовая техника',
+  'Компьютеры',
+  'Авто',
+  'Мото',
+  'Недвижимость',
+  'Инструменты',
+  'Запчасти',
+  'Одежда',
+  'Другое'
+];
+
+const categoryIcons = {
+  'Услуги': 'handyman',
+  'Электроника': 'smartphone',
+  'Бытовая техника': 'tv',
+  'Компьютеры': 'computer',
+  'Авто': 'directions_car',
+  'Мото': 'two_wheeler',
+  'Недвижимость': 'home',
+  'Инструменты': 'build',
+  'Запчасти': 'build_circle',
+  'Одежда': 'checkroom',
+  'Другое': 'category'
+};
+
+const categoryTransKeys = {
+  'Услуги': 'cat_services',
+  'Электроника': 'cat_electronics',
+  'Бытовая техника': 'cat_appliances',
+  'Компьютеры': 'cat_computers',
+  'Авто': 'cat_auto',
+  'Мото': 'cat_moto',
+  'Недвижимость': 'cat_realestate',
+  'Инструменты': 'cat_tools',
+  'Запчасти': 'cat_parts',
+  'Одежда': 'cat_clothes',
+  'Другое': 'cat_other'
+};
     function renderCategories() {
       let html = '<div class="categories-row">';
       html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> ${t('cat_all')}</div>`;
@@ -763,17 +801,31 @@
     }
 
     async function renderHome() {
-      const cloudListings = await loadFirestoreListings();
+    const cloudListings = await loadFirestoreListings();
       const merged = [...DEFAULT_LISTINGS];
+
       cloudListings.forEach(cl => {
         if (!merged.some(l => l.id === cl.id)) merged.unshift(cl);
       });
+
       state.listings = merged;
+
       let filtered = state.listings.filter(l => l.isActive !== false);
-      if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
-      const gridHtml = filtered.length ? filtered.map(cardHTML).join('') : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
-      document.getElementById('screen-home').innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
-    }
+
+      if (state.activeCategory) {
+        filtered = filtered.filter(l => l.category === state.activeCategory);
+      }
+
+      // меняет порядок объявлений внутри категории
+      filtered.sort(() => Math.random() - 0.5);
+
+      const gridHtml = filtered.length
+        ? filtered.map(cardHTML).join('')
+        : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
+
+      document.getElementById('screen-home').innerHTML =
+        renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
+}
 
     window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
     window._clearCategory = () => { state.activeCategory = null; renderHome(); window.scrollTo(0,0); };
@@ -1179,6 +1231,63 @@ document.getElementById('submit-create').addEventListener('click', async functio
       showScreen('login');
     }
   })();
+
+  // ========== ВАЛИДАЦИЯ И БЛОКИРОВКА КНОПКИ ВХОДА ==========
+    function validateLoginPhone() {
+      const phoneInput = document.getElementById('login-phone');
+      const loginBtn = document.getElementById('login-btn');
+      if (!phoneInput || !loginBtn) return;
+      
+      const digitsCount = phoneInput.value.length;
+      
+      if (digitsCount < 6 || digitsCount > 10) {
+        loginBtn.disabled = true;
+        loginBtn.style.opacity = '0.5';
+        loginBtn.style.pointerEvents = 'none';
+      } else {
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = '1';
+        loginBtn.style.pointerEvents = 'auto';
+      }
+    }
+
+    // Обработчик ввода в поле телефона
+    document.getElementById('login-phone').addEventListener('input', function (e) {
+      // Мгновенно удаляет всё, кроме цифр
+      this.value = this.value.replace(/\D/g, '');
+      // Обрезаем длину до 10 цифр
+      if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10);
+      }
+      // Проверяем валидацию
+      validateLoginPhone();
+    });
+
+    // Блокируем кнопку при загрузке, если поле пустое
+    validateLoginPhone();
+
+    document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
+    document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
+    document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
+    document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
+    document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
+    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const phone = document.getElementById('login-phone').value.trim();
+      if (phone) {
+        state.user = { uid: 'user_'+Date.now(), phone, name: '', avatar: null, village: 'Деҳаи Геран' };
+        localStorage.setItem('geran_user', JSON.stringify(state.user));
+        showScreen('home');
+      }
+    });
+
+    const themeCheckbox = document.getElementById('theme-checkbox');
+    themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
+    document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
+    document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
+
+    if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
+
 </script>
 </body>
 </html>

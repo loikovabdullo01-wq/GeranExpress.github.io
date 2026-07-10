@@ -885,13 +885,23 @@
       
       const fileInput = document.getElementById('create-photo-input');
       let imageUrls = ['https://cdn-icons-png.flaticon.com/512/2922/2922510.png'];
-// Берем фотографии из вашего массива selectedImages, который используется для красивой анимации
+// Жёстко заставляем код взять файлы из превью вашей анимации
+let filesToUpload = [];
+
 if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
-    const files = selectedImages.slice(0, 5); // Берем первые 5 выбранных картинок
-    const uploaded = await uploadImagesToImgBB(files);
+    filesToUpload = selectedImages;
+} else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    filesToUpload = Array.from(fileInput.files);
+}
+
+// Если файлы нашлись, отправляем их на ImgBB
+if (filesToUpload.length > 0) {
+    const uploaded = await uploadImagesToImgBB(filesToUpload.slice(0, 5));
     if (uploaded && uploaded.length > 0) {
-        imageUrls = uploaded;
+        imageUrls = uploaded; // Заменяем аватар-персонажа на ссылки с ImgBB!
     }
+}
+
 } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
     // На всякий случай оставляем проверку стандартного инпута, если массив окажется пуст
     const files = Array.from(fileInput.files).slice(0, 5);

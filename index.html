@@ -849,112 +849,120 @@ async function uploadImagesToImgBB(base64Array) {
     var apiKey = '044c84fb33e068293052ead694715174';
     var urls = [];
 
+    if (!Array.isArray(base64Array) || base64Array.length === 0) {
+        return urls;
+    }
+
     for (var i = 0; i < base64Array.length; i++) {
         try {
-            // Вытаскиваем чистый код картинки, убирая техническую приставку "data:image/...;base64,"
             var rawString = base64Array[i];
-            var cleanBase64 = rawString.includes(',') ? rawString.split(',')[1] : rawString;
+
+            if (typeof rawString !== 'string') {
+                continue;
+            }
+
+            var cleanBase64 = rawString.includes(',')
+                ? rawString.split(',')[1]
+                : rawString;
 
             var formData = new FormData();
             formData.append('image', cleanBase64);
-        var res = await fetch('https://imgbb.com' + apiKey, {
 
-                method: 'POST',
-                body: formData
-            });
+            var res = await fetch(
+                'https://api.imgbb.com/1/upload?key=' + apiKey,
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
             var data = await res.json();
 
-            if (data && data.success) {
+            if (data && data.success && data.data && data.data.display_url) {
                 urls.push(data.data.display_url);
             } else {
                 console.error('Ошибка ImgBB:', data);
             }
+
         } catch (e) {
-            console.error('Ошибка сети при загрузке:', e);
+            console.error('Ошибка сети при загрузке изображения:', e);
         }
     }
+
     return urls;
 }
 
+document.getElementById('submit-create').addEventListener('click', async function (e) {
+    e.preventDefault();
 
+    const title = document.getElementById('create-title').value.trim();
+    const phone = document.getElementById('create-phone').value.trim();
 
-
-    document.getElementById('submit-create').addEventListener('click', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('create-title').value.trim();
-      const phone = document.getElementById('create-phone').value.trim();
-      if (!title || !phone) return alert(t('fill_fields'));
-      
-           const btn = document.getElementById('submit-create');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Загрузка и публикация...';
+    if (!title || !phone) {
+        alert(t('fill_fields'));
+        return;
     }
 
-    const fileInput = document.getElementById('create-photo-input');
-    let imageUrls = ['https://flaticon.com'];
-    
-    let filesToUpload = [];
+    const btn = document.getElementById('submit-create');
+    btn.disabled = true;
+    btn.textContent = 'Загрузка и публикация...';
 
-    if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
-        filesToUpload = selectedImages;
-    } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        filesToUpload = Array.from(fileInput.files);
-    }
+    try {
 
-    if (filesToUpload.length > 0) {
-        const uploaded = await uploadImagesToImgBB(filesToUpload.slice(0, 5));
-        if (uploaded && uploaded.length > 0) {
-            imageUrls = uploaded;
+        let imageUrls = [];
+
+        if (Array.isArray(selectedImages) && selectedImages.length > 0) {
+            imageUrls = await uploadImagesToImgBB(selectedImages.slice(0, 5));
         }
-    }
 
+        const isFree = document.getElementById('create-free')?.checked || false;
+        const priceInput = document.getElementById('create-price');
+        const activeCondition = document.querySelector('#condition-selector .condition-option.active');
 
+        const listingData = {
+            title: title,
+            desc: document.getElementById('create-desc').value.trim(),
+            price: isFree ? 0 : (parseInt(priceInput?.value) || 0),
+            phone: phone,
+            village: document.getElementById('create-village').value.trim() || 'Деҳаи Геран',
+            images: imageUrls,
+            date: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: state.user?.uid || 'demo',
+            condition: activeCondition?.dataset.condition || 'new',
+            isVIP: document.getElementById('create-vip')?.checked || false
+        };
 
-      
-      const isFree = document.getElementById('create-free')?.checked || false;
-      const priceInput = document.getElementById('create-price');
-      const activeCondition = document.querySelector('#condition-selector .condition-option.active');
-      
-      const listingData = {
-        title: title,
-        desc: document.getElementById('create-desc').value.trim(),
-        price: isFree ? 0 : (parseInt(priceInput?.value) || 0),
-        isFree: isFree,
-        category: document.getElementById('create-category').value,
-        phone: phone,
-        village: document.getElementById('create-village').value.trim() || 'Деҳаи Геран',
-        images: imageUrls,
-        date: firebase.firestore.FieldValue.serverTimestamp(),
-        userId: state.user?.uid || 'demo',
-        condition: activeCondition?.dataset.condition || 'new',
-        isVIP: document.getElementById('create-vip')?.checked || false
-      };
-      
-      try {
-        if (db && firebaseReady) {
-          await db.collection("listings").add(listingData);
-          alert("Объявление успешно опубликовано в Firebase Firestore!");
-          document.getElementById('create-title').value = '';
-          document.getElementById('create-desc').value = '';
-          if(priceInput) priceInput.value = '';
-          document.getElementById('create-phone').value = '+992 ';
-          document.getElementById('create-village').value = 'Деҳаи Геран';
-          document.getElementById('create-free').checked = false;
-          document.getElementById('create-vip').checked = false;
-          if(fileInput) fileInput.value = '';
-          selectedImages = [];
-          renderSelectedPhotos();
-          showScreen('home');
+        await db.collection('listings').add(listingData);
+
+        alert('Объявление успешно опубликовано!');
+
+        document.getElementById('create-title').value = '';
+        document.getElementById('create-desc').value = '';
+
+        if (priceInput) {
+            priceInput.value = '';
         }
-      } catch (error) {
+
+        document.getElementById('create-phone').value = '+992 ';
+        document.getElementById('create-village').value = 'Деҳаи Геран';
+        document.getElementById('create-free').checked = false;
+        document.getElementById('create-vip').checked = false;
+
+        document.getElementById('create-photo-input').value = '';
+
+        selectedImages = [];
+        renderSelectedPhotos();
+
+        showScreen('home');
+
+    } catch (error) {
         console.error('Ошибка публикации:', error);
-        alert('Ошибка при отправке в базу данных.');
-      } finally {
+        alert('Ошибка при публикации объявления.');
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Нашр кунед';
-      }
-    });
+    }
+});
 
     window._toggleFav = (id) => {
       if (!state.user) return alert(t('login_required'));

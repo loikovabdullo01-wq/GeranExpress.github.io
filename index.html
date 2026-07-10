@@ -816,8 +816,10 @@ const categoryTransKeys = {
         filtered = filtered.filter(l => l.category === state.activeCategory);
       }
 
-      // меняет порядок объявлений внутри категории
-      filtered.sort(() => Math.random() - 0.5);
+
+      if (performance.navigation.type === 1) {
+  filtered.sort(() => Math.random() - 0.5);
+}
 
       const gridHtml = filtered.length
         ? filtered.map(cardHTML).join('')

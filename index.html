@@ -845,32 +845,38 @@
       });
     }
 
-   async function uploadImagesToImgBB(files) {
-    const apiKey = '044c84fb33e068293052ead694715174';
-    const urls = [];
+async function uploadImagesToImgBB(base64Array) {
+    var apiKey = '044c84fb33e068293052ead694715174';
+    var urls = [];
 
-    for (const file of files) {
-        const formData = new FormData();
-        formData.append('image', file);
-
+    for (var i = 0; i < base64Array.length; i++) {
         try {
-            const res = await fetch(`https://imgbb.com{apiKey}`, {
+            // Вытаскиваем чистый код картинки, убирая техническую приставку "data:image/...;base64,"
+            var rawString = base64Array[i];
+            var cleanBase64 = rawString.includes(',') ? rawString.split(',')[1] : rawString;
+
+            var formData = new FormData();
+            formData.append('image', cleanBase64);
+        var res = await fetch('https://imgbb.com' + apiKey, {
+
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
+            var data = await res.json();
 
             if (data && data.success) {
-                urls.push(data.data.url);
+                urls.push(data.data.display_url);
             } else {
-                console.error('ImgBB error response:', data);
+                console.error('Ошибка ImgBB:', data);
             }
         } catch (e) {
-            console.error('ImgBB upload error:', e);
+            console.error('Ошибка сети при загрузке:', e);
         }
     }
     return urls;
 }
+
+
 
 
     document.getElementById('submit-create').addEventListener('click', async (e) => {

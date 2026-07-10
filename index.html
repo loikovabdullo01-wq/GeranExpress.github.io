@@ -883,30 +883,29 @@
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert(t('fill_fields'));
       
-           const btn = document.getElementById('submit-create');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Загрузка и публикация...';
-    }
-
     const fileInput = document.getElementById('create-photo-input');
     let imageUrls = ['https://flaticon.com'];
     
     let filesToUpload = [];
 
+    // Проверяем ваш анимированный массив
     if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
         filesToUpload = selectedImages;
     } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
         filesToUpload = Array.from(fileInput.files);
     }
 
+    // Если файлы есть, ждем их загрузки на ImgBB
     if (filesToUpload.length > 0) {
-        const uploaded = await uploadImagesToImgBB(filesToUpload.slice(0, 5));
-        if (uploaded && uploaded.length > 0) {
-            imageUrls = uploaded;
+        try {
+            const uploaded = await uploadImagesToImgBB(filesToUpload);
+            if (uploaded && uploaded.length > 0) {
+                imageUrls = uploaded; // Перезаписываем массив ссылками
+            }
+        } catch (uploadErr) {
+            console.error("Ошибка при отправке файлов на хостинг:", uploadErr);
         }
     }
-
 
 
       

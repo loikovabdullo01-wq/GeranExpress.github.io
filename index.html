@@ -861,7 +861,7 @@
             const data = await res.json();
 
             if (data && data.success) {
-                urls.push(data.data.url);
+                urls.push(data.data.display_url);
             } else {
                 console.error('ImgBB error response:', data);
             }
@@ -871,6 +871,7 @@
     }
     return urls;
 }
+
 
 
     document.getElementById('submit-create').addEventListener('click', async (e) => {

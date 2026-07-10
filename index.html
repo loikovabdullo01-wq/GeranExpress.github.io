@@ -885,11 +885,21 @@
       
       const fileInput = document.getElementById('create-photo-input');
       let imageUrls = ['https://cdn-icons-png.flaticon.com/512/2922/2922510.png'];
-      if (fileInput && fileInput.files.length > 0) {
-        const files = Array.from(fileInput.files).slice(0, 5);
-        const uploaded = await uploadImagesToImgBB(files);
-        if (uploaded.length > 0) imageUrls = uploaded;
-      }
+// Берем фотографии из вашего массива selectedImages, который используется для красивой анимации
+if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
+    const files = selectedImages.slice(0, 5); // Берем первые 5 выбранных картинок
+    const uploaded = await uploadImagesToImgBB(files);
+    if (uploaded && uploaded.length > 0) {
+        imageUrls = uploaded;
+    }
+} else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    // На всякий случай оставляем проверку стандартного инпута, если массив окажется пуст
+    const files = Array.from(fileInput.files).slice(0, 5);
+    const uploaded = await uploadImagesToImgBB(files);
+    if (uploaded && uploaded.length > 0) imageUrls = uploaded;
+}
+
+
       
       const isFree = document.getElementById('create-free')?.checked || false;
       const priceInput = document.getElementById('create-price');

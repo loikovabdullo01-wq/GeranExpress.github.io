@@ -879,35 +879,30 @@
       const phone = document.getElementById('create-phone').value.trim();
       if (!title || !phone) return alert(t('fill_fields'));
       
-      const btn = document.getElementById('submit-create');
-      btn.disabled = true;
-      btn.textContent = 'Загрузка и публикация...';
-      
-      const fileInput = document.getElementById('create-photo-input');
-      let imageUrls = ['https://cdn-icons-png.flaticon.com/512/2922/2922510.png'];
-// Жёстко заставляем код взять файлы из превью вашей анимации
-let filesToUpload = [];
-
-if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
-    filesToUpload = selectedImages;
-} else if (fileInput && fileInput.files && fileInput.files.length > 0) {
-    filesToUpload = Array.from(fileInput.files);
-}
-
-// Если файлы нашлись, отправляем их на ImgBB
-if (filesToUpload.length > 0) {
-    const uploaded = await uploadImagesToImgBB(filesToUpload.slice(0, 5));
-    if (uploaded && uploaded.length > 0) {
-        imageUrls = uploaded; // Заменяем аватар-персонажа на ссылки с ImgBB!
+           const btn = document.getElementById('submit-create');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Загрузка и публикация...';
     }
-}
 
-} else if (fileInput && fileInput.files && fileInput.files.length > 0) {
-    // На всякий случай оставляем проверку стандартного инпута, если массив окажется пуст
-    const files = Array.from(fileInput.files).slice(0, 5);
-    const uploaded = await uploadImagesToImgBB(files);
-    if (uploaded && uploaded.length > 0) imageUrls = uploaded;
-}
+    const fileInput = document.getElementById('create-photo-input');
+    let imageUrls = ['https://flaticon.com'];
+    
+    let filesToUpload = [];
+
+    if (typeof selectedImages !== 'undefined' && selectedImages.length > 0) {
+        filesToUpload = selectedImages;
+    } else if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        filesToUpload = Array.from(fileInput.files);
+    }
+
+    if (filesToUpload.length > 0) {
+        const uploaded = await uploadImagesToImgBB(filesToUpload.slice(0, 5));
+        if (uploaded && uploaded.length > 0) {
+            imageUrls = uploaded;
+        }
+    }
+
 
 
       

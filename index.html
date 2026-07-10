@@ -864,14 +864,15 @@
             if (data && data.success) {
                 urls.push(data.data.display_url);
             } else {
-                console.error('ImgBB error response:', data);
+                console.error('Ошибка ImgBB:', data);
             }
         } catch (e) {
-            console.error('ImgBB upload error:', e);
+            console.error('Ошибка сети при загрузке:', e);
         }
     }
     return urls;
 }
+
 
 
 

@@ -1246,7 +1246,7 @@ document.getElementById('submit-create').addEventListener('click', async functio
       
       const digitsCount = phoneInput.value.length;
       
-      if (digitsCount < 6 || digitsCount > 10) {
+      if (digitsCount < 9 || digitsCount > 10) {
         loginBtn.disabled = true;
         loginBtn.style.opacity = '0.5';
         loginBtn.style.pointerEvents = 'none';

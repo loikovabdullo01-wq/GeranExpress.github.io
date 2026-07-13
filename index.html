@@ -456,10 +456,30 @@
         </div>
       </div>
       <select class="select-field" id="create-village">
-        <option value="Деҳаи Геран">Деҳаи Геран</option>
-        <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
-        <option value="Деҳаи Севвум">Деҳаи Севвум</option>
-        <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
+         <option value="Дехаи Геран">Дехаи Геран</option>
+    <option value="Дехаи Якум">Дехаи Якум</option>
+    <option value="Дехаи Дуввум">Дехаи Дуввум</option>
+    <option value="Дехаи Севвум">Дехаи Севвум</option>
+    <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+    <option value="Дехаи Панчум">Дехаи Панчум</option>
+    <option value="Дехаи Шашум">Дехаи Шашум</option>
+    <option value="Дехаи Хафтум">Дехаи Хафтум</option>
+    <option value="Дехаи Хаштум">Дехаи Хаштум</option>
+    <option value="Дехаи Нухум">Дехаи Нухум</option>
+    <option value="Дехаи Дахум">Дехаи Дахум</option>
+    <option value="Раёни Чайхун">Раёни Чайхун</option>
+    <option value="Бозор">Бозор</option>
+    <option value="Аэрапорт">Аэрапорт</option>
+    <option value="Новая Земля">Новая Земля</option>
+    <option value="Рисавхоз">Рисавхоз</option>
+    <option value="Карадум">Карадум</option>
+    <option value="Каврак">Каврак</option>
+    <option value="Турмано">Турмано</option>
+    <option value="Далин 1">Далин 1</option>
+    <option value="Далин 2">Далин 2</option>
+    <option value="Далин 3">Далин 3</option>
+    <option value="Далин 4">Далин 4</option>
+    <option value="Панч">Панч</option>
       </select>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -649,10 +669,33 @@
       const loginBtn = document.getElementById('login-btn');
       if (loginBtn) loginBtn.textContent = t('login_btn');
       const villageNames = {
-        'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
-        'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
-        'Деҳаи Севвум': { tg: 'Деҳаи Севвум', ru: 'Дехаи Севвум' },
-        'Деҳаи Чахорум': { tg: 'Деҳаи Чахорум', ru: 'Дехаи Чахорум' },
+      'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
+  'Деҳаи Якум': { tg: 'Деҳаи Якум', ru: 'Дехаи Якум' },
+  'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
+  'Деҳаи Севвум': { tg: 'Деҳаи Севвум', ru: 'Дехаи Севвум' },
+  'Деҳаи Чахорум': { tg: 'Деҳаи Чаҳорум', ru: 'Дехаи Чахорум' },
+  'Деҳаи Панчум': { tg: 'Деҳаи Панҷум', ru: 'Дехаи Панчум' },
+  'Деҳаи Шашум': { tg: 'Деҳаи Шашум', ru: 'Дехаи Шашум' },
+  'Деҳаи Хафтум': { tg: 'Деҳаи Ҳафтум', ru: 'Дехаи Хафтум' },
+  'Деҳаи Хаштум': { tg: 'Деҳаи Ҳаштум', ru: 'Дехаи Хаштум' },
+  'Деҳаи Нухум': { tg: 'Деҳаи Нуҳум', ru: 'Дехаи Нухум' },
+  'Деҳаи Дахум': { tg: 'Деҳаи Даҳум', ru: 'Дехаи Дахум' },
+
+  'Раёни Чайхун': { tg: 'Раёни Чайхун', ru: 'Райони Чайхун' },
+  'Бозор': { tg: 'Бозор', ru: 'Бозор' },
+  'Аэрапорт': { tg: 'Аэрапорт', ru: 'Аэропорт' },
+  'Новая Земля': { tg: 'Новая Земля', ru: 'Новая Земля' },
+  'Рисавхоз': { tg: 'Рисавхоз', ru: 'Рисавхоз' },
+  'Карадум': { tg: 'Карадум', ru: 'Карадум' },
+  'Каврак': { tg: 'Каврак', ru: 'Каврак' },
+  'Турмано': { tg: 'Турмано', ru: 'Турмано' },
+
+  'Далин 1': { tg: 'Далин 1', ru: 'Далин 1' },
+  'Далин 2': { tg: 'Далин 2', ru: 'Далин 2' },
+  'Далин 3': { tg: 'Далин 3', ru: 'Далин 3' },
+  'Далин 4': { tg: 'Далин 4', ru: 'Далин 4' },
+  'Панч': { tg: 'Панч', ru: 'Панч' }
+        
       };
       document.querySelectorAll('#edit-village option, #create-village option').forEach(opt => {
         const names = villageNames[opt.value];
@@ -812,6 +855,7 @@ const categoryTransKeys = {
         if (!merged.some(l => l.id === cl.id)) merged.unshift(cl);
       });
 
+
       state.listings = merged;
 
       let filtered = state.listings.filter(l => l.isActive !== false);
@@ -853,20 +897,57 @@ const categoryTransKeys = {
         </div>`).join('') : `<p>${t('no_my')}</p>`;
     }
 
-    function renderProfile() {
-      if (!state.user) { showScreen('login'); return; }
-      document.getElementById('profile-name').textContent = state.user?.name || t('user');
-      document.getElementById('profile-phone').textContent = state.user?.phone || '';
-      document.getElementById('edit-name').value = state.user?.name || '';
-      document.getElementById('edit-phone').value = state.user?.phone || '';
-      document.getElementById('edit-village').value = state.user?.village || 'Деҳаи Геран';
-      document.getElementById('edit-lang').value = currentLang;
-      if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
-      const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
-      document.getElementById('stat-listings').textContent = my.length;
-      document.getElementById('stat-views').textContent = my.reduce((acc,l)=>acc+(l.views||0),0);
-      document.getElementById('stat-favs').textContent = state.favorites.length;
-    }
+ function renderProfile() {
+    if (!state.user) { showScreen('login'); return; }
+    document.getElementById('profile-name').textContent = state.user?.name || t('user');
+    document.getElementById('profile-phone').textContent = state.user?.phone || '';
+    document.getElementById('edit-name').value = state.user?.name || '';
+    document.getElementById('edit-phone').value = state.user?.phone || '';
+    
+     const editVillageSelect = document.getElementById('edit-village');
+        if (editVillageSelect) {
+            const villages = [
+                "Дехаи Геран",
+                "Дехаи Якум",
+                "Дехаи Дуввум",
+                "Дехаи Севвум",
+                "Дехаи Чахорум",
+                "Дехаи Панчум",
+                "Дехаи Шашум",
+                "Дехаи Хафтум",
+                "Дехаи Хаштум",
+                "Дехаи Нухум",
+                "Дехаи Дахум",
+                "Раёни Чайхун",
+                "Бозор",
+                "Аэрапорт",
+                "Новая Земля",
+                "Рисавхоз",
+                "Карадум",
+                "Каврак",
+                "Турмано",
+                "Далин 1",
+                "Далин 2",
+                "Далин 3",
+                "Далин 4",
+                "Панч"
+            ];
+            
+            editVillageSelect.innerHTML = villages.map(name => `
+                <option value="${name}">${name}</option>
+            `).join('');
+            
+            editVillageSelect.value = state.user?.village || 'Дехаи Геран';
+        }
+    
+    document.getElementById('edit-lang').value = currentLang;
+    if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
+    const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
+    document.getElementById('stat-listings').textContent = my.length;
+    document.getElementById('stat-views').textContent = my.reduce((acc, l) => acc + (l.views || 0), 0);
+    document.getElementById('stat-favs').textContent = state.favorites.length;
+}
+
 
     function renderCreateForm() {
       if (state.currentScreen === 'create' && !state.editId) return;

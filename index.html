@@ -847,44 +847,82 @@ const categoryTransKeys = {
       }
     }
 
-    async function renderHome() {
-    const cloudListings = await loadFirestoreListings();
-      const merged = [...DEFAULT_LISTINGS];
+  async function renderHome() {
+  console.log("renderHome");
+  const cloudListings = await loadFirestoreListings();
 
-      cloudListings.forEach(cl => {
-        if (!merged.some(l => l.id === cl.id)) merged.unshift(cl);
-      });
+  const merged = [...cloudListings];
 
-
-      state.listings = merged;
-
-      let filtered = state.listings.filter(l => l.isActive !== false);
-
-      if (state.activeCategory) {
-        filtered = filtered.filter(l => l.category === state.activeCategory);
-      }
-
-
-      if (performance.navigation.type === 1) {
-  filtered.sort(() => Math.random() - 0.5);
-}
-
-      const gridHtml = filtered.length
-        ? filtered.map(cardHTML).join('')
-        : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
-
-      document.getElementById('screen-home').innerHTML =
-        renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
-}
-
-    window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
-    window._clearCategory = () => { state.activeCategory = null; renderHome(); window.scrollTo(0,0); };
-
-    function renderFavorites() {
-      const favs = state.listings.filter(l => state.favorites.includes(l.id));
-      document.getElementById('favorites-container').innerHTML = favs.length ? favs.map(cardHTML).join('') : `<p>${t('no_favs')}</p>`;
+  DEFAULT_LISTINGS.forEach(item => {
+    if (!merged.some(l => l.id === item.id)) {
+      merged.push(item);
     }
+  });
 
+  state.listings = merged;
+
+  let filtered = state.listings.filter(l => l.isActive !== false);
+
+  if (state.activeCategory) {
+    filtered = filtered.filter(l => l.category === state.activeCategory);
+  }
+
+  // Используем sessionStorage для отслеживания новой загрузки страницы
+  const sessionId = sessionStorage.getItem("sessionId");
+  const currentSessionId = window._sessionId || (window._sessionId = Date.now().toString());
+  
+  if (!sessionId || sessionId !== currentSessionId) {
+    // Новая сессия - очищаем сохраненный порядок
+    sessionStorage.removeItem("homeOrder");
+    sessionStorage.setItem("sessionId", currentSessionId);
+  }
+
+  // Получаем или создаем перемешанный порядок
+  let order = sessionStorage.getItem("homeOrder");
+  
+  if (!order) {
+    // Перемешиваем ВСЕ активные объявления
+    const allActive = state.listings.filter(l => l.isActive !== false);
+    const shuffled = [...allActive];
+    
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    order = shuffled.map(x => x.id);
+    sessionStorage.setItem("homeOrder", JSON.stringify(order));
+  } else {
+    order = JSON.parse(order);
+  }
+
+  // Применяем сохраненный порядок к отфильтрованным объявлениям
+  filtered.sort((a, b) => {
+    const ia = order.indexOf(a.id);
+    const ib = order.indexOf(b.id);
+    
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    
+    return ia - ib;
+  });
+
+  const gridHtml = filtered.length
+    ? filtered.map(cardHTML).join('')
+    : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
+
+  document.getElementById('screen-home').innerHTML =
+    renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
+}
+
+window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
+window._clearCategory = () => { state.activeCategory = null; renderHome(); window.scrollTo(0,0); };
+
+function renderFavorites() {
+  const favs = state.listings.filter(l => state.favorites.includes(l.id));
+  document.getElementById('favorites-container').innerHTML = favs.length ? favs.map(cardHTML).join('') : `<p>${t('no_favs')}</p>`;
+}
     function renderMy() {
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
       document.getElementById('my-container').innerHTML = my.length ? my.map(l => `

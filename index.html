@@ -746,7 +746,12 @@
 
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
-      const priceText = l.isFree ? `<div class="card-price free">${t('free')}</div>` : `<div class="card-price">${(l.price || 0).toLocaleString()} с.</div>`;
+    const priceVal = l.price || 0;
+const hasCurrency = typeof priceVal === 'string' && (priceVal.includes('Р') || priceVal.includes('р') || priceVal.includes('P'));
+const formattedPrice = hasCurrency ? priceVal : priceVal.toLocaleString() + ' c.';
+
+const priceText = l.isFree ? `<div class="card-price free">${t('free')}</div>` : `<div class="card-price">${formattedPrice}</div>`;
+
       let finalSrc = PLACEHOLDER_IMG;
       if (l.images && l.images.length > 0) {
         let raw = l.images[0];

@@ -733,6 +733,11 @@
 
     let selectedImages = [];
     const PLACEHOLDER_IMG = 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png';
+    
+    // Переменные для сохранения позиции скролла
+    let savedScrollPosition = 0;
+    let shouldRestoreScroll = false;
+    let isChangingCategory = false;
 
     const save = () => {
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
@@ -914,10 +919,39 @@ const categoryTransKeys = {
 
   document.getElementById('screen-home').innerHTML =
     renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
+
+  // Восстанавливаем позицию прокрутки если нужно (после возврата из карточки)
+  if (shouldRestoreScroll && !isChangingCategory) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
+        shouldRestoreScroll = false;
+      });
+    });
+  }
+  
+  // Если была смена категории - скроллим вверх
+  if (isChangingCategory) {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      isChangingCategory = false;
+    });
+  }
 }
 
-window._filterCategory = (cat) => { state.activeCategory = cat; renderHome(); window.scrollTo(0,0); };
-window._clearCategory = () => { state.activeCategory = null; renderHome(); window.scrollTo(0,0); };
+window._filterCategory = (cat) => { 
+  state.activeCategory = cat; 
+  shouldRestoreScroll = false;
+  isChangingCategory = true;
+  renderHome(); 
+};
+
+window._clearCategory = () => { 
+  state.activeCategory = null; 
+  shouldRestoreScroll = false;
+  isChangingCategory = true;
+  renderHome(); 
+};
 
 function renderFavorites() {
   const favs = state.listings.filter(l => state.favorites.includes(l.id));
@@ -1171,6 +1205,10 @@ document.getElementById('submit-create').addEventListener('click', async functio
     };
 
     window._openDetail = (id) => {
+      // Сохраняем текущую позицию скролла перед открытием карточки
+      savedScrollPosition = window.scrollY;
+      shouldRestoreScroll = true;
+      
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
       let finalSrc = PLACEHOLDER_IMG;
@@ -1247,6 +1285,13 @@ document.getElementById('submit-create').addEventListener('click', async functio
 
     function showScreen(id) {
       if (id === 'profile' && !state.user) id = 'login';
+      
+      // Если уходим с главной на другую страницу - сохраняем позицию
+      if (state.currentScreen === 'home' && id !== 'home') {
+        savedScrollPosition = window.scrollY;
+        shouldRestoreScroll = true;
+      }
+      
       Object.values(screens).forEach(s => s.classList.remove('active'));
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
@@ -1331,7 +1376,11 @@ document.getElementById('submit-create').addEventListener('click', async functio
     });
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
-    document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
+    document.getElementById('back-detail').addEventListener('click', () => {
+      // При возврате из карточки восстанавливаем позицию
+      shouldRestoreScroll = true;
+      showScreen('home');
+    });
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
@@ -1393,7 +1442,11 @@ document.getElementById('submit-create').addEventListener('click', async functio
 
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
-    document.getElementById('back-detail').addEventListener('click', () => showScreen('home'));
+    document.getElementById('back-detail').addEventListener('click', () => {
+      // При возврате из карточки восстанавливаем позицию
+      shouldRestoreScroll = true;
+      showScreen('home');
+    });
     document.getElementById('notif-btn').addEventListener('click', () => alert('Уведомления'));
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });

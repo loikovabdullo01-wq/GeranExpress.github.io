@@ -532,6 +532,7 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
   (() => {
@@ -541,22 +542,31 @@
       document.documentElement.classList.add('fonts-loaded');
     }
 
+        window.gtag = function(){ window.dataLayer.push(arguments); };
+    window.dataLayer = window.dataLayer || [];
+    window.gtag('js', new Date());
+    window.gtag('config', 'G-WP2S70R07C', { send_page_view: false });
+
     const firebaseConfig = {
       apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
       authDomain: "geran-express.firebaseapp.com",
       projectId: "geran-express",
       storageBucket: "geran-express.firebasestorage.app",
       messagingSenderId: "100329986906",
-      appId: "1:100329986906:web:4998c36eecc975b46bf163"
+      appId: "1:100329986906:web:4998c36eecc975b46bf163",
+      measurementId: "G-WP2S70R07C"
     };
 
     let db = null;
+    let analytics = null;
     let firebaseReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
+      analytics = firebase.analytics();
       firebaseReady = true;
-      console.log("Firebase OK");
+      analytics.logEvent('page_view');
+      console.log("Firebase + Analytics OK");
     } catch (e) {
       console.warn('Firebase init error:', e.message);
     }

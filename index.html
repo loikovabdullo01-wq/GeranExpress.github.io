@@ -107,8 +107,8 @@
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
     }
     .lang-btn {
-      width: 30px !important;
-      height: 30px !important;
+      width: 27px !important;
+      height: 27px !important;
       border-radius: 50%;
       background: var(--primary);
       color: white;
@@ -354,6 +354,79 @@
       background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 14px;
       margin: 16px 0; font-weight: 500; text-align: center;
     }
+
+    /* === G-EXPRESS BANNER CAROUSEL (ISOLATED) === */
+    .g-express-slider-wrapper {
+      width: 100%;
+      padding: 0 12px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .g-express-slider-container {
+      position: relative;
+      width: 100%;
+      height: 160px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #e5e7eb;
+    }
+
+    .g-express-slider-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.4s ease-in-out;
+      will-change: transform;
+    }
+
+    .g-express-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      width: 100%;
+    }
+
+    .g-express-slide-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #e5e7eb;
+      margin: 0;
+      padding: 0;
+    }
+
+    .g-express-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .g-express-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.6);
+      transition: width 0.3s ease, background 0.3s ease;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .g-express-dot.g-express-active {
+      width: 20px;
+      background: #ffffff;
+    }
+    /* === END G-EXPRESS BANNER === */
   </style>
 </head>
 <body>
@@ -384,7 +457,21 @@
     </div>
   </header>
   <main id="main-content">
-    <div id="screen-home" class="screen active"></div>
+    <div id="screen-home" class="screen active">
+      <!-- G-Express Banner Carousel (только на главной) -->
+      <div class="g-express-slider-wrapper" id="g-express-banner">
+        <div class="g-express-slider-container">
+          <div class="g-express-slider-track" id="g-express-track">
+            <div class="g-express-slide"><img class="g-express-slide-img" src="mm.jpg" alt="Ad 1" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=300&fit=crop" alt="Ad 2" loading="lazy"></div>
+        
+            
+          </div>
+          <div class="g-express-dots" id="g-express-dots"></div>
+        </div>
+      </div>
+      <!-- END G-Express Banner -->
+    </div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
     <div id="screen-profile" class="screen">
@@ -517,7 +604,7 @@
         <div style="margin-top: 40px; text-align: center; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
           From Loikov Project <br>
           © Geran Express 2026 <br>
-          Все права защищены 
+          Все права защищены. 
         </div>
       </div>
     </div>
@@ -542,7 +629,7 @@
       document.documentElement.classList.add('fonts-loaded');
     }
 
-        window.gtag = function(){ window.dataLayer.push(arguments); };
+    window.gtag = function(){ window.dataLayer.push(arguments); };
     window.dataLayer = window.dataLayer || [];
     window.gtag('js', new Date());
     window.gtag('config', 'G-WP2S70R07C', { send_page_view: false });
@@ -862,7 +949,34 @@
       const gridHtml = filtered.length
         ? filtered.map(cardHTML).join('')
         : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
-      document.getElementById('screen-home').innerHTML = renderCategories() + `<div class="listings-grid">${gridHtml}</div>`;
+      
+      // Сохраняем баннер перед очисткой screen-home
+      const screenHome = document.getElementById('screen-home');
+      const banner = document.getElementById('g-express-banner');
+      
+      // Очищаем экран
+      screenHome.innerHTML = '';
+      
+      // Возвращаем баннер на место (если он существует)
+      if (banner) {
+        screenHome.appendChild(banner);
+      }
+      
+      // Добавляем категории
+      const categoriesContainer = document.createElement('div');
+      categoriesContainer.innerHTML = renderCategories();
+      while (categoriesContainer.firstChild) {
+        screenHome.appendChild(categoriesContainer.firstChild);
+      }
+      
+      // Добавляем сетку товаров
+      const listingsGrid = document.createElement('div');
+      listingsGrid.className = 'listings-grid';
+      listingsGrid.innerHTML = gridHtml;
+      screenHome.appendChild(listingsGrid);
+
+      // Инициализируем карусель после перерисовки
+      setTimeout(initBannerCarousel, 50);
 
       if (shouldRestoreScroll && !isChangingCategory) {
         requestAnimationFrame(() => {
@@ -1245,9 +1359,80 @@
 
     validateLoginPhone();
 
+    // === G-EXPRESS BANNER CAROUSEL (ISOLATED) ===
+    function initBannerCarousel() {
+      const track = document.getElementById('g-express-track');
+      const dotsContainer = document.getElementById('g-express-dots');
+      const slides = document.querySelectorAll('.g-express-slide');
+      
+      if (!track || !dotsContainer || slides.length === 0) return;
+      
+      // Защита от повторной инициализации
+      if (track.dataset.initialized === 'true') return;
+      track.dataset.initialized = 'true';
+
+      const SLIDE_COUNT = slides.length;
+      const INTERVAL_TIME = 10000;
+      let currentSlide = 0;
+      let autoPlayTimer = null;
+
+      function createDots() {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < SLIDE_COUNT; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'g-express-dot';
+          if (i === 0) dot.classList.add('g-express-active');
+          dot.addEventListener('click', () => goToSlide(i));
+          dotsContainer.appendChild(dot);
+        }
+      }
+
+      function updateDots(index) {
+        const dots = dotsContainer.querySelectorAll('.g-express-dot');
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('g-express-active', i === index);
+        });
+      }
+
+      function goToSlide(index) {
+        if (index >= SLIDE_COUNT) index = 0;
+        else if (index < 0) index = SLIDE_COUNT - 1;
+        currentSlide = index;
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        updateDots(currentSlide);
+      }
+
+      function nextSlide() {
+        goToSlide(currentSlide + 1);
+      }
+
+      function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayTimer = setInterval(nextSlide, INTERVAL_TIME);
+      }
+
+      function stopAutoPlay() {
+        if (autoPlayTimer) {
+          clearInterval(autoPlayTimer);
+          autoPlayTimer = null;
+        }
+      }
+
+      createDots();
+      startAutoPlay();
+
+      track.addEventListener('mouseenter', stopAutoPlay);
+      track.addEventListener('mouseleave', startAutoPlay);
+      track.addEventListener('touchstart', stopAutoPlay, { passive: true });
+      track.addEventListener('touchend', startAutoPlay);
+    }
+    // === END G-EXPRESS BANNER CAROUSEL ===
+
     applyLanguage();
     if (state.user) {
       showScreen('home');
+      // Инициализируем карусель после первого рендера
+      setTimeout(initBannerCarousel, 200);
     } else {
       showScreen('login');
     }

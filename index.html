@@ -362,6 +362,13 @@
       margin-bottom: 5px;
       box-sizing: border-box;
       flex-shrink: 0;
+      opacity: 0; /* Скрыт по умолчанию */
+      transition: opacity 0.3s ease; /* Плавное появление */
+    }
+    
+    /* Баннер видим только когда данные загружены */
+    .g-express-slider-wrapper.g-express-loaded {
+      opacity: 1;
     }
 
     .g-express-slider-container {
@@ -458,14 +465,12 @@
   </header>
   <main id="main-content">
     <div id="screen-home" class="screen active">
-      <!-- G-Express Banner Carousel (только на главной) -->
+      <!-- G-Express Banner Carousel (только на главной, изначально скрыт) -->
       <div class="g-express-slider-wrapper" id="g-express-banner">
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
             <div class="g-express-slide"><img class="g-express-slide-img" src="mmmm.jpg" alt="Ad 1" loading="lazy"></div>
             <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 2" loading="lazy"></div>
-         
-            
           </div>
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>
@@ -960,6 +965,10 @@
       // Возвращаем баннер на место (если он существует)
       if (banner) {
         screenHome.appendChild(banner);
+        // Показываем баннер с анимацией
+        requestAnimationFrame(() => {
+          banner.classList.add('g-express-loaded');
+        });
       }
       
       // Добавляем категории
@@ -1431,8 +1440,6 @@
     applyLanguage();
     if (state.user) {
       showScreen('home');
-      // Инициализируем карусель после первого рендера
-      setTimeout(initBannerCarousel, 200);
     } else {
       showScreen('login');
     }

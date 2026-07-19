@@ -78,12 +78,6 @@
       color: inherit !important;
       font-size: 24px !important;
     }
-  </style>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
-  <style>
     body.dark {
       --bg: #111827;
       --surface: #1f2937;
@@ -237,10 +231,6 @@
       padding-top: 2px;
     }
     .card-meta span { display: flex; align-items: center; gap: 2px; }
-    .detail-img {
-      width: 100%; max-height: 300px; object-fit: contain;
-      border-radius: 14px; margin: 12px 0; background: var(--border);
-    }
     .detail-actions { display: flex; gap: 10px; margin: 16px 0; }
     .btn {
       background: var(--primary); color: white; border: none;
@@ -362,15 +352,12 @@
       margin-bottom: 5px;
       box-sizing: border-box;
       flex-shrink: 0;
-      opacity: 0; /* Скрыт по умолчанию */
-      transition: opacity 0.3s ease; /* Плавное появление */
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
-    
-    /* Баннер видим только когда данные загружены */
     .g-express-slider-wrapper.g-express-loaded {
       opacity: 1;
     }
-
     .g-express-slider-container {
       position: relative;
       width: 100%;
@@ -379,20 +366,17 @@
       overflow: hidden;
       background: #e5e7eb;
     }
-
     .g-express-slider-track {
       display: flex;
       height: 100%;
       transition: transform 0.4s ease-in-out;
       will-change: transform;
     }
-
     .g-express-slide {
       flex: 0 0 100%;
       height: 100%;
       width: 100%;
     }
-
     .g-express-slide-img {
       display: block;
       width: 100%;
@@ -403,7 +387,6 @@
       margin: 0;
       padding: 0;
     }
-
     .g-express-dots {
       position: absolute;
       bottom: 12px;
@@ -418,7 +401,6 @@
       padding: 6px 14px;
       border-radius: 20px;
     }
-
     .g-express-dot {
       width: 4px;
       height: 4px;
@@ -428,13 +410,140 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-
     .g-express-dot.g-express-active {
       width: 20px;
       background: #ffffff;
     }
     /* === END G-EXPRESS BANNER === */
+
+    /* ==========================================
+       PRODUCT SLIDER STYLES
+       ========================================== */
+    .product-slider {
+      position: relative;
+      width: 100%;
+      margin-bottom: 16px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--border);
+      user-select: none;
+      -webkit-user-select: none;
+      aspect-ratio: 4 / 3;
+    }
+    .product-slider-viewport {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: pan-y pinch-zoom;
+    }
+    .product-slider-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+    }
+    .product-slider-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 100%;
+    }
+    .product-slider-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .product-slider-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      z-index: 5;
+      transition: opacity 0.2s, transform 0.2s;
+      padding: 0;
+    }
+    .product-slider-arrow:active {
+      transform: translateY(-50%) scale(0.92);
+    }
+    .product-slider-arrow--left {
+      left: 8px;
+    }
+    .product-slider-arrow--right {
+      right: 8px;
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .product-slider-arrow {
+        display: none;
+      }
+    }
+    .product-slider-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .product-slider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+    .product-slider-dot.active {
+      background: #fff;
+      transform: scale(1.3);
+    }
+    .product-slider[data-slides="1"] .product-slider-arrow,
+    .product-slider[data-slides="1"] .product-slider-dots {
+      display: none !important;
+    }
+    .product-info {
+      padding: 0 4px;
+    }
+    .product-price {
+      color: var(--accent-price);
+      font-size: 1.6rem;
+      margin: 4px 0 10px;
+    }
+    .product-desc {
+      margin: 10px 0;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+    .product-meta {
+      font-size: 0.85rem;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+    /* ========================================== */
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
 </head>
 <body>
 <div id="app">
@@ -465,19 +574,17 @@
   </header>
   <main id="main-content">
     <div id="screen-home" class="screen active">
-      <!-- G-Express Banner Carousel (только на главной, изначально скрыт) -->
       <div class="g-express-slider-wrapper" id="g-express-banner">
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
             <div class="g-express-slide"><img class="g-express-slide-img" src="bbb.jpg" alt="Ad 1" loading="lazy"></div>
             <div class="g-express-slide"><img class="g-express-slide-img" src="mmmm.jpg" alt="Ad 2" loading="lazy"></div>
-              <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 2" loading="lazy"></div>
-               <div class="g-express-slide"><img class="g-express-slide-img" src="pp.jpg" alt="Ad 2" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 3" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="pp.jpg" alt="Ad 4" loading="lazy"></div>
           </div>
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>
       </div>
-      <!-- END G-Express Banner -->
     </div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
@@ -957,36 +1064,29 @@
         ? filtered.map(cardHTML).join('')
         : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
       
-      // Сохраняем баннер перед очисткой screen-home
       const screenHome = document.getElementById('screen-home');
       const banner = document.getElementById('g-express-banner');
       
-      // Очищаем экран
       screenHome.innerHTML = '';
       
-      // Возвращаем баннер на место (если он существует)
       if (banner) {
         screenHome.appendChild(banner);
-        // Показываем баннер с анимацией
         requestAnimationFrame(() => {
           banner.classList.add('g-express-loaded');
         });
       }
       
-      // Добавляем категории
       const categoriesContainer = document.createElement('div');
       categoriesContainer.innerHTML = renderCategories();
       while (categoriesContainer.firstChild) {
         screenHome.appendChild(categoriesContainer.firstChild);
       }
       
-      // Добавляем сетку товаров
       const listingsGrid = document.createElement('div');
       listingsGrid.className = 'listings-grid';
       listingsGrid.innerHTML = gridHtml;
       screenHome.appendChild(listingsGrid);
 
-      // Инициализируем карусель после перерисовки
       setTimeout(initBannerCarousel, 50);
 
       if (shouldRestoreScroll && !isChangingCategory) {
@@ -1169,32 +1269,71 @@
       renderScreen(state.currentScreen);
     };
 
+    // ==========================================
+    // ОБНОВЛЁННАЯ ФУНКЦИЯ _openDetail СО СЛАЙДЕРОМ
+    // ==========================================
     window._openDetail = (id) => {
       savedScrollPosition = window.scrollY;
       shouldRestoreScroll = true;
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
-      let finalSrc = PLACEHOLDER_IMG;
-      if (l.images && l.images.length > 0) {
-        let raw = l.images[0];
-        if (raw && (raw.startsWith('data:image/') || raw.startsWith('http://') || raw.startsWith('https://'))) finalSrc = raw;
-        else if (raw) finalSrc = raw;
-      }
+      
+      // Собираем массив картинок (если нет — подставляем placeholder)
+      let images = (l.images && l.images.length > 0) 
+        ? l.images.filter(src => src && (src.startsWith('data:image/') || src.startsWith('http')))
+        : [PLACEHOLDER_IMG];
+      
+      // Если после фильтрации массив пуст — используем placeholder
+      if (images.length === 0) images = [PLACEHOLDER_IMG];
+      
       const priceText = l.isFree ? t('free') : `${(l.price||0).toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
       const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
+      
+      // Строим HTML с контейнером для слайдера и блоком информации под ним
       document.getElementById('detail-content').innerHTML = `
-        <img src="${finalSrc}" class="detail-img" onerror="this.style.display='none';" onload="this.style.display='block';">
-        <h2>${l.title}</h2>
-        <h3 style="color:var(--accent-price);font-size:1.6rem">${priceText}</h3>
-        <p style="margin:10px 0">${l.desc}</p>
-        <p>📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
-        <div class="detail-actions">
-          <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;"><span class="material-symbols-rounded">call</span>${t('call')}</a>
-          <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')"><span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span></button>
+        <!-- Слайдер карточки товара -->
+        <div class="product-slider" id="product-slider" data-images='${JSON.stringify(images)}'>
+          <div class="product-slider-viewport" id="product-slider-viewport">
+            <div class="product-slider-track" id="product-slider-track">
+              <!-- Слайды будут сгенерированы в JS -->
+            </div>
+          </div>
+          <!-- Стрелки (скрываются, если 1 картинка) -->
+          <button class="product-slider-arrow product-slider-arrow--left" id="product-slider-prev" aria-label="Назад">
+            <span class="material-symbols-rounded">chevron_left</span>
+          </button>
+          <button class="product-slider-arrow product-slider-arrow--right" id="product-slider-next" aria-label="Вперёд">
+            <span class="material-symbols-rounded">chevron_right</span>
+          </button>
+          <!-- Точки навигации (скрываются, если 1 картинка) -->
+          <div class="product-slider-dots" id="product-slider-dots"></div>
+        </div>
+        
+        <!-- Блок с названием и описанием (строго под слайдером) -->
+        <div class="product-info">
+          <h2>${l.title}</h2>
+          <h3 class="product-price">${priceText}</h3>
+          <p class="product-desc">${l.desc}</p>
+          <p class="product-meta">📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
+          <div class="detail-actions">
+            <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;">
+              <span class="material-symbols-rounded">call</span>${t('call')}
+            </a>
+            <button class="btn btn-outline" onclick="window._toggleFav('${l.id}');window._openDetail('${l.id}')">
+              <span class="material-symbols-rounded">${liked?'favorite':'favorite'}</span>
+            </button>
+          </div>
         </div>`;
+        
       showScreen('detail');
+      
+      // Инициализируем слайдер после вставки в DOM
+      setTimeout(function() {
+        initProductSlider();
+      }, 10);
     };
+    // ==========================================
 
     function renderSearch() {
       const q = state.searchQuery.toLowerCase();
@@ -1345,7 +1484,6 @@
 
     if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
 
-    // --- Валидация телефона ---
     function validateLoginPhone() {
       const phoneInput = document.getElementById('login-phone');
       const loginBtn = document.getElementById('login-btn');
@@ -1370,15 +1508,13 @@
 
     validateLoginPhone();
 
-    // === G-EXPRESS BANNER CAROUSEL (ISOLATED) ===
+    // === G-EXPRESS BANNER CAROUSEL ===
     function initBannerCarousel() {
       const track = document.getElementById('g-express-track');
       const dotsContainer = document.getElementById('g-express-dots');
       const slides = document.querySelectorAll('.g-express-slide');
       
       if (!track || !dotsContainer || slides.length === 0) return;
-      
-      // Защита от повторной инициализации
       if (track.dataset.initialized === 'true') return;
       track.dataset.initialized = 'true';
 
@@ -1446,6 +1582,266 @@
       showScreen('login');
     }
   })();
+
+  // ==========================================
+  // SCROLL RESTORATION LOGIC
+  // ==========================================
+  (function() {
+    'use strict';
+    
+    const SCROLL_KEY = 'geran_scroll_pos';
+    const SCROLL_TIME_KEY = 'geran_scroll_time';
+    const MAX_AGE_MS = 30 * 60 * 1000;
+    
+    function saveScrollPosition() {
+      sessionStorage.setItem(SCROLL_KEY, window.scrollY || window.pageYOffset);
+      sessionStorage.setItem(SCROLL_TIME_KEY, Date.now());
+    }
+    
+    function restoreScrollPosition() {
+      const savedY = parseFloat(sessionStorage.getItem(SCROLL_KEY));
+      const savedTime = parseInt(sessionStorage.getItem(SCROLL_TIME_KEY), 10);
+      
+      if (isNaN(savedY) || isNaN(savedTime)) return;
+      if (Date.now() - savedTime > MAX_AGE_MS) {
+        sessionStorage.removeItem(SCROLL_KEY);
+        sessionStorage.removeItem(SCROLL_TIME_KEY);
+        return;
+      }
+      
+      waitForStableLayout(function() {
+        window.scrollTo({ top: savedY, behavior: 'instant' });
+        sessionStorage.removeItem(SCROLL_KEY);
+        sessionStorage.removeItem(SCROLL_TIME_KEY);
+      });
+    }
+    
+    function waitForStableLayout(callback) {
+      var lastHeight = document.body.scrollHeight;
+      var stableCount = 0;
+      var maxAttempts = 20;
+      var attempts = 0;
+      
+      function check() {
+        attempts++;
+        var currentHeight = document.body.scrollHeight;
+        
+        if (currentHeight === lastHeight) {
+          stableCount++;
+        } else {
+          stableCount = 0;
+          lastHeight = currentHeight;
+        }
+        
+        if (stableCount >= 3 || attempts >= maxAttempts) {
+          requestAnimationFrame(function() {
+            callback();
+          });
+          return;
+        }
+        
+        requestAnimationFrame(check);
+      }
+      
+      requestAnimationFrame(check);
+    }
+    
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.card');
+      if (card) {
+        if (!e.target.closest('.card-heart')) {
+          saveScrollPosition();
+        }
+      }
+    }, true);
+    
+    var originalOpenDetail = window._openDetail;
+    if (typeof originalOpenDetail === 'function') {
+      window._openDetail = function(id) {
+        saveScrollPosition();
+        return originalOpenDetail.apply(this, arguments);
+      };
+    }
+    
+    window.addEventListener('beforeunload', saveScrollPosition);
+    
+    if (document.readyState === 'complete') {
+      restoreScrollPosition();
+    } else {
+      window.addEventListener('load', restoreScrollPosition);
+    }
+    
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        restoreScrollPosition();
+      }
+    });
+    
+  })();
+  // ==========================================
+
+  // ==========================================
+  // PRODUCT SLIDER INITIALIZATION
+  // ==========================================
+  function initProductSlider() {
+    'use strict';
+    
+    var slider = document.getElementById('product-slider');
+    if (!slider) return;
+    
+    if (slider.dataset.initialized === 'true') return;
+    slider.dataset.initialized = 'true';
+    
+    var track = document.getElementById('product-slider-track');
+    var dotsContainer = document.getElementById('product-slider-dots');
+    var prevBtn = document.getElementById('product-slider-prev');
+    var nextBtn = document.getElementById('product-slider-next');
+    var viewport = document.getElementById('product-slider-viewport');
+    
+    var images = [];
+    try {
+      images = JSON.parse(slider.getAttribute('data-images') || '[]');
+    } catch (e) {
+      images = [PLACEHOLDER_IMG];
+    }
+    
+    if (!images.length) images = [PLACEHOLDER_IMG];
+    
+    var slideCount = images.length;
+    var currentIndex = 0;
+    
+    slider.setAttribute('data-slides', slideCount);
+    
+    track.innerHTML = '';
+    images.forEach(function(src) {
+      var slide = document.createElement('div');
+      slide.className = 'product-slider-slide';
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Фото товара';
+      img.draggable = false;
+      slide.appendChild(img);
+      track.appendChild(slide);
+    });
+    
+    dotsContainer.innerHTML = '';
+    if (slideCount > 1) {
+      for (var i = 0; i < slideCount; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'product-slider-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('data-index', i);
+        dot.addEventListener('click', function() {
+          goToSlide(parseInt(this.getAttribute('data-index'), 10));
+        });
+        dotsContainer.appendChild(dot);
+      }
+    }
+    
+    function updateUI() {
+      track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+      
+      var dots = dotsContainer.querySelectorAll('.product-slider-dot');
+      dots.forEach(function(dot, idx) {
+        dot.classList.toggle('active', idx === currentIndex);
+      });
+      
+      if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.4' : '1';
+      if (nextBtn) nextBtn.style.opacity = currentIndex === slideCount - 1 ? '0.4' : '1';
+    }
+    
+    function goToSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slideCount) index = slideCount - 1;
+      currentIndex = index;
+      updateUI();
+    }
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        goToSlide(currentIndex - 1);
+      });
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        goToSlide(currentIndex + 1);
+      });
+    }
+    
+    // SWIPE SUPPORT
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var isSwiping = false;
+    var SWIPE_THRESHOLD = 50;
+    
+    viewport.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].clientX;
+      isSwiping = true;
+    }, { passive: true });
+    
+    viewport.addEventListener('touchmove', function(e) {
+      if (!isSwiping) return;
+      touchEndX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    viewport.addEventListener('touchend', function() {
+      if (!isSwiping) return;
+      isSwiping = false;
+      
+      var diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff > 0) {
+          goToSlide(currentIndex + 1);
+        } else {
+          goToSlide(currentIndex - 1);
+        }
+      }
+    });
+    
+    // MOUSE DRAG SUPPORT
+    var mouseDown = false;
+    var mouseStartX = 0;
+    var mouseEndX = 0;
+    
+    viewport.addEventListener('mousedown', function(e) {
+      mouseDown = true;
+      mouseStartX = e.clientX;
+      viewport.style.cursor = 'grabbing';
+    });
+    
+    viewport.addEventListener('mousemove', function(e) {
+      if (!mouseDown) return;
+      mouseEndX = e.clientX;
+    });
+    
+    viewport.addEventListener('mouseup', function() {
+      if (!mouseDown) return;
+      mouseDown = false;
+      viewport.style.cursor = '';
+      
+      var diff = mouseStartX - mouseEndX;
+      if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff > 0) {
+          goToSlide(currentIndex + 1);
+        } else {
+          goToSlide(currentIndex - 1);
+        }
+      }
+    });
+    
+    viewport.addEventListener('mouseleave', function() {
+      if (mouseDown) {
+        mouseDown = false;
+        viewport.style.cursor = '';
+      }
+    });
+    
+    updateUI();
+  }
+  // ==========================================
 </script>
 </body>
 </html>

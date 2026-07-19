@@ -29,11 +29,12 @@
       box-shadow:0 0 30px rgba(0,0,0,0.03)
     }
     .header{
-      position:sticky;top:0;z-index:100;background:var(--bg);
+      position:fixed;top:0;z-index:100;background:var(--bg);
       border-bottom:1px solid var(--border);width:100%;padding:0 16px;
       height:var(--header-height);display:flex;align-items:center;
       justify-content:space-between;
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      left:50%;transform:translateX(-50%);max-width:1200px
     }
     .logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;cursor:pointer}
     .logo img{height:35px!important;width:auto!important;object-fit:contain!important;display:block}
@@ -129,7 +130,7 @@
     .bottom-nav { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: transform 0.2s; transform: translateY(0); }
     .nav-item .material-symbols-rounded { font-size: 24px; }
     .nav-item.create-btn .material-symbols-rounded { font-size: 26px; }
-    main { flex: 1; overflow-y: auto; padding: 0 12px 80px; }
+    main { flex: 1; overflow-y: auto; padding: 0 12px 80px; padding-top: var(--header-height); }
     .screen { display: none; padding: 8px 0 16px; animation: fadeSlide 0.25s ease; }
     .screen.active { display: block; }
     #screen-login.active {
@@ -194,9 +195,9 @@
     }
     .card-img img {
       width: 100%; height: 100%; object-fit: cover; display: block;
-      transition: transform 0.3s;
+      transition: transform 0s;
     }
-    .card:hover .card-img img { transform: scale(1.02); }
+    .card:hover .card-img img { transform: none; }
     .card-badge {
       position: absolute; top: 6px; left: 6px;
       background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
@@ -1387,6 +1388,10 @@
         
       showScreen('detail');
       
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      });
+      
       setTimeout(function() {
         initProductSlider();
       }, 10);
@@ -1613,9 +1618,14 @@
       track.dataset.initialized = 'true';
 
       const SLIDE_COUNT = slides.length;
-      const INTERVAL_TIME = 10000;
+      const INTERVAL_TIME = 8000;
       let currentSlide = 0;
       let autoPlayTimer = null;
+      let touchStartX = 0;
+      let touchEndX = 0;
+      let mouseStartX = 0;
+      let mouseEndX = 0;
+      let isDragging = false;
 
       function createDots() {
         dotsContainer.innerHTML = '';
@@ -1647,6 +1657,10 @@
         goToSlide(currentSlide + 1);
       }
 
+      function prevSlide() {
+        goToSlide(currentSlide - 1);
+      }
+
       function startAutoPlay() {
         stopAutoPlay();
         autoPlayTimer = setInterval(nextSlide, INTERVAL_TIME);
@@ -1659,13 +1673,72 @@
         }
       }
 
+      function resetAutoPlay() {
+        stopAutoPlay();
+        startAutoPlay();
+      }
+
       createDots();
       startAutoPlay();
 
-      track.addEventListener('mouseenter', stopAutoPlay);
-      track.addEventListener('mouseleave', startAutoPlay);
-      track.addEventListener('touchstart', stopAutoPlay, { passive: true });
-      track.addEventListener('touchend', startAutoPlay);
+      const sliderContainer = track.parentElement;
+
+      sliderContainer.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        stopAutoPlay();
+      }, { passive: true });
+
+      sliderContainer.addEventListener('touchmove', function(e) {
+        touchEndX = e.touches[0].clientX;
+      }, { passive: true });
+
+      sliderContainer.addEventListener('touchend', function() {
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) {
+            nextSlide();
+          } else {
+            prevSlide();
+          }
+        }
+        startAutoPlay();
+      });
+
+      sliderContainer.addEventListener('mousedown', function(e) {
+        mouseStartX = e.clientX;
+        isDragging = true;
+        stopAutoPlay();
+        sliderContainer.style.cursor = 'grabbing';
+      });
+
+      sliderContainer.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        mouseEndX = e.clientX;
+      });
+
+      sliderContainer.addEventListener('mouseup', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        sliderContainer.style.cursor = '';
+        
+        const diff = mouseStartX - mouseEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) {
+            nextSlide();
+          } else {
+            prevSlide();
+          }
+        }
+        startAutoPlay();
+      });
+
+      sliderContainer.addEventListener('mouseleave', function() {
+        if (isDragging) {
+          isDragging = false;
+          sliderContainer.style.cursor = '';
+          startAutoPlay();
+        }
+      });
     }
 
     applyLanguage();

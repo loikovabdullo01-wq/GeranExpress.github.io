@@ -390,34 +390,36 @@
       opacity: 1;
     }
     .g-express-slider-container {
-      position: relative;
-      width: 100%;
-      height: 120px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #e5e7eb;
-    }
-    .g-express-slider-track {
-      display: flex;
-      height: 100%;
-      transition: transform 0.4s ease-in-out;
-      will-change: transform;
-    }
-    .g-express-slide {
-      flex: 0 0 100%;
-      height: 100%;
-      width: 100%;
-    }
-    .g-express-slide-img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 12px;
-      background: #e5e7eb;
-      margin: 0;
-      padding: 0;
-    }
+    position: relative;
+    width: 100%;
+    height: 120px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #e5e7eb;
+}
+
+.g-express-slider {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease;
+}
+
+.g-express-slide {
+    min-width: 100%;
+    height: 100%;
+    flex-shrink: 0;
+}
+
+.g-express-slide img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;      /* Красиво заполняет весь баннер */
+    object-position: center; /* Центрирует изображение */
+    user-select: none;
+    -webkit-user-drag: none;
+}
     .g-express-dots {
       position: absolute;
       bottom: 12px;
@@ -610,9 +612,7 @@
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
             <div class="g-express-slide"><img class="g-express-slide-img" src="bbb.jpg" alt="Ad 1" loading="lazy"></div>
-            <div class="g-express-slide"><img class="g-express-slide-img" src="mmmm.jpg" alt="Ad 2" loading="lazy"></div>
-            <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 3" loading="lazy"></div>
-            <div class="g-express-slide"><img class="g-express-slide-img" src="pp.jpg" alt="Ad 4" loading="lazy"></div>
+            
           </div>
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>

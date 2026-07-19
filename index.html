@@ -296,7 +296,37 @@
       background: var(--surface); transition: all var(--transition); font-size: 0.7rem;
     }
     .photo-upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .photo-upload-btn.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      cursor: not-allowed;
+      border-color: var(--border);
+      color: var(--text-tertiary);
+    }
     .photo-upload-btn .material-symbols-rounded { font-size: 24px; }
+    .photo-counter {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .photo-limit-message {
+      display: none;
+      width: 100%;
+      text-align: left;
+      color: var(--accent-heart);
+      font-size: 0.7rem;
+      font-weight: 500;
+      margin-top: 2px;
+      animation: fadeSlide 0.3s ease;
+    }
+    .photo-limit-message.show {
+      display: block;
+    }
     .profile-avatar-wrapper { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
     .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--primary-soft); }
     .profile-avatar-edit {
@@ -696,6 +726,10 @@
           <span class="material-symbols-rounded">add_a_photo</span>
           <span id="photo-upload-text">Сурат</span>
         </div>
+        <div class="photo-counter" id="photo-counter">
+          <span>Загружено: </span><span id="photo-count">0</span><span>/5</span>
+        </div>
+        <div class="photo-limit-message" id="photo-limit-message">Достигнут лимит в 5 фото</div>
       </div>
       <input type="file" id="create-photo-input" accept="image/*" multiple style="display:none;">
       <div id="photo-previews-container" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;"></div>
@@ -939,6 +973,7 @@
     };
 
     let selectedImages = [];
+    const MAX_PHOTOS = 5;
     const PLACEHOLDER_IMG = 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png';
     let savedScrollPosition = 0;
     let shouldRestoreScroll = false;
@@ -1160,6 +1195,8 @@
       });
       selectedImages = [];
       renderSelectedPhotos();
+      updatePhotoCounter();
+      updateUploadButtonState();
     }
 
     function renderSelectedPhotos() {
@@ -1180,8 +1217,39 @@
           e.stopPropagation();
           selectedImages.splice(parseInt(btn.dataset.index), 1);
           renderSelectedPhotos();
+          updatePhotoCounter();
+          updateUploadButtonState();
         });
       });
+    }
+
+    function updatePhotoCounter() {
+      const countEl = document.getElementById('photo-count');
+      if (countEl) {
+        countEl.textContent = selectedImages.length;
+      }
+    }
+
+    function updateUploadButtonState() {
+      const uploadBtn = document.getElementById('photo-upload-btn');
+      if (!uploadBtn) return;
+      
+      if (selectedImages.length >= MAX_PHOTOS) {
+        uploadBtn.classList.add('disabled');
+      } else {
+        uploadBtn.classList.remove('disabled');
+      }
+    }
+
+    function showPhotoLimitMessage() {
+      const limitMsg = document.getElementById('photo-limit-message');
+      if (!limitMsg) return;
+      
+      limitMsg.classList.add('show');
+      
+      setTimeout(() => {
+        limitMsg.classList.remove('show');
+      }, 3000);
     }
 
     async function uploadImagesToImgBB(base64Array) {
@@ -1218,7 +1286,7 @@
           const newImages = selectedImages.filter(img => img.startsWith('data:'));
           const existingImages = selectedImages.filter(img => !img.startsWith('data:'));
           if (newImages.length > 0) {
-            const uploadedUrls = await uploadImagesToImgBB(newImages.slice(0, 5));
+            const uploadedUrls = await uploadImagesToImgBB(newImages.slice(0, MAX_PHOTOS));
             imageUrls = [...existingImages, ...uploadedUrls];
           } else { imageUrls = [...existingImages]; }
         }
@@ -1256,6 +1324,8 @@
         document.getElementById('create-photo-input').value = '';
         selectedImages = [];
         renderSelectedPhotos();
+        updatePhotoCounter();
+        updateUploadButtonState();
         showScreen('home');
       } catch (error) { console.error('Ошибка публикации:', error); alert('Ошибка при публикации объявления.'); }
       finally { btn.disabled = false; btn.textContent = 'Нашр кунед'; }
@@ -1269,48 +1339,37 @@
       renderScreen(state.currentScreen);
     };
 
-    // ==========================================
-    // ОБНОВЛЁННАЯ ФУНКЦИЯ _openDetail СО СЛАЙДЕРОМ
-    // ==========================================
     window._openDetail = (id) => {
       savedScrollPosition = window.scrollY;
       shouldRestoreScroll = true;
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
       
-      // Собираем массив картинок (если нет — подставляем placeholder)
       let images = (l.images && l.images.length > 0) 
         ? l.images.filter(src => src && (src.startsWith('data:image/') || src.startsWith('http')))
         : [PLACEHOLDER_IMG];
       
-      // Если после фильтрации массив пуст — используем placeholder
       if (images.length === 0) images = [PLACEHOLDER_IMG];
       
       const priceText = l.isFree ? t('free') : `${(l.price||0).toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
       const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
       
-      // Строим HTML с контейнером для слайдера и блоком информации под ним
       document.getElementById('detail-content').innerHTML = `
-        <!-- Слайдер карточки товара -->
         <div class="product-slider" id="product-slider" data-images='${JSON.stringify(images)}'>
           <div class="product-slider-viewport" id="product-slider-viewport">
             <div class="product-slider-track" id="product-slider-track">
-              <!-- Слайды будут сгенерированы в JS -->
             </div>
           </div>
-          <!-- Стрелки (скрываются, если 1 картинка) -->
           <button class="product-slider-arrow product-slider-arrow--left" id="product-slider-prev" aria-label="Назад">
             <span class="material-symbols-rounded">chevron_left</span>
           </button>
           <button class="product-slider-arrow product-slider-arrow--right" id="product-slider-next" aria-label="Вперёд">
             <span class="material-symbols-rounded">chevron_right</span>
           </button>
-          <!-- Точки навигации (скрываются, если 1 картинка) -->
           <div class="product-slider-dots" id="product-slider-dots"></div>
         </div>
         
-        <!-- Блок с названием и описанием (строго под слайдером) -->
         <div class="product-info">
           <h2>${l.title}</h2>
           <h3 class="product-price">${priceText}</h3>
@@ -1328,12 +1387,10 @@
         
       showScreen('detail');
       
-      // Инициализируем слайдер после вставки в DOM
       setTimeout(function() {
         initProductSlider();
       }, 10);
     };
-    // ==========================================
 
     function renderSearch() {
       const q = state.searchQuery.toLowerCase();
@@ -1355,6 +1412,8 @@
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.toggle('active', el.dataset.condition === state.selectedCondition));
       selectedImages = [...(l.images || [])];
       renderSelectedPhotos();
+      updatePhotoCounter();
+      updateUploadButtonState();
       showScreen('create');
     };
 
@@ -1421,16 +1480,52 @@
       else { priceInput.disabled = false; priceInput.value = ''; }
     });
 
-    document.getElementById('photo-upload-btn')?.addEventListener('click', () => document.getElementById('create-photo-input').click());
+    document.getElementById('photo-upload-btn')?.addEventListener('click', () => {
+      const input = document.getElementById('create-photo-input');
+      
+      if (selectedImages.length >= MAX_PHOTOS) {
+        showPhotoLimitMessage();
+        return;
+      }
+      
+      input.click();
+    });
+    
     document.getElementById('create-photo-input')?.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files).slice(0, 5);
+      const files = Array.from(e.target.files);
       if (!files.length) return;
+      
+      const remainingSlots = MAX_PHOTOS - selectedImages.length;
+      
+      if (remainingSlots <= 0) {
+        showPhotoLimitMessage();
+        e.target.value = '';
+        return;
+      }
+      
+      const filesToAdd = files.slice(0, remainingSlots);
+      
+      if (files.length > remainingSlots) {
+        showPhotoLimitMessage();
+      }
+      
       let loaded = 0;
-      files.forEach(file => {
+      const totalToLoad = filesToAdd.length;
+      
+      filesToAdd.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (ev) => { selectedImages.push(ev.target.result); loaded++; if (loaded === files.length) renderSelectedPhotos(); };
+        reader.onload = (ev) => {
+          selectedImages.push(ev.target.result);
+          loaded++;
+          if (loaded === totalToLoad) {
+            renderSelectedPhotos();
+            updatePhotoCounter();
+            updateUploadButtonState();
+          }
+        };
         reader.readAsDataURL(file);
       });
+      
       e.target.value = '';
     });
 
@@ -1508,7 +1603,6 @@
 
     validateLoginPhone();
 
-    // === G-EXPRESS BANNER CAROUSEL ===
     function initBannerCarousel() {
       const track = document.getElementById('g-express-track');
       const dotsContainer = document.getElementById('g-express-dots');
@@ -1573,7 +1667,6 @@
       track.addEventListener('touchstart', stopAutoPlay, { passive: true });
       track.addEventListener('touchend', startAutoPlay);
     }
-    // === END G-EXPRESS BANNER CAROUSEL ===
 
     applyLanguage();
     if (state.user) {
@@ -1583,9 +1676,6 @@
     }
   })();
 
-  // ==========================================
-  // SCROLL RESTORATION LOGIC
-  // ==========================================
   (function() {
     'use strict';
     
@@ -1678,11 +1768,7 @@
     });
     
   })();
-  // ==========================================
 
-  // ==========================================
-  // PRODUCT SLIDER INITIALIZATION
-  // ==========================================
   function initProductSlider() {
     'use strict';
     
@@ -1770,7 +1856,6 @@
       });
     }
     
-    // SWIPE SUPPORT
     var touchStartX = 0;
     var touchEndX = 0;
     var isSwiping = false;
@@ -1801,7 +1886,6 @@
       }
     });
     
-    // MOUSE DRAG SUPPORT
     var mouseDown = false;
     var mouseStartX = 0;
     var mouseEndX = 0;
@@ -1841,7 +1925,6 @@
     
     updateUI();
   }
-  // ==========================================
 </script>
 </body>
 </html>

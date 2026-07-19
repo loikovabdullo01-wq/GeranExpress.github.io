@@ -644,6 +644,23 @@
       margin-bottom: 12px;
     }
     /* ========================================== */
+
+    /* Красим кнопку "Позвонить" в приятный зелёный */
+.detail-actions a[href^="tel:"] {
+    background: #1e5e48 !important; /* Насыщенный зелёный, слегка приглушённый */
+    color: #ffffff !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* Красим кнопку "WhatsApp" в точно такой же цвет */
+.detail-actions a[href*="wa.me"], .btn-whatsapp {
+    background: #1e5e48 !important; /* Идентичный приятный зелёный цвет */
+    color: #ffffff !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

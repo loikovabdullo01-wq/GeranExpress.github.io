@@ -829,7 +829,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
   (() => {
     if ('fonts' in document) {
@@ -850,94 +849,117 @@
       storageBucket: "geran-express.firebasestorage.app",
       messagingSenderId: "100329986906",
       appId: "1:100329986906:web:4998c36eecc975b46bf163",
-      measurementId: "G-WP2S70R07C",
-      databaseURL: "https://geran-express-default-rtdb.firebaseio.com/"
+      measurementId: "G-WP2S70R07C"
     };
 
     let db = null;
     let analytics = null;
-    let rtdb = null;
     let firebaseReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       analytics = firebase.analytics();
-      rtdb = firebase.database();
       firebaseReady = true;
       analytics.logEvent('page_view');
-      console.log("Firebase + Analytics + Realtime Database OK");
+      console.log("Firebase + Analytics OK (Firestore)");
     } catch (e) {
       console.warn('Firebase init error:', e.message);
     }
 
-    // ==================== PRESENCE SYSTEM (FIXED) ====================
+    // ==================== PRESENCE SYSTEM (FIRESTORE-BASED) ====================
     (function() {
-      if (!rtdb || !firebaseReady) {
-        console.warn('Presence: RTDB not available');
+      if (!db || !firebaseReady) {
+        console.warn('Presence: Firestore not available');
         return;
       }
 
-      const presenceRef = rtdb.ref('presence');
-      const connectedRef = rtdb.ref('.info/connected');
+      const presenceCollection = db.collection('presence');
       
-      function generateUserId() {
-        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      function generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       }
       
-      let userId = localStorage.getItem('geran_presence_id');
-      if (!userId) {
-        userId = generateUserId();
-        localStorage.setItem('geran_presence_id', userId);
+      let sessionId = sessionStorage.getItem('geran_session_id');
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        sessionStorage.setItem('geran_session_id', sessionId);
       }
       
-      let myPresenceRef = presenceRef.child(userId);
+      const myPresenceDoc = presenceCollection.doc(sessionId);
       
-      // Устанавливаем onDisconnect ДО записи — гарантирует удаление при разрыве
-      myPresenceRef.onDisconnect().remove();
+      // Записываем присутствие
+      function updatePresence() {
+        myPresenceDoc.set({
+          online: true,
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+          sessionId: sessionId
+        }).then(() => {
+          console.log('Presence: registered as', sessionId);
+        }).catch((err) => {
+          console.warn('Presence: write error', err.message);
+        });
+      }
       
-      connectedRef.on('value', function(snap) {
-        if (snap.val() === true) {
-          // Пересоздаём ref на случай если база была переподключена
-          if (!myPresenceRef || !myPresenceRef.key) {
-            myPresenceRef = presenceRef.child(userId);
-            myPresenceRef.onDisconnect().remove();
-          }
-          
-          // Записываем присутствие с timestamp для heartbeat
-          myPresenceRef.set({
-            online: true,
-            lastSeen: firebase.database.ServerValue.TIMESTAMP
-          });
-          
-          console.log('Presence: connected as', userId);
-        } else {
-          console.log('Presence: disconnected');
-        }
-      });
+      // Обновляем каждые 30 секунд (heartbeat)
+      updatePresence();
+      const heartbeatInterval = setInterval(updatePresence, 30000);
       
-      // Обработчик закрытия вкладки — явно удаляем присутствие
+      // При закрытии вкладки удаляем документ
       window.addEventListener('beforeunload', function() {
-        if (myPresenceRef && myPresenceRef.key) {
-          try {
-            myPresenceRef.remove();
-          } catch(e) {
-            // Игнорируем ошибки при закрытии
-          }
+        clearInterval(heartbeatInterval);
+        // Синхронный XHR для удаления присутствия при закрытии
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('DELETE', 'https://firestore.googleapis.com/v1/projects/geran-express/databases/(default)/documents/presence/' + sessionId, true);
+          xhr.setRequestHeader('Authorization', 'Bearer ' + firebase.auth().currentUser?.accessToken || '');
+          xhr.send();
+        } catch(e) {
+          // Fallback: пытаемся удалить через SDK
+          myPresenceDoc.delete().catch(() => {});
         }
+        // Также удаляем через SDK
+        myPresenceDoc.delete().catch(() => {});
       });
       
+      // Очистка старых сессий (старше 2 минут) — каждые 60 секунд
+      function cleanupOldSessions() {
+        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+        presenceCollection
+          .where('lastSeen', '<', twoMinutesAgo)
+          .get()
+          .then(snapshot => {
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+              batch.delete(doc.ref);
+            });
+            return batch.commit();
+          })
+          .catch(() => {});
+      }
+      
+      setInterval(cleanupOldSessions, 60000);
+      cleanupOldSessions(); // Первый запуск сразу
+      
+      // Слушаем изменения количества онлайн-пользователей
       const onlineDot = document.getElementById('online-dot');
       const onlineCount = document.getElementById('online-count');
       
-      presenceRef.on('value', function(snapshot) {
-        if (!snapshot) return;
-        
-        const users = snapshot.val();
+      presenceCollection.onSnapshot(function(snapshot) {
+        // Фильтруем только активные сессии (за последние 2 минуты)
+        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         let count = 0;
         
-        if (users) {
-          count = Object.keys(users).length;
-        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.lastSeen && data.lastSeen.toDate) {
+            const lastSeenDate = data.lastSeen.toDate();
+            if (lastSeenDate >= twoMinutesAgo) {
+              count++;
+            }
+          } else if (data.online === true) {
+            count++;
+          }
+        });
         
         if (onlineCount) {
           onlineCount.textContent = count;
@@ -947,15 +969,15 @@
           onlineDot.classList.remove('offline', 'zero');
           if (count === 0) {
             onlineDot.classList.add('zero');
-          } else if (count === 1) {
-            // Показываем зелёную точку если 1 и более пользователей
           }
         }
         
         console.log('Presence: online count =', count);
+      }, function(error) {
+        console.warn('Presence: listener error', error.message);
       });
     })();
-    // ==================================================================
+    // ===========================================================================
 
     const translations = {
       tg: {

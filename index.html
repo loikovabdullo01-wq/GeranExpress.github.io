@@ -44,20 +44,22 @@
       border-radius:50%;display:flex;align-items:center;justify-content:center;
       cursor:pointer;color:var(--text-secondary);padding:0;flex-shrink:0;position:relative
     }
-    .search-bar {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 4px 10px;
-      gap: 6px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      margin: 0 4px;
-      max-width: 120px;
-    }
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 4px 10px;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  margin: 0 4px;
+  max-width: 120px; /* Добавьте эту строку */
+}
+
+
     .bottom-nav{
       position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:1200px;
       background:var(--bg);border-top:1px solid var(--border);
@@ -398,7 +400,7 @@
       margin: 16px 0; font-weight: 500; text-align: center;
     }
 
-    /* === ONLINE INDICATOR (DESKTOP DEFAULT) === */
+    /* === ONLINE INDICATOR === */
     .online-indicator {
       display: inline-flex;
       align-items: center;
@@ -427,88 +429,6 @@
       background: #9ca3af;
     }
     /* ================================ */
-
-    /* ==========================================
-       MOBILE HEADER (max-width: 480px) — TASK
-       ========================================== */
-    @media (max-width: 480px) {
-      .header {
-        flex-wrap: wrap;
-        height: auto;
-        min-height: var(--header-height);
-        padding: 6px 10px 6px 10px;
-        gap: 0;
-      }
-      
-      .logo {
-        order: 1;
-        margin-right: 6px;
-      }
-      
-      .logo img {
-        height: 30px !important;
-      }
-      
-      /* Индикатор онлайна — над поиском, по центру */
-      .header-actions {
-        order: 2;
-        margin-left: auto;
-        gap: 4px;
-      }
-      
-      .header-actions .online-indicator {
-        display: none !important;
-      }
-      
-      /* Дублируем индикатор онлайна в отдельную строку */
-      .header::after {
-        display: none;
-      }
-      
-      .search-bar {
-        order: 3;
-        flex: 1 1 100%;
-        max-width: 100%;
-        margin: 4px 0 2px 0;
-      }
-      
-      /* Показываем мобильный индикатор */
-      .mobile-online-indicator {
-        order: 0;
-        width: 100%;
-        display: flex !important;
-        justify-content: center;
-        align-items: center;
-        padding: 2px 0 4px 0;
-        margin: 0;
-      }
-      
-      .mobile-online-indicator .online-indicator-inner {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 9px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        padding: 1px 8px;
-        border-radius: 12px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        white-space: nowrap;
-        line-height: 1;
-      }
-      
-      .mobile-online-indicator .online-dot {
-        width: 6px;
-        height: 6px;
-      }
-      
-      /* Скрываем стандартный индикатор в desktop-версии на мобилке */
-      .header-actions .online-indicator {
-        display: none !important;
-      }
-    }
-    /* ========================================== */
 
     /* === G-EXPRESS BANNER CAROUSEL === */
     .g-express-slider-wrapper {
@@ -726,15 +646,6 @@
 <body>
 <div id="app">
   <header class="header" id="main-header">
-    <!-- Мобильный индикатор онлайна (виден только на ≤480px) -->
-    <div class="mobile-online-indicator" id="mobile-online-indicator" style="display:none;">
-      <div class="online-indicator-inner">
-        <span class="online-dot zero" id="mobile-online-dot"></span>
-        <span id="mobile-online-count">0</span>
-        <span id="mobile-online-text">онлайн</span>
-      </div>
-    </div>
-    
     <a href="/" class="logo" onclick="event.preventDefault(); window.location.reload();">
       <img src="1.jpg" alt="Geran Express">
     </a>
@@ -987,6 +898,7 @@
       
       const myPresenceDoc = presenceCollection.doc(sessionId);
       
+      // Записываем присутствие
       function updatePresence() {
         myPresenceDoc.set({
           online: true,
@@ -999,14 +911,28 @@
         });
       }
       
+      // Обновляем каждые 30 секунд (heartbeat)
       updatePresence();
       const heartbeatInterval = setInterval(updatePresence, 30000);
       
+      // При закрытии вкладки удаляем документ
       window.addEventListener('beforeunload', function() {
         clearInterval(heartbeatInterval);
+        // Синхронный XHR для удаления присутствия при закрытии
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('DELETE', 'https://firestore.googleapis.com/v1/projects/geran-express/databases/(default)/documents/presence/' + sessionId, true);
+          xhr.setRequestHeader('Authorization', 'Bearer ' + firebase.auth().currentUser?.accessToken || '');
+          xhr.send();
+        } catch(e) {
+          // Fallback: пытаемся удалить через SDK
+          myPresenceDoc.delete().catch(() => {});
+        }
+        // Также удаляем через SDK
         myPresenceDoc.delete().catch(() => {});
       });
       
+      // Очистка старых сессий (старше 2 минут) — каждые 60 секунд
       function cleanupOldSessions() {
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         presenceCollection
@@ -1023,17 +949,14 @@
       }
       
       setInterval(cleanupOldSessions, 60000);
-      cleanupOldSessions();
+      cleanupOldSessions(); // Первый запуск сразу
       
-      // Desktop индикатор
+      // Слушаем изменения количества онлайн-пользователей
       const onlineDot = document.getElementById('online-dot');
       const onlineCount = document.getElementById('online-count');
       
-      // Mobile индикатор
-      const mobileOnlineDot = document.getElementById('mobile-online-dot');
-      const mobileOnlineCount = document.getElementById('mobile-online-count');
-      
       presenceCollection.onSnapshot(function(snapshot) {
+        // Фильтруем только активные сессии (за последние 2 минуты)
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         let count = 0;
         
@@ -1049,25 +972,14 @@
           }
         });
         
-        // Обновляем desktop индикатор
         if (onlineCount) {
           onlineCount.textContent = count;
         }
+        
         if (onlineDot) {
           onlineDot.classList.remove('offline', 'zero');
           if (count === 0) {
             onlineDot.classList.add('zero');
-          }
-        }
-        
-        // Обновляем mobile индикатор
-        if (mobileOnlineCount) {
-          mobileOnlineCount.textContent = count;
-        }
-        if (mobileOnlineDot) {
-          mobileOnlineDot.classList.remove('offline', 'zero');
-          if (count === 0) {
-            mobileOnlineDot.classList.add('zero');
           }
         }
         
@@ -1132,9 +1044,6 @@
       
       const onlineTextEl = document.getElementById('online-text');
       if (onlineTextEl) onlineTextEl.textContent = t('online_text');
-      
-      const mobileOnlineTextEl = document.getElementById('mobile-online-text');
-      if (mobileOnlineTextEl) mobileOnlineTextEl.textContent = t('online_text');
     }
 
     function applyLanguage() {

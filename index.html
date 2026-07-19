@@ -460,12 +460,13 @@
       user-select: none;
       -webkit-user-select: none;
       aspect-ratio: 4 / 3;
+      touch-action: pan-x;
     }
     .product-slider-viewport {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      touch-action: pan-y pinch-zoom;
+      touch-action: pan-x;
     }
     .product-slider-track {
       display: flex;
@@ -1060,6 +1061,10 @@
 
     async function renderHome() {
       console.log("renderHome");
+      if (shouldRestoreScroll && !isChangingCategory) {
+        window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
+        shouldRestoreScroll = false;
+      }
       const cloudListings = await loadFirestoreListings();
       const merged = [...cloudListings];
       DEFAULT_LISTINGS.forEach(item => {
@@ -1125,14 +1130,6 @@
 
       setTimeout(initBannerCarousel, 50);
 
-      if (shouldRestoreScroll && !isChangingCategory) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
-            shouldRestoreScroll = false;
-          });
-        });
-      }
       if (isChangingCategory) {
         requestAnimationFrame(() => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1772,41 +1769,9 @@
         return;
       }
       
-      waitForStableLayout(function() {
-        window.scrollTo({ top: savedY, behavior: 'instant' });
-        sessionStorage.removeItem(SCROLL_KEY);
-        sessionStorage.removeItem(SCROLL_TIME_KEY);
-      });
-    }
-    
-    function waitForStableLayout(callback) {
-      var lastHeight = document.body.scrollHeight;
-      var stableCount = 0;
-      var maxAttempts = 20;
-      var attempts = 0;
-      
-      function check() {
-        attempts++;
-        var currentHeight = document.body.scrollHeight;
-        
-        if (currentHeight === lastHeight) {
-          stableCount++;
-        } else {
-          stableCount = 0;
-          lastHeight = currentHeight;
-        }
-        
-        if (stableCount >= 3 || attempts >= maxAttempts) {
-          requestAnimationFrame(function() {
-            callback();
-          });
-          return;
-        }
-        
-        requestAnimationFrame(check);
-      }
-      
-      requestAnimationFrame(check);
+      window.scrollTo({ top: savedY, behavior: 'instant' });
+      sessionStorage.removeItem(SCROLL_KEY);
+      sessionStorage.removeItem(SCROLL_TIME_KEY);
     }
     
     document.addEventListener('click', function(e) {
@@ -1827,12 +1792,6 @@
     }
     
     window.addEventListener('beforeunload', saveScrollPosition);
-    
-    if (document.readyState === 'complete') {
-      restoreScrollPosition();
-    } else {
-      window.addEventListener('load', restoreScrollPosition);
-    }
     
     window.addEventListener('pageshow', function(event) {
       if (event.persisted) {
@@ -1935,12 +1894,13 @@
     var SWIPE_THRESHOLD = 50;
     
     viewport.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) return;
       touchStartX = e.touches[0].clientX;
       isSwiping = true;
     }, { passive: true });
     
     viewport.addEventListener('touchmove', function(e) {
-      if (!isSwiping) return;
+      if (!isSwiping || e.touches.length > 1) return;
       touchEndX = e.touches[0].clientX;
     }, { passive: true });
     
@@ -1994,6 +1954,18 @@
         mouseDown = false;
         viewport.style.cursor = '';
       }
+    });
+    
+    slider.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+    
+    slider.addEventListener('gesturechange', function(e) {
+      e.preventDefault();
+    });
+    
+    slider.addEventListener('gestureend', function(e) {
+      e.preventDefault();
     });
     
     updateUI();

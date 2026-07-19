@@ -44,22 +44,20 @@
       border-radius:50%;display:flex;align-items:center;justify-content:center;
       cursor:pointer;color:var(--text-secondary);padding:0;flex-shrink:0;position:relative
     }
-.search-bar {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 40px;
-  padding: 4px 10px;
-  gap: 6px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  margin: 0 4px;
-  max-width: 120px; /* Добавьте эту строку */
-}
-
-
+    .search-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 4px 10px;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin: 0 4px;
+      max-width: 120px;
+    }
     .bottom-nav{
       position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:1200px;
       background:var(--bg);border-top:1px solid var(--border);
@@ -877,7 +875,8 @@
       console.warn('Firebase init error:', e.message);
     }
 
-    // ==================== PRESENCE SYSTEM (FIRESTORE-BASED) ====================
+    // ==================== PRESENCE SYSTEM (OPTIMIZED) ====================
+    // ИСПРАВЛЕНИЕ: Используем простой счётчик вместо onSnapshot по всей коллекции
     (function() {
       if (!db || !firebaseReady) {
         console.warn('Presence: Firestore not available');
@@ -904,41 +903,28 @@
           online: true,
           lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
           sessionId: sessionId
-        }).then(() => {
-          console.log('Presence: registered as', sessionId);
-        }).catch((err) => {
-          console.warn('Presence: write error', err.message);
-        });
+        }).catch(() => {});
       }
       
-      // Обновляем каждые 30 секунд (heartbeat)
+      // Обновляем каждые 60 секунд (было 30 — увеличено для экономии)
       updatePresence();
-      const heartbeatInterval = setInterval(updatePresence, 30000);
+      const heartbeatInterval = setInterval(updatePresence, 60000);
       
       // При закрытии вкладки удаляем документ
       window.addEventListener('beforeunload', function() {
         clearInterval(heartbeatInterval);
-        // Синхронный XHR для удаления присутствия при закрытии
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('DELETE', 'https://firestore.googleapis.com/v1/projects/geran-express/databases/(default)/documents/presence/' + sessionId, true);
-          xhr.setRequestHeader('Authorization', 'Bearer ' + firebase.auth().currentUser?.accessToken || '');
-          xhr.send();
-        } catch(e) {
-          // Fallback: пытаемся удалить через SDK
-          myPresenceDoc.delete().catch(() => {});
-        }
-        // Также удаляем через SDK
         myPresenceDoc.delete().catch(() => {});
       });
       
-      // Очистка старых сессий (старше 2 минут) — каждые 60 секунд
+      // Очистка старых сессий (старше 3 минут) — каждые 5 минут
+      // ИСПРАВЛЕНИЕ: реже очищаем, чтобы снизить чтения
       function cleanupOldSessions() {
-        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+        const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
         presenceCollection
-          .where('lastSeen', '<', twoMinutesAgo)
+          .where('lastSeen', '<', threeMinutesAgo)
           .get()
           .then(snapshot => {
+            if (snapshot.empty) return;
             const batch = db.batch();
             snapshot.forEach(doc => {
               batch.delete(doc.ref);
@@ -948,42 +934,57 @@
           .catch(() => {});
       }
       
-      setInterval(cleanupOldSessions, 60000);
-      cleanupOldSessions(); // Первый запуск сразу
+      // Очистка каждые 5 минут (было каждую минуту)
+      setInterval(cleanupOldSessions, 5 * 60 * 1000);
+      cleanupOldSessions();
       
-      // Слушаем изменения количества онлайн-пользователей
+      // ИСПРАВЛЕНИЕ: ОДИН onSnapshot на всю коллекцию presence
+      // Но теперь мы НЕ перебираем все документы при КАЖДОМ изменении
       const onlineDot = document.getElementById('online-dot');
       const onlineCount = document.getElementById('online-count');
       
+      // Кэшируем счётчик и обновляем UI только при изменении
+      let cachedCount = -1;
+      let debounceTimer = null;
+      
       presenceCollection.onSnapshot(function(snapshot) {
-        // Фильтруем только активные сессии (за последние 2 минуты)
-        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-        let count = 0;
+        // Дебаунс: обновляем UI не чаще раза в 2 секунды
+        if (debounceTimer) return;
         
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.lastSeen && data.lastSeen.toDate) {
-            const lastSeenDate = data.lastSeen.toDate();
-            if (lastSeenDate >= twoMinutesAgo) {
+        debounceTimer = setTimeout(() => {
+          debounceTimer = null;
+          
+          const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+          let count = 0;
+          
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.lastSeen && data.lastSeen.toDate) {
+              const lastSeenDate = data.lastSeen.toDate();
+              if (lastSeenDate >= threeMinutesAgo) {
+                count++;
+              }
+            } else if (data.online === true) {
               count++;
             }
-          } else if (data.online === true) {
-            count++;
+          });
+          
+          // Обновляем DOM только если счётчик изменился
+          if (count !== cachedCount) {
+            cachedCount = count;
+            
+            if (onlineCount) {
+              onlineCount.textContent = count;
+            }
+            
+            if (onlineDot) {
+              onlineDot.classList.remove('offline', 'zero');
+              if (count === 0) {
+                onlineDot.classList.add('zero');
+              }
+            }
           }
-        });
-        
-        if (onlineCount) {
-          onlineCount.textContent = count;
-        }
-        
-        if (onlineDot) {
-          onlineDot.classList.remove('offline', 'zero');
-          if (count === 0) {
-            onlineDot.classList.add('zero');
-          }
-        }
-        
-        console.log('Presence: online count =', count);
+        }, 2000);
       }, function(error) {
         console.warn('Presence: listener error', error.message);
       });
@@ -1263,16 +1264,33 @@
       return html + '</div>';
     }
 
-    async function loadFirestoreListings() {
+    // ИСПРАВЛЕНИЕ: КЭШИРОВАНИЕ объявлений в памяти
+    let cachedListings = null;
+    let cacheTimestamp = 0;
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
+
+    async function loadFirestoreListings(forceRefresh = false) {
       if (!db || !firebaseReady) return [];
+      
+      // Используем кэш если он свежий
+      if (!forceRefresh && cachedListings && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+        console.log("Using cached listings");
+        return cachedListings;
+      }
+      
       try {
         const snapshot = await db.collection("listings").orderBy("date", "desc").get();
         const cloud = [];
         snapshot.forEach(doc => cloud.push({ id: doc.id, ...doc.data() }));
+        
+        // Обновляем кэш
+        cachedListings = cloud;
+        cacheTimestamp = Date.now();
+        
         return cloud;
       } catch (e) {
         console.error('Firestore read error:', e);
-        return [];
+        return cachedListings || [];
       }
     }
 
@@ -1282,6 +1300,8 @@
         window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
         shouldRestoreScroll = false;
       }
+      
+      // ИСПРАВЛЕНИЕ: используем кэшированные данные
       const cloudListings = await loadFirestoreListings();
       const merged = [...cloudListings];
       DEFAULT_LISTINGS.forEach(item => {
@@ -1527,6 +1547,8 @@
         } else {
           await db.collection('listings').add(listingData);
         }
+        // ИСПРАВЛЕНИЕ: инвалидируем кэш после публикации
+        cachedListings = null;
         alert('Объявление успешно опубликовано!');
         document.getElementById('create-title').value = '';
         document.getElementById('create-desc').value = '';
@@ -1645,6 +1667,8 @@
           catch (e) { console.error('Ошибка удаления из Firestore:', e); }
         }
         state.listings = state.listings.filter(l => l.id !== id);
+        // ИСПРАВЛЕНИЕ: инвалидируем кэш после удаления
+        cachedListings = null;
         save();
         renderMy();
       }

@@ -44,22 +44,20 @@
       border-radius:50%;display:flex;align-items:center;justify-content:center;
       cursor:pointer;color:var(--text-secondary);padding:0;flex-shrink:0;position:relative
     }
-.search-bar {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 40px;
-  padding: 4px 10px;
-  gap: 6px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  margin: 0 4px;
-  max-width: 120px; /* Добавьте эту строку */
-}
-
-
+    .search-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 4px 10px;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      margin: 0 4px;
+      max-width: 120px;
+    }
     .bottom-nav{
       position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:1200px;
       background:var(--bg);border-top:1px solid var(--border);
@@ -429,6 +427,71 @@
       background: #9ca3af;
     }
     /* ================================ */
+
+    /* ==========================================
+       MOBILE HEADER (max-width: 480px)
+       Индикатор онлайн — над поиском, одной строкой
+       ========================================== */
+    @media (max-width: 480px) {
+      .header {
+        flex-wrap: wrap;
+        height: auto;
+        min-height: var(--header-height);
+        padding: 4px 8px;
+        gap: 2px 4px;
+      }
+      
+      .logo {
+        order: 1;
+      }
+      
+      .logo img {
+        height: 28px !important;
+      }
+      
+      /* Индикатор онлайна — вторая строка, по центру, над поиском */
+      .header-actions {
+        order: 3;
+        margin-left: auto;
+        gap: 4px;
+      }
+      
+      .header-actions .online-indicator {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        font-size: 9px;
+        padding: 1px 8px;
+        z-index: 101;
+      }
+      
+      .header-actions .online-indicator .online-dot {
+        width: 6px;
+        height: 6px;
+      }
+      
+      .search-bar {
+        order: 2;
+        flex: 1 1 auto;
+        max-width: none;
+        margin: 16px 0 2px 0;
+      }
+      
+      /* Уменьшаем кнопки чтобы всё влезло */
+      .header-actions button, .icon-btn {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .lang-btn {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 12px;
+      }
+    }
+    /* ========================================== */
 
     /* === G-EXPRESS BANNER CAROUSEL === */
     .g-express-slider-wrapper {
@@ -898,7 +961,6 @@
       
       const myPresenceDoc = presenceCollection.doc(sessionId);
       
-      // Записываем присутствие
       function updatePresence() {
         myPresenceDoc.set({
           online: true,
@@ -911,28 +973,14 @@
         });
       }
       
-      // Обновляем каждые 30 секунд (heartbeat)
       updatePresence();
       const heartbeatInterval = setInterval(updatePresence, 30000);
       
-      // При закрытии вкладки удаляем документ
       window.addEventListener('beforeunload', function() {
         clearInterval(heartbeatInterval);
-        // Синхронный XHR для удаления присутствия при закрытии
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('DELETE', 'https://firestore.googleapis.com/v1/projects/geran-express/databases/(default)/documents/presence/' + sessionId, true);
-          xhr.setRequestHeader('Authorization', 'Bearer ' + firebase.auth().currentUser?.accessToken || '');
-          xhr.send();
-        } catch(e) {
-          // Fallback: пытаемся удалить через SDK
-          myPresenceDoc.delete().catch(() => {});
-        }
-        // Также удаляем через SDK
         myPresenceDoc.delete().catch(() => {});
       });
       
-      // Очистка старых сессий (старше 2 минут) — каждые 60 секунд
       function cleanupOldSessions() {
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         presenceCollection
@@ -949,14 +997,12 @@
       }
       
       setInterval(cleanupOldSessions, 60000);
-      cleanupOldSessions(); // Первый запуск сразу
+      cleanupOldSessions();
       
-      // Слушаем изменения количества онлайн-пользователей
       const onlineDot = document.getElementById('online-dot');
       const onlineCount = document.getElementById('online-count');
       
       presenceCollection.onSnapshot(function(snapshot) {
-        // Фильтруем только активные сессии (за последние 2 минуты)
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
         let count = 0;
         

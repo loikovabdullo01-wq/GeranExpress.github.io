@@ -181,23 +181,33 @@
     .card {
       background: var(--surface); border-radius: 12px; overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--border);
-      transition: all var(--transition); cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;
       display: flex; flex-direction: column;
+    }
+    .card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
+      z-index: 2;
+      position: relative;
     }
     .card.vip-card {
       border: 2px solid #d4a017;
       box-shadow: 0 4px 14px rgba(212,160,23,0.25);
     }
-    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .card.vip-card:hover {
+      box-shadow: 0 16px 36px rgba(212,160,23,0.35), 0 6px 14px rgba(212,160,23,0.2);
+    }
     .card-img {
       position: relative; width: 100%; height: 200px; background: var(--border);
       overflow: hidden;
     }
     .card-img img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-      transition: transform 0s;
+      width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
+      transition: transform 0.3s ease;
     }
-    .card:hover .card-img img { transform: none; }
+    .card:hover .card-img img {
+      transform: scale(1.05);
+    }
     .card-badge {
       position: absolute; top: 6px; left: 6px;
       background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
@@ -215,7 +225,10 @@
       cursor: pointer; color: #aaa; transition: 0.2s; font-size: 16px;
     }
     .card-heart.liked { color: var(--accent-heart); }
-    .card-body { padding: 10px 10px; flex: 0 0 auto; display: flex; flex-direction: column; }
+    .card-body {
+      padding: 10px 10px; flex: 1 1 auto; display: flex; flex-direction: column;
+      justify-content: space-between;
+    }
     .card-price {
       font-weight: 700; font-size: 0.95rem; color: var(--accent-price);
       margin-bottom: 3px; line-height: 1.3;
@@ -229,7 +242,7 @@
     .card-meta {
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.62rem; color: var(--text-tertiary); margin-top: auto;
-      padding-top: 2px;
+      padding-top: 2px; flex-wrap: wrap; gap: 2px 4px;
     }
     .card-meta span { display: flex; align-items: center; gap: 2px; }
     .detail-actions { display: flex; gap: 10px; margin: 16px 0; }
@@ -376,6 +389,36 @@
       margin: 16px 0; font-weight: 500; text-align: center;
     }
 
+    /* === ONLINE INDICATOR (TASK 5) === */
+    .online-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-right: 4px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      flex-shrink: 0;
+    }
+    .online-dot.offline {
+      background: #ef4444;
+    }
+    .online-dot.zero {
+      background: #9ca3af;
+    }
+    /* ================================ */
+
     /* === G-EXPRESS BANNER CAROUSEL (ISOLATED) === */
     .g-express-slider-wrapper {
       width: 100%;
@@ -480,13 +523,18 @@
       flex: 0 0 100%;
       width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
     }
     .product-slider-slide img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
       pointer-events: none;
+      background: #ffffff;
     }
     .product-slider-arrow {
       position: absolute;
@@ -565,9 +613,14 @@
     .product-desc {
       margin: 10px 0;
       line-height: 1.5;
-      color: var(--text-secondary);
+      color: #000000;
     }
     .product-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .product-date {
       font-size: 0.85rem;
       color: var(--text-tertiary);
       margin-bottom: 12px;
@@ -596,6 +649,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="icon.jpg">
     <link rel="manifest" href="icon.jpg">
     <div class="header-actions">
+      <div class="online-indicator" id="online-indicator">
+        <span class="online-dot zero" id="online-dot"></span>
+        <span id="online-count">0</span>
+        <span id="online-text">онлайн</span>
+      </div>
       <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
@@ -611,7 +669,7 @@
       <div class="g-express-slider-wrapper" id="g-express-banner">
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
-            <div class="g-express-slide"><img class="g-express-slide-img" src="yy.jpg" alt="Ad 1" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="opo.jpg" alt="Ad 1" loading="lazy"></div>
            
           </div>
           <div class="g-express-dots" id="g-express-dots"></div>
@@ -771,6 +829,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
   (() => {
     if ('fonts' in document) {
@@ -791,22 +850,75 @@
       storageBucket: "geran-express.firebasestorage.app",
       messagingSenderId: "100329986906",
       appId: "1:100329986906:web:4998c36eecc975b46bf163",
-      measurementId: "G-WP2S70R07C"
+      measurementId: "G-WP2S70R07C",
+      databaseURL: "https://geran-express-default-rtdb.firebaseio.com/"
     };
 
     let db = null;
     let analytics = null;
+    let rtdb = null;
     let firebaseReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       analytics = firebase.analytics();
+      rtdb = firebase.database();
       firebaseReady = true;
       analytics.logEvent('page_view');
-      console.log("Firebase + Analytics OK");
+      console.log("Firebase + Analytics + Realtime Database OK");
     } catch (e) {
       console.warn('Firebase init error:', e.message);
     }
+
+    // ==================== PRESENCE SYSTEM (TASK 5) ====================
+    (function() {
+      if (!rtdb || !firebaseReady) return;
+      
+      const presenceRef = rtdb.ref('presence');
+      const connectedRef = rtdb.ref('.info/connected');
+      let myPresenceRef = null;
+      
+      function generateUserId() {
+        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      }
+      
+      let userId = localStorage.getItem('geran_presence_id');
+      if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('geran_presence_id', userId);
+      }
+      
+      myPresenceRef = presenceRef.child(userId);
+      
+      connectedRef.on('value', function(snap) {
+        if (snap.val() === true) {
+          myPresenceRef.set(true);
+          
+          myPresenceRef.onDisconnect().remove();
+        }
+      });
+      
+      const onlineDot = document.getElementById('online-dot');
+      const onlineCount = document.getElementById('online-count');
+      
+      presenceRef.on('value', function(snapshot) {
+        const count = snapshot.numChildren();
+        
+        if (onlineCount) {
+          onlineCount.textContent = count;
+        }
+        
+        if (onlineDot) {
+          onlineDot.classList.remove('offline', 'zero');
+          if (count === 0) {
+            onlineDot.classList.add('zero');
+          } else if (count === 1) {
+            onlineDot.classList.add('offline');
+          }
+        }
+      });
+    })();
+    // ==================================================================
 
     const translations = {
       tg: {
@@ -825,6 +937,7 @@
         cat_all: 'Ҳама', cat_electronics: 'Электроника', cat_computers: 'Компютерҳо', cat_appliances: 'Техникаи маишӣ',
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Кӯчонанда', cat_tools: 'Асбобҳо', cat_parts: 'Қисмҳои эҳтиётӣ',
         cat_clothes: 'Либос', cat_services: 'Хизматрасониҳо', cat_other: 'Дигар',
+        online_text: 'онлайн',
       },
       ru: {
         search: 'поиск', search_placeholder: 'Поиск по названию...', home: 'Главная', favorites: 'Избранное',
@@ -842,6 +955,7 @@
         cat_all: 'Все', cat_electronics: 'Электроника', cat_computers: 'Компьютеры', cat_appliances: 'Бытовая техника',
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Недвижимость', cat_tools: 'Инструменты', cat_parts: 'Запчасти',
         cat_clothes: 'Одежда', cat_services: 'Услуги', cat_other: 'Другое',
+        online_text: 'онлайн',
       }
     };
 
@@ -857,6 +971,9 @@
       }
       const langSelect = document.getElementById('edit-lang');
       if (langSelect) langSelect.value = currentLang;
+      
+      const onlineTextEl = document.getElementById('online-text');
+      if (onlineTextEl) onlineTextEl.textContent = t('online_text');
     }
 
     function applyLanguage() {
@@ -986,6 +1103,32 @@
       if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
     };
 
+    function formatDate(timestamp) {
+      if (!timestamp) return '19.07.26';
+      try {
+        let date;
+        if (timestamp && typeof timestamp.toDate === 'function') {
+          date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+          date = timestamp;
+        } else if (typeof timestamp === 'number' || typeof timestamp === 'string') {
+          date = new Date(timestamp);
+        } else {
+          return '19.07.26';
+        }
+        
+        if (isNaN(date.getTime())) return '19.07.26';
+        
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        
+        return `${day}.${month}.${year}`;
+      } catch (e) {
+        return '19.07.26';
+      }
+    }
+
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
       const priceVal = l.price || 0;
@@ -1003,6 +1146,7 @@
       }
       const vipClass = l.isVIP ? 'vip-card' : '';
       const vipBadge = l.isVIP ? '<div class="card-badge vip-badge">VIP</div>' : '';
+      const dateFormatted = formatDate(l.date);
       return `
         <div class="card ${vipClass}" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
@@ -1013,10 +1157,13 @@
             </div>
           </div>
           <div class="card-body">
-            ${priceText}
-            <div class="card-title">${l.title}</div>
+            <div>
+              ${priceText}
+              <div class="card-title">${l.title}</div>
+            </div>
             <div class="card-meta">
               <span>📍 ${l.village || 'Деҳаи Геран'}</span>
+              <span>📅 ${dateFormatted}</span>
               <span>${l.condition === 'new' ? t('cond_new') : t('cond_used')}</span>
             </div>
           </div>
@@ -1352,6 +1499,7 @@
       const priceText = l.isFree ? t('free') : `${(l.price||0).toLocaleString()} с.`;
       const liked = state.favorites.includes(l.id);
       const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
+      const dateFormatted = formatDate(l.date);
       
       document.getElementById('detail-content').innerHTML = `
         <div class="product-slider" id="product-slider" data-images='${JSON.stringify(images)}'>
@@ -1373,6 +1521,7 @@
           <h3 class="product-price">${priceText}</h3>
           <p class="product-desc">${l.desc}</p>
           <p class="product-meta">📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
+          <p class="product-date">📅 Дата публикации: ${dateFormatted}</p>
           <div class="detail-actions">
             <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;">
               <span class="material-symbols-rounded">call</span>${t('call')}

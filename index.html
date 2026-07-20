@@ -109,6 +109,10 @@
     .badge-dot {
       position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
       background: var(--accent-heart); border-radius: 50%; border: 2px solid var(--bg);
+      display: none;
+    }
+    .badge-dot.visible {
+      display: block;
     }
     .lang-btn {
       width: 27px !important;
@@ -667,21 +671,19 @@
 
     /* Красим кнопку "Позвонить" в приятный зелёный */
 .detail-actions a[href^="tel:"] {
-    background: #1e5e48 !important; /* Насыщенный зелёный, слегка приглушённый */
+    background: #1e5e48 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     filter: none !important;
 }
 
-/* Красим кнопку "WhatsApp" в точно такой же цвет */
 .detail-actions a[href*="wa.me"], .btn-whatsapp {
-    background: #1e5e48 !important; /* Идентичный приятный зелёный цвет */
+    background: #1e5e48 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     filter: none !important;
 }
 
-/* Стили для выпадающего списка локаций */
 .location-dropdown-overlay {
   position: fixed;
   top: 0;
@@ -752,7 +754,7 @@
       <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
-        <span class="badge-dot" id="notification-dot" style="display:none;"></span>
+        <span class="badge-dot" id="notification-dot"></span>
       </button>
       <button class="icon-btn" id="profile-btn">
         <span class="material-symbols-rounded">person</span>
@@ -1001,14 +1003,9 @@
       analytics = firebase.analytics();
       firebaseReady = true;
       
-      // Enable persistent auth state
       auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-        .then(() => {
-          console.log("Firebase Auth persistence set to LOCAL");
-        })
-        .catch((error) => {
-          console.warn("Firebase Auth persistence error:", error.message);
-        });
+        .then(() => console.log("Firebase Auth persistence set to LOCAL"))
+        .catch((error) => console.warn("Firebase Auth persistence error:", error.message));
       
       analytics.logEvent('page_view');
       console.log("Firebase + Analytics + Auth OK (Firestore)");
@@ -1127,7 +1124,7 @@
         edit_name: 'Ном', edit_phone: 'Рақами телефон', village_label: '📍 Деҳаи ман', lang_label: '🌐 Забон / Язык',
         save_btn: 'Тағйиротро захира кунед', listings_label: 'эълон', views_label: 'тамошо', favs_label: 'интихобшуда',
         dark_theme: 'Реҷаи торик', logout: 'Баромад', create_title: 'Эълони нав', title_placeholder: 'Ном',
-        desc_placeholder: 'Тавсиф', cond_new: 'Нав', cond_used: 'Истифодашуда', price_placeholder: 'Нарх (с.)',
+        desc_placeholder: 'Тавсиф', cond_new: 'Нав', cond_used: 'Истифодашуда', price_placeholder: 'Нарх',
         phone_placeholder: 'Телефон', photo_btn: 'Сурат', submit_btn: 'Нашр кунед', login_subtitle: 'Дар наздикӣ харед ва фурӯшед',
         login_btn: 'Ворид', no_listings: 'Эълон нест', no_favs: 'Интихобшуда нест', no_my: 'Эълон нест',
         no_search: 'Ҳеҷ чиз ёфт нашуд', free: 'Ройгон', call: 'Занг занед', profile_updated: 'Профил навсозӣ шуд!',
@@ -1138,7 +1135,8 @@
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Кӯчонанда', cat_tools: 'Асбобҳо', cat_parts: 'Қисмҳои эҳтиётӣ',
         cat_clothes: 'Либос', cat_services: 'Хизматрасониҳо', cat_other: 'Дигар',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_label: 'Локация', total_listings: 'Ҳамаи эълонҳо',
-        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис', all_locations: 'Все локации',
+        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис', all_locations: 'Ҳамаи локацияҳо',
+        no_notifications: 'Огоҳинома нест',
       },
       ru: {
         search: 'поиск', search_placeholder: 'Поиск по названию...', home: 'Главная', favorites: 'Избранное',
@@ -1146,7 +1144,7 @@
         edit_name: 'Имя', edit_phone: 'Номер телефона', village_label: '📍 Моё село', lang_label: '🌐 Забон / Язык',
         save_btn: 'Сохранить изменения', listings_label: 'объявлений', views_label: 'просмотров', favs_label: 'избранных',
         dark_theme: 'Тёмная тема', logout: 'Выйти', create_title: 'Новое объявление', title_placeholder: 'Название',
-        desc_placeholder: 'Описание', cond_new: 'Новый', cond_used: 'Б.у.', price_placeholder: 'Цена (с.)',
+        desc_placeholder: 'Описание', cond_new: 'Новый', cond_used: 'Б.у.', price_placeholder: 'Цена',
         phone_placeholder: 'Телефон', photo_btn: 'Фото', submit_btn: 'Опубликовать', login_subtitle: 'Покупайте и продавайте рядом',
         login_btn: 'Войти', no_listings: 'Нет объявлений', no_favs: 'Нет избранных', no_my: 'Нет публикаций',
         no_search: 'Ничего не найдено', free: 'Бесплатно', call: 'Позвонить', profile_updated: 'Профиль обновлён!',
@@ -1158,6 +1156,7 @@
         cat_clothes: 'Одежда', cat_services: 'Услуги', cat_other: 'Другое',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_label: 'Локация', total_listings: 'Всего объявлений',
         shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис', all_locations: 'Все локации',
+        no_notifications: 'Нет уведомлений',
       }
     };
 
@@ -1291,8 +1290,9 @@
       activeCategory: localStorage.getItem('geran_active_category') || null,
       selectedCondition: 'new',
       uploadedPhotos: [],
-      // selectedLocation теперь хранит ВРЕМЕННУЮ локацию для просмотра
-      selectedLocation: null,
+      selectedLocation: localStorage.getItem('geran_selected_location') || null,
+      lastNotificationsView: parseInt(localStorage.getItem('geran_last_notif_view') || '0'),
+      notifications: [],
     };
 
     let selectedImages = [];
@@ -1305,6 +1305,7 @@
     const save = () => {
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
       localStorage.setItem('geran_active_category', state.activeCategory || '');
+      localStorage.setItem('geran_selected_location', state.selectedLocation || '');
       if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
     };
 
@@ -1344,13 +1345,8 @@
         priceText = `<div class="card-price" style="color: var(--primary);">${l.bizType}</div>`;
       } else if (l.isFree || priceVal === 'Бесплатно') {
         priceText = `<div class="card-price free">${t('free')}</div>`;
-      } else if (priceVal && isNaN(Number(priceVal))) {
-        // Цена — произвольная строка
-        priceText = `<div class="card-price">${priceVal}</div>`;
       } else if (priceVal) {
-        // Цена — число
-        const numPrice = Number(priceVal);
-        priceText = `<div class="card-price">${numPrice.toLocaleString()} c.</div>`;
+        priceText = `<div class="card-price">${priceVal}</div>`;
       } else {
         priceText = `<div class="card-price">—</div>`;
       }
@@ -1404,16 +1400,6 @@
 
     const allVillages = ["Дехаи Геран","Дехаи Якум","Дехаи Дуввум","Дехаи Севвум","Дехаи Чахорум","Дехаи Панчум","Дехаи Шашум","Дехаи Хафтум","Дехаи Хаштум","Дехаи Нухум","Дехаи Дахум","Раёни Чайхун","Бозор","Аэрапорт","Новая Земля","Рисавхоз","Карадум","Каврак","Турмано","Далин 1","Далин 2","Далин 3","Далин 4","Панч"];
 
-    function getUniqueLocationsFromListings(listings) {
-      const locs = new Set();
-      listings.forEach(l => {
-        if (l.village && l.isActive !== false) {
-          locs.add(l.village);
-        }
-      });
-      return [...locs].sort();
-    }
-
     function countListingsByCategory(listings) {
       const counts = { total: 0 };
       categoryKeys.forEach(cat => { counts[cat] = 0; });
@@ -1456,14 +1442,12 @@
       const chip = document.getElementById('location-chip');
       if (!chip) return;
       
-      // Удаляем старый обработчик (через замену элемента)
       const newChip = chip.cloneNode(true);
       chip.parentNode.replaceChild(newChip, chip);
       
       newChip.addEventListener('click', function(e) {
         e.stopPropagation();
         
-        // Удаляем существующий дропдаун если есть
         const existing = document.querySelector('.location-dropdown-menu');
         if (existing) {
           existing.remove();
@@ -1472,9 +1456,8 @@
           return;
         }
         
-        const locations = getUniqueLocationsFromListings(state.listings);
+        const locations = [...allVillages];
         
-        // Создаём оверлей
         const overlay = document.createElement('div');
         overlay.className = 'location-dropdown-overlay';
         overlay.addEventListener('click', function() {
@@ -1483,29 +1466,28 @@
         });
         document.body.appendChild(overlay);
         
-        // Создаём дропдаун
         const dropdown = document.createElement('div');
         dropdown.className = 'location-dropdown-menu';
         
-        // Позиционируем
         const rect = newChip.getBoundingClientRect();
         dropdown.style.top = (rect.bottom + 4) + 'px';
         dropdown.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
         
-        // Опция "Все локации"
         const allOption = document.createElement('div');
         allOption.className = 'location-dropdown-item' + (!state.selectedLocation ? ' active' : '');
         allOption.textContent = '📍 ' + t('all_locations');
         allOption.addEventListener('click', function(e) {
           e.stopPropagation();
           state.selectedLocation = null;
+          localStorage.removeItem('geran_selected_location');
           overlay.remove();
           dropdown.remove();
+          // Принудительно обновляем кэш, чтобы перерисовать
+          cachedListings = null;
           renderHome();
         });
         dropdown.appendChild(allOption);
         
-        // Локации
         locations.forEach(loc => {
           const opt = document.createElement('div');
           opt.className = 'location-dropdown-item' + (state.selectedLocation === loc ? ' active' : '');
@@ -1513,8 +1495,11 @@
           opt.addEventListener('click', function(e) {
             e.stopPropagation();
             state.selectedLocation = loc;
+            localStorage.setItem('geran_selected_location', loc);
             overlay.remove();
             dropdown.remove();
+            // Принудительно обновляем кэш, чтобы перерисовать
+            cachedListings = null;
             renderHome();
           });
           dropdown.appendChild(opt);
@@ -1553,6 +1538,8 @@
 
     async function renderHome() {
       console.log("renderHome");
+      console.log("Selected location:", state.selectedLocation);
+      
       if (shouldRestoreScroll && !isChangingCategory) {
         window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
         shouldRestoreScroll = false;
@@ -1568,30 +1555,18 @@
       let filtered = state.listings.filter(l => l.isActive !== false);
       if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
 
-      // Применяем сортировку по локации (временная выбранная локация)
+      // СОРТИРОВКА ПО ЛОКАЦИИ: это главная сортировка, применяется первой
       if (state.selectedLocation) {
+        console.log("Applying location sort for:", state.selectedLocation);
         filtered.sort((a, b) => {
           const aMatch = (a.village === state.selectedLocation) ? 0 : 1;
           const bMatch = (b.village === state.selectedLocation) ? 0 : 1;
-          if (aMatch !== bMatch) return aMatch - bMatch;
-          // Сохраняем порядок по дате внутри групп
-          const aDate = a.date?.toDate?.() || new Date(a.date || 0);
-          const bDate = b.date?.toDate?.() || new Date(b.date || 0);
-          return bDate - aDate;
+          return aMatch - bMatch;
         });
-      } else if (state.user && state.user.village) {
-        // Если нет временной локации, но есть основная в профиле — сортируем по ней
-        const userVillage = state.user.village;
-        filtered.sort((a, b) => {
-          const aMatch = (a.village === userVillage) ? 0 : 1;
-          const bMatch = (b.village === userVillage) ? 0 : 1;
-          if (aMatch !== bMatch) return aMatch - bMatch;
-          const aDate = a.date?.toDate?.() || new Date(a.date || 0);
-          const bDate = b.date?.toDate?.() || new Date(b.date || 0);
-          return bDate - aDate;
-        });
+        console.log("First 10 villages after sort:", filtered.slice(0, 10).map(item => item.village));
       }
 
+      // Перемешивание (order) применяется ПОСЛЕ сортировки по локации
       const sessionId = sessionStorage.getItem("sessionId");
       const currentSessionId = window._sessionId || (window._sessionId = Date.now().toString());
       if (!sessionId || sessionId !== currentSessionId) {
@@ -1611,6 +1586,8 @@
       } else {
         order = JSON.parse(order);
       }
+      
+      // Сортировка по order сохраняет группы локаций
       filtered.sort((a, b) => {
         const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
         if (ia === -1 && ib === -1) return 0;
@@ -1620,7 +1597,7 @@
       });
 
       const totalCount = filtered.length;
-      const totalCounterHTML = `<div class="total-counter" style="text-align:center;padding:6px 10px;font-size:0.85rem;color:var(--text-secondary);font-weight:500;">${t('total_listings')}: ${totalCount}</div>`;
+      const totalCounterHTML = `<div style="text-align:center;padding:6px 10px;font-size:0.85rem;color:var(--text-secondary);font-weight:500;">${t('total_listings')}: ${totalCount}</div>`;
 
       const gridHtml = filtered.length
         ? filtered.map(cardHTML).join('')
@@ -1638,7 +1615,7 @@
         });
       }
       
-      // Добавляем общий счётчик
+      // Добавляем счётчик
       const totalCounterEl = document.createElement('div');
       totalCounterEl.innerHTML = totalCounterHTML;
       screenHome.appendChild(totalCounterEl.firstChild);
@@ -1650,7 +1627,6 @@
         screenHome.appendChild(categoriesContainer.firstChild);
       }
       
-      // Настраиваем обработчик для кнопки локации
       setTimeout(setupLocationHandler, 20);
       
       const listingsGrid = document.createElement('div');
@@ -1664,18 +1640,6 @@
         requestAnimationFrame(() => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
           isChangingCategory = false;
-        });
-      }
-      
-      // Сохраняем позицию скролла категорий
-      const categoriesRow = document.querySelector('.categories-row');
-      if (categoriesRow) {
-        const savedScrollLeft = localStorage.getItem('geran_cat_scroll');
-        if (savedScrollLeft) {
-          categoriesRow.scrollLeft = parseInt(savedScrollLeft, 10);
-        }
-        categoriesRow.addEventListener('scroll', () => {
-          localStorage.setItem('geran_cat_scroll', categoriesRow.scrollLeft);
         });
       }
     }
@@ -1710,10 +1674,8 @@
           priceDisplay = l.bizType;
         } else if (l.isFree || l.price === 'Бесплатно') {
           priceDisplay = t('free');
-        } else if (l.price && isNaN(Number(l.price))) {
-          priceDisplay = l.price;
         } else {
-          priceDisplay = (l.price || 0).toLocaleString() + ' с.';
+          priceDisplay = l.price || '—';
         }
         
         return `
@@ -1871,14 +1833,13 @@
         const bizType = bizTypeRadio ? bizTypeRadio.value : '';
         const isBizType = bizType && ['Магазин', 'Аптека', 'Сервис'].includes(bizType);
         
-        // Определяем цену как строку
         let priceValue = '';
         if (isBizType) {
           priceValue = bizType;
         } else if (isFree) {
           priceValue = 'Бесплатно';
         } else {
-          priceValue = priceInput?.value.trim() || '0';
+          priceValue = priceInput?.value.trim() || '';
         }
         
         const listingData = {
@@ -1954,10 +1915,8 @@
         priceText = l.bizType;
       } else if (l.isFree || l.price === 'Бесплатно') {
         priceText = t('free');
-      } else if (l.price && isNaN(Number(l.price))) {
-        priceText = l.price;
       } else {
-        priceText = `${(Number(l.price) || 0).toLocaleString()} с.`;
+        priceText = l.price || '—';
       }
       
       const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
@@ -2033,20 +1992,20 @@
         snapshot.forEach(doc => {
           notifications.push({ id: doc.id, ...doc.data() });
         });
+        state.notifications = notifications;
         
-        // Update last viewed timestamp
         const now = Date.now();
+        state.lastNotificationsView = now;
         localStorage.setItem('geran_last_notif_view', now);
         
-        // Hide notification dot
         const dot = document.getElementById('notification-dot');
-        if (dot) dot.style.display = 'none';
+        if (dot) dot.classList.remove('visible');
         
         const container = document.getElementById('notifications-container');
         if (!container) return;
         
         if (notifications.length === 0) {
-          container.innerHTML = `<p style="padding:20px;text-align:center;">Нет уведомлений</p>`;
+          container.innerHTML = `<p style="padding:20px;text-align:center;">${t('no_notifications')}</p>`;
           return;
         }
         
@@ -2070,7 +2029,7 @@
       if (!db || !firebaseReady) return;
       
       try {
-        const lastView = parseInt(localStorage.getItem('geran_last_notif_view') || '0');
+        const lastView = state.lastNotificationsView;
         let query = db.collection('notifications').orderBy('timestamp', 'desc').limit(1);
         
         if (lastView > 0) {
@@ -2082,7 +2041,7 @@
         const dot = document.getElementById('notification-dot');
         
         if (!snapshot.empty && dot) {
-          dot.style.display = 'block';
+          dot.classList.add('visible');
         }
       } catch (e) {
         console.warn('Error checking notifications:', e);
@@ -2096,7 +2055,7 @@
       document.getElementById('create-title').value = l.title;
       document.getElementById('create-desc').value = l.desc;
       document.getElementById('create-category').value = l.category;
-      document.getElementById('create-price').value = (typeof l.price === 'string' && isNaN(Number(l.price))) ? l.price : (l.price || '');
+      document.getElementById('create-price').value = l.price || '';
       document.getElementById('create-phone').value = l.phone;
       document.getElementById('create-whatsapp').value = l.whatsapp || '';
       document.getElementById('create-village').value = l.village || 'Дехаи Геран';
@@ -2219,7 +2178,6 @@
       }
     });
 
-    // Handle biz type radio buttons
     document.querySelectorAll('input[name="bizType"]').forEach(radio => {
       radio.addEventListener('change', function() {
         const priceInput = document.getElementById('create-price');
@@ -2318,10 +2276,9 @@
       state.user.village = newVillage;
       save();
       
-      // Сбрасываем временную локацию, чтобы основная из профиля применилась
       state.selectedLocation = null;
+      localStorage.removeItem('geran_selected_location');
       
-      // Обновляем профиль в Firestore если есть
       if (db && firebaseReady && state.user.uid) {
         try {
           await db.collection('users').doc(state.user.uid).set({
@@ -2339,7 +2296,6 @@
       renderProfile();
       alert(t('profile_updated'));
       
-      // Если мы на главной, перерендерим с новой основной локацией
       if (state.currentScreen === 'home') {
         renderHome();
       }
@@ -2351,9 +2307,10 @@
     document.getElementById('back-notif')?.addEventListener('click', () => showScreen('home'));
     
     document.getElementById('notif-btn').addEventListener('click', () => {
+      state.lastNotificationsView = Date.now();
+      localStorage.setItem('geran_last_notif_view', state.lastNotificationsView);
       const dot = document.getElementById('notification-dot');
-      if (dot) dot.style.display = 'none';
-      localStorage.setItem('geran_last_notif_view', Date.now());
+      if (dot) dot.classList.remove('visible');
       showScreen('notifications');
     });
     
@@ -2363,6 +2320,7 @@
       localStorage.removeItem('geran_user'); 
       state.user = null;
       state.selectedLocation = null;
+      localStorage.removeItem('geran_selected_location');
       if (auth && firebaseReady) {
         auth.signOut().catch(() => {});
       }
@@ -2376,7 +2334,6 @@
         state.user = { uid: uid, phone, name: '', avatar: null, village: 'Дехаи Геран' };
         localStorage.setItem('geran_user', JSON.stringify(state.user));
         
-        // Try anonymous auth for persistence
         if (auth && firebaseReady) {
           auth.signInAnonymously()
             .then((result) => {
@@ -2393,7 +2350,6 @@
       }
     });
 
-    // Firebase Auth state observer
     if (auth && firebaseReady) {
       auth.onAuthStateChanged((user) => {
         if (user) {
@@ -2590,14 +2546,12 @@
       });
     }
 
-    // Periodically check for new notifications
     setInterval(() => {
       if (state.user && state.currentScreen !== 'notifications') {
         checkNewNotifications();
       }
     }, 30000);
     
-    // Initial notification check
     if (state.user) {
       setTimeout(checkNewNotifications, 2000);
     }

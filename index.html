@@ -157,7 +157,7 @@
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
       gap: 8px;
-      padding: 8px 16px 8px;
+      padding: 12px 16px 8px;
       margin-bottom: 8px;
     }
     .categories-row::-webkit-scrollbar { display: none; }
@@ -427,16 +427,6 @@
       margin: 16px 0; font-weight: 500; text-align: center;
     }
 
-    /* === TOTAL COUNTER === */
-    .total-counter {
-      text-align: center;
-      padding: 6px 10px;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-    /* ================================ */
-
     /* === ONLINE INDICATOR === */
     .online-indicator {
       display: inline-flex;
@@ -691,6 +681,46 @@
     filter: none !important;
 }
 
+/* Стили для выпадающего списка локаций */
+.location-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  background: transparent;
+}
+.location-dropdown-menu {
+  position: fixed;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 9999;
+  max-height: 280px;
+  overflow-y: auto;
+  min-width: 200px;
+  padding: 4px;
+}
+.location-dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.location-dropdown-item:hover {
+  background: var(--surface);
+}
+.location-dropdown-item.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -722,7 +752,7 @@
       <button class="lang-btn" id="lang-switch-btn" title="Switch language">RU</button>
       <button class="icon-btn" id="notif-btn">
         <span class="material-symbols-rounded">notifications</span>
-        <span class="badge-dot" id="notif-badge" style="display:none;"></span>
+        <span class="badge-dot" id="notification-dot" style="display:none;"></span>
       </button>
       <button class="icon-btn" id="profile-btn">
         <span class="material-symbols-rounded">person</span>
@@ -740,7 +770,6 @@
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>
       </div>
-      <!-- Счётчик и категории будут рендериться динамически -->
     </div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
     <div id="screen-my" class="screen"><h2 style="margin:8px 0 12px" id="my-title">Эълонҳои ман</h2><div id="my-container"></div></div>
@@ -761,10 +790,30 @@
       <div class="profile-location-section">
         <label for="edit-village" id="village-label">📍 Деҳаи ман</label>
         <select class="select-field" id="edit-village">
-          <option value="Деҳаи Геран">Деҳаи Геран</option>
-          <option value="Деҳаи Дуввум">Деҳаи Дуввум</option>
-          <option value="Деҳаи Севвум">Деҳаи Севвум</option>
-          <option value="Деҳаи Чахорум">Деҳаи Чахорум</option>
+          <option value="Дехаи Геран">Дехаи Геран</option>
+          <option value="Дехаи Якум">Дехаи Якум</option>
+          <option value="Дехаи Дуввум">Дехаи Дуввум</option>
+          <option value="Дехаи Севвум">Дехаи Севвум</option>
+          <option value="Дехаи Чахорум">Дехаи Чахорум</option>
+          <option value="Дехаи Панчум">Дехаи Панчум</option>
+          <option value="Дехаи Шашум">Дехаи Шашум</option>
+          <option value="Дехаи Хафтум">Дехаи Хафтум</option>
+          <option value="Дехаи Хаштум">Дехаи Хаштум</option>
+          <option value="Дехаи Нухум">Дехаи Нухум</option>
+          <option value="Дехаи Дахум">Дехаи Дахум</option>
+          <option value="Раёни Чайхун">Раёни Чайхун</option>
+          <option value="Бозор">Бозор</option>
+          <option value="Аэрапорт">Аэрапорт</option>
+          <option value="Новая Земля">Новая Земля</option>
+          <option value="Рисавхоз">Рисавхоз</option>
+          <option value="Карадум">Карадум</option>
+          <option value="Каврак">Каврак</option>
+          <option value="Турмано">Турмано</option>
+          <option value="Далин 1">Далин 1</option>
+          <option value="Далин 2">Далин 2</option>
+          <option value="Далин 3">Далин 3</option>
+          <option value="Далин 4">Далин 4</option>
+          <option value="Панч">Панч</option>
         </select>
       </div>
       <div class="profile-location-section" style="margin-top:16px;">
@@ -845,23 +894,21 @@
           <input type="checkbox" id="create-vip"> <span style="color:#d4a017;font-weight:600">VIP</span>
         </label>
       </div>
-      <!-- Новый селектор для Магазин/Аптека/Сервис -->
-      <div id="biz-type-container" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.8rem;">
+      <div id="biz-type-container" style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
           <input type="radio" name="bizType" value="" checked> <span>Обычное</span>
         </label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.8rem;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
           <input type="radio" name="bizType" value="Магазин"> <span>Магазин</span>
         </label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.8rem;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
           <input type="radio" name="bizType" value="Аптека"> <span>Аптека</span>
         </label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.8rem;">
-          <input type="radio" name="bizType" value="Сервис/Услуги"> <span>Сервис/Услуги</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
+          <input type="radio" name="bizType" value="Сервис"> <span>Сервис</span>
         </label>
       </div>
-      <!-- Конец селектора -->
-      <input class="input-field" id="create-price" placeholder="Нарх (с)" type="number">
+      <input class="input-field" id="create-price" placeholder="Нарх (с)" type="text">
       <input class="input-field" id="create-phone" placeholder="📞 Телефон">
       <input class="input-field" id="create-whatsapp" placeholder="💬 WhatsApp (необязательно)">
       <div class="photo-upload-area" id="photo-upload-area">
@@ -886,13 +933,6 @@
       </div>
       <div id="search-results" class="listings-grid"></div>
     </div>
-    <div id="screen-notifications" class="screen">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <span class="material-symbols-rounded" id="back-notif" style="cursor:pointer">arrow_back</span>
-        <h2 style="margin:0;">Уведомления</h2>
-      </div>
-      <div id="notifications-container"></div>
-    </div>
     <div id="screen-login" class="screen">
       <div style="text-align:center;width:100%">
         <img src="123.png" alt="Geran Express" class="login-logo">
@@ -905,6 +945,13 @@
           Все права защищены. 
         </div>
       </div>
+    </div>
+    <div id="screen-notifications" class="screen">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <span class="material-symbols-rounded" id="back-notif" style="cursor:pointer">arrow_back</span>
+        <h2 style="margin:0;">Уведомления</h2>
+      </div>
+      <div id="notifications-container"></div>
     </div>
   </main>
   <nav class="bottom-nav" id="bottom-nav">
@@ -944,8 +991,8 @@
     };
 
     let db = null;
-    let auth = null;
     let analytics = null;
+    let auth = null;
     let firebaseReady = false;
     try {
       firebase.initializeApp(firebaseConfig);
@@ -954,49 +1001,19 @@
       analytics = firebase.analytics();
       firebaseReady = true;
       
-      // Включаем persistence для долгосрочного хранения сессии
+      // Enable persistent auth state
       auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-        .then(() => console.log("Auth persistence set to LOCAL"))
-        .catch(e => console.warn("Auth persistence error:", e));
+        .then(() => {
+          console.log("Firebase Auth persistence set to LOCAL");
+        })
+        .catch((error) => {
+          console.warn("Firebase Auth persistence error:", error.message);
+        });
       
       analytics.logEvent('page_view');
-      console.log("Firebase + Analytics OK (Firestore)");
+      console.log("Firebase + Analytics + Auth OK (Firestore)");
     } catch (e) {
       console.warn('Firebase init error:', e.message);
-    }
-
-    // ==================== AUTH STATE HANDLER ====================
-    if (auth) {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          // Пользователь вошёл через Firebase Auth
-          const phone = user.phoneNumber || localStorage.getItem('geran_phone_fallback');
-          const existingUser = JSON.parse(localStorage.getItem('geran_user') || '{}');
-          const mergedUser = {
-            uid: user.uid,
-            phone: phone || existingUser.phone || '',
-            name: existingUser.name || user.displayName || '',
-            avatar: existingUser.avatar || user.photoURL || null,
-            village: existingUser.village || 'Деҳаи Геран'
-          };
-          localStorage.setItem('geran_user', JSON.stringify(mergedUser));
-          state.user = mergedUser;
-          
-          // Обновляем интерфейс если экран логина или профиля открыт
-          if (state.currentScreen === 'login') {
-            showScreen('home');
-          } else if (state.currentScreen === 'profile') {
-            renderProfile();
-          }
-        } else {
-          // Не вошёл, используем localStorage как fallback
-          const savedUser = JSON.parse(localStorage.getItem('geran_user') || 'null');
-          state.user = savedUser;
-          if (!savedUser && state.currentScreen !== 'login') {
-            showScreen('login');
-          }
-        }
-      });
     }
 
     // ==================== PRESENCE SYSTEM (OPTIMIZED) ====================
@@ -1121,7 +1138,7 @@
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Кӯчонанда', cat_tools: 'Асбобҳо', cat_parts: 'Қисмҳои эҳтиётӣ',
         cat_clothes: 'Либос', cat_services: 'Хизматрасониҳо', cat_other: 'Дигар',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_label: 'Локация', total_listings: 'Ҳамаи эълонҳо',
-        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис/Услуги',
+        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис', all_locations: 'Все локации',
       },
       ru: {
         search: 'поиск', search_placeholder: 'Поиск по названию...', home: 'Главная', favorites: 'Избранное',
@@ -1140,7 +1157,7 @@
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Недвижимость', cat_tools: 'Инструменты', cat_parts: 'Запчасти',
         cat_clothes: 'Одежда', cat_services: 'Услуги', cat_other: 'Другое',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_label: 'Локация', total_listings: 'Всего объявлений',
-        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис/Услуги',
+        shop: 'Магазин', pharmacy: 'Аптека', service_type: 'Сервис', all_locations: 'Все локации',
       }
     };
 
@@ -1218,20 +1235,20 @@
       const loginBtn = document.getElementById('login-btn');
       if (loginBtn) loginBtn.textContent = t('login_btn');
       const villageNames = {
-        'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
-        'Деҳаи Якум': { tg: 'Деҳаи Якум', ru: 'Дехаи Якум' },
-        'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
-        'Деҳаи Севвум': { tg: 'Деҳаи Севвум', ru: 'Дехаи Севвум' },
-        'Деҳаи Чахорум': { tg: 'Деҳаи Чаҳорум', ru: 'Дехаи Чахорум' },
-        'Деҳаи Панчум': { tg: 'Деҳаи Панҷум', ru: 'Дехаи Панчум' },
-        'Деҳаи Шашум': { tg: 'Деҳаи Шашум', ru: 'Дехаи Шашум' },
-        'Деҳаи Хафтум': { tg: 'Деҳаи Ҳафтум', ru: 'Дехаи Хафтум' },
-        'Деҳаи Хаштум': { tg: 'Деҳаи Ҳаштум', ru: 'Дехаи Хаштум' },
-        'Деҳаи Нухум': { tg: 'Деҳаи Нуҳум', ru: 'Дехаи Нухум' },
-        'Деҳаи Дахум': { tg: 'Деҳаи Даҳум', ru: 'Дехаи Дахум' },
-        'Раёни Чайхун': { tg: 'Раёни Чайхун', ru: 'Райони Чайхун' },
+        'Дехаи Геран': { tg: 'Дехаи Геран', ru: 'Дехаи Геран' },
+        'Дехаи Якум': { tg: 'Дехаи Якум', ru: 'Дехаи Якум' },
+        'Дехаи Дуввум': { tg: 'Дехаи Дуввум', ru: 'Дехаи Дуввум' },
+        'Дехаи Севвум': { tg: 'Дехаи Севвум', ru: 'Дехаи Севвум' },
+        'Дехаи Чахорум': { tg: 'Дехаи Чахорум', ru: 'Дехаи Чахорум' },
+        'Дехаи Панчум': { tg: 'Дехаи Панчум', ru: 'Дехаи Панчум' },
+        'Дехаи Шашум': { tg: 'Дехаи Шашум', ru: 'Дехаи Шашум' },
+        'Дехаи Хафтум': { tg: 'Дехаи Хафтум', ru: 'Дехаи Хафтум' },
+        'Дехаи Хаштум': { tg: 'Дехаи Хаштум', ru: 'Дехаи Хаштум' },
+        'Дехаи Нухум': { tg: 'Дехаи Нухум', ru: 'Дехаи Нухум' },
+        'Дехаи Дахум': { tg: 'Дехаи Дахум', ru: 'Дехаи Дахум' },
+        'Раёни Чайхун': { tg: 'Раёни Чайхун', ru: 'Раёни Чайхун' },
         'Бозор': { tg: 'Бозор', ru: 'Бозор' },
-        'Аэрапорт': { tg: 'Аэрапорт', ru: 'Аэропорт' },
+        'Аэрапорт': { tg: 'Аэрапорт', ru: 'Аэрапорт' },
         'Новая Земля': { tg: 'Новая Земля', ru: 'Новая Земля' },
         'Рисавхоз': { tg: 'Рисавхоз', ru: 'Рисавхоз' },
         'Карадум': { tg: 'Карадум', ru: 'Карадум' },
@@ -1259,9 +1276,9 @@
 
     const SHOW_DEFAULT_LISTINGS = false;
     const DEFAULT_LISTINGS = SHOW_DEFAULT_LISTINGS ? [
-      { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-      { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: 50, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['34.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
-      { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false }
+      { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: '35', isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Дехаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false, bizType: '' },
+      { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: '50', isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Дехаи Геран', images: ['34.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false, bizType: '' },
+      { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: '70', isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Дехаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false, bizType: '' }
     ] : [];
 
     const state = {
@@ -1271,10 +1288,11 @@
       currentScreen: 'home',
       editId: null,
       searchQuery: '',
-      activeCategory: null,
+      activeCategory: localStorage.getItem('geran_active_category') || null,
       selectedCondition: 'new',
       uploadedPhotos: [],
-      selectedLocation: localStorage.getItem('geran_selected_location') || null,
+      // selectedLocation теперь хранит ВРЕМЕННУЮ локацию для просмотра
+      selectedLocation: null,
     };
 
     let selectedImages = [];
@@ -1286,18 +1304,9 @@
 
     const save = () => {
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
-      if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
       localStorage.setItem('geran_active_category', state.activeCategory || '');
-      localStorage.setItem('geran_selected_location', state.selectedLocation || '');
+      if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
     };
-
-    // Восстанавливаем категорию при загрузке
-    (function restoreCategory() {
-      const savedCat = localStorage.getItem('geran_active_category');
-      if (savedCat) {
-        state.activeCategory = savedCat;
-      }
-    })();
 
     function formatDate(timestamp) {
       if (!timestamp) return '19.07.26';
@@ -1327,24 +1336,23 @@
 
     function cardHTML(l) {
       const liked = state.favorites.includes(l.id);
-      const priceVal = l.price || 0;
-      let priceText = '';
+      const priceVal = l.price || '';
+      const bizTypes = ['Магазин', 'Аптека', 'Сервис'];
       
-      // Проверяем тип бизнеса
-      const bizTypes = ['Магазин', 'Аптека', 'Сервис/Услуги'];
+      let priceText = '';
       if (l.bizType && bizTypes.includes(l.bizType)) {
-        const bizNameMap = {
-          'Магазин': t('shop'),
-          'Аптека': t('pharmacy'),
-          'Сервис/Услуги': t('service_type')
-        };
-        priceText = `<div class="card-price" style="color: var(--primary);">${bizNameMap[l.bizType] || l.bizType}</div>`;
-      } else if (l.isFree || l.price === 'Бесплатно') {
+        priceText = `<div class="card-price" style="color: var(--primary);">${l.bizType}</div>`;
+      } else if (l.isFree || priceVal === 'Бесплатно') {
         priceText = `<div class="card-price free">${t('free')}</div>`;
+      } else if (priceVal && isNaN(Number(priceVal))) {
+        // Цена — произвольная строка
+        priceText = `<div class="card-price">${priceVal}</div>`;
+      } else if (priceVal) {
+        // Цена — число
+        const numPrice = Number(priceVal);
+        priceText = `<div class="card-price">${numPrice.toLocaleString()} c.</div>`;
       } else {
-        const hasCurrency = typeof priceVal === 'string' && (priceVal.includes('Р') || priceVal.includes('р') || priceVal.includes('P'));
-        const formattedPrice = hasCurrency ? priceVal : Number(priceVal).toLocaleString() + ' c.';
-        priceText = `<div class="card-price">${formattedPrice}</div>`;
+        priceText = `<div class="card-price">—</div>`;
       }
       
       let finalSrc = PLACEHOLDER_IMG;
@@ -1374,7 +1382,7 @@
               <div class="card-title">${l.title}</div>
             </div>
             <div class="card-meta">
-              <span>📍 ${l.village || 'Деҳаи Геран'}</span>
+              <span>📍 ${l.village || 'Дехаи Геран'}</span>
               <span> ${dateFormatted}</span>
               <span>${l.condition === 'new' ? t('cond_new') : t('cond_used')}</span>
             </div>
@@ -1394,27 +1402,9 @@
       'Инструменты': 'cat_tools', 'Запчасти': 'cat_parts', 'Одежда': 'cat_clothes', 'Другое': 'cat_other'
     };
 
-    // Хранилище подсчёта объявлений по категориям
-    let categoryCounts = {};
+    const allVillages = ["Дехаи Геран","Дехаи Якум","Дехаи Дуввум","Дехаи Севвум","Дехаи Чахорум","Дехаи Панчум","Дехаи Шашум","Дехаи Хафтум","Дехаи Хаштум","Дехаи Нухум","Дехаи Дахум","Раёни Чайхун","Бозор","Аэрапорт","Новая Земля","Рисавхоз","Карадум","Каврак","Турмано","Далин 1","Далин 2","Далин 3","Далин 4","Панч"];
 
-    function updateCategoryCounts(listings) {
-      const counts = { total: 0 };
-      categoryKeys.forEach(cat => { counts[cat] = 0; });
-      
-      listings.forEach(item => {
-        if (item.isActive !== false) {
-          counts.total++;
-          if (item.category && counts.hasOwnProperty(item.category)) {
-            counts[item.category]++;
-          }
-        }
-      });
-      
-      categoryCounts = counts;
-    }
-
-    // Функция для получения списка уникальных локаций
-    function getUniqueLocations(listings) {
+    function getUniqueLocationsFromListings(listings) {
       const locs = new Set();
       listings.forEach(l => {
         if (l.village && l.isActive !== false) {
@@ -1424,18 +1414,33 @@
       return [...locs].sort();
     }
 
+    function countListingsByCategory(listings) {
+      const counts = { total: 0 };
+      categoryKeys.forEach(cat => { counts[cat] = 0; });
+      listings.forEach(l => {
+        if (l.isActive !== false) {
+          counts.total++;
+          if (l.category && counts.hasOwnProperty(l.category)) {
+            counts[l.category]++;
+          }
+        }
+      });
+      return counts;
+    }
+
     function renderCategories() {
-      const locations = getUniqueLocations(state.listings);
+      const activeListings = state.listings.filter(l => l.isActive !== false);
+      const categoryCounts = countListingsByCategory(activeListings);
       
       let html = '<div class="categories-row">';
       
-      // Кнопка локации (только иконка)
+      // Кнопка локации (только иконка 📍)
       html += `<div class="location-chip ${state.selectedLocation ? 'active' : ''}" id="location-chip" title="${state.selectedLocation || t('location_label')}">
         <span class="material-symbols-rounded">location_on</span>
       </div>`;
       
       // Все категории
-      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> ${t('cat_all')} (${categoryCounts.total || 0})</div>`;
+      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()"><span class="material-symbols-rounded">apps</span> ${t('cat_all')} (${categoryCounts.total})</div>`;
       
       categoryKeys.forEach(cat => {
         const icon = categoryIcons[cat] || 'label';
@@ -1448,102 +1453,74 @@
     }
 
     function setupLocationHandler() {
-      // Удаляем старый обработчик, если есть
-      const oldChip = document.getElementById('location-chip');
-      if (!oldChip) return;
+      const chip = document.getElementById('location-chip');
+      if (!chip) return;
       
-      oldChip.addEventListener('click', function(e) {
+      // Удаляем старый обработчик (через замену элемента)
+      const newChip = chip.cloneNode(true);
+      chip.parentNode.replaceChild(newChip, chip);
+      
+      newChip.addEventListener('click', function(e) {
         e.stopPropagation();
         
-        const locations = getUniqueLocations(state.listings);
-        
-        // Создаём выпадающий список
-        const existingDropdown = document.getElementById('location-dropdown');
-        if (existingDropdown) {
-          existingDropdown.remove();
+        // Удаляем существующий дропдаун если есть
+        const existing = document.querySelector('.location-dropdown-menu');
+        if (existing) {
+          existing.remove();
+          const overlay = document.querySelector('.location-dropdown-overlay');
+          if (overlay) overlay.remove();
           return;
         }
         
+        const locations = getUniqueLocationsFromListings(state.listings);
+        
+        // Создаём оверлей
+        const overlay = document.createElement('div');
+        overlay.className = 'location-dropdown-overlay';
+        overlay.addEventListener('click', function() {
+          overlay.remove();
+          dropdown.remove();
+        });
+        document.body.appendChild(overlay);
+        
+        // Создаём дропдаун
         const dropdown = document.createElement('div');
-        dropdown.id = 'location-dropdown';
-        dropdown.style.cssText = `
-          position: fixed;
-          background: var(--bg);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-          z-index: 9999;
-          max-height: 300px;
-          overflow-y: auto;
-          min-width: 180px;
-          padding: 4px;
-        `;
+        dropdown.className = 'location-dropdown-menu';
         
-        // Позиционируем под кнопкой
-        const rect = oldChip.getBoundingClientRect();
+        // Позиционируем
+        const rect = newChip.getBoundingClientRect();
         dropdown.style.top = (rect.bottom + 4) + 'px';
-        dropdown.style.left = rect.left + 'px';
+        dropdown.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
         
-        // Добавляем опцию "Все"
+        // Опция "Все локации"
         const allOption = document.createElement('div');
-        allOption.style.cssText = 'padding:10px 14px;cursor:pointer;border-radius:8px;font-size:0.85rem;';
-        allOption.textContent = '📍 Все локации';
-        if (!state.selectedLocation) {
-          allOption.style.background = 'var(--primary-soft)';
-          allOption.style.color = 'var(--primary)';
-          allOption.style.fontWeight = '600';
-        }
-        allOption.addEventListener('click', (e) => {
+        allOption.className = 'location-dropdown-item' + (!state.selectedLocation ? ' active' : '');
+        allOption.textContent = '📍 ' + t('all_locations');
+        allOption.addEventListener('click', function(e) {
           e.stopPropagation();
           state.selectedLocation = null;
-          save();
+          overlay.remove();
           dropdown.remove();
           renderHome();
         });
         dropdown.appendChild(allOption);
         
-        // Добавляем локации
+        // Локации
         locations.forEach(loc => {
           const opt = document.createElement('div');
-          opt.style.cssText = 'padding:10px 14px;cursor:pointer;border-radius:8px;font-size:0.85rem;';
+          opt.className = 'location-dropdown-item' + (state.selectedLocation === loc ? ' active' : '');
           opt.textContent = '📍 ' + loc;
-          if (state.selectedLocation === loc) {
-            opt.style.background = 'var(--primary-soft)';
-            opt.style.color = 'var(--primary)';
-            opt.style.fontWeight = '600';
-          }
-          opt.addEventListener('click', (e) => {
+          opt.addEventListener('click', function(e) {
             e.stopPropagation();
             state.selectedLocation = loc;
-            save();
+            overlay.remove();
             dropdown.remove();
             renderHome();
-          });
-          opt.addEventListener('mouseenter', () => {
-            if (state.selectedLocation !== loc) {
-              opt.style.background = 'var(--surface)';
-            }
-          });
-          opt.addEventListener('mouseleave', () => {
-            if (state.selectedLocation !== loc) {
-              opt.style.background = 'transparent';
-            }
           });
           dropdown.appendChild(opt);
         });
         
         document.body.appendChild(dropdown);
-        
-        // Закрываем при клике вне
-        const closeHandler = function(e) {
-          if (!dropdown.contains(e.target) && e.target !== oldChip) {
-            dropdown.remove();
-            document.removeEventListener('click', closeHandler);
-          }
-        };
-        setTimeout(() => {
-          document.addEventListener('click', closeHandler);
-        }, 10);
       });
     }
 
@@ -1588,19 +1565,27 @@
       });
       state.listings = merged;
       
-      // Обновляем счётчики категорий
-      updateCategoryCounts(merged);
-      
       let filtered = state.listings.filter(l => l.isActive !== false);
       if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
 
-      // Применяем сортировку по локации
+      // Применяем сортировку по локации (временная выбранная локация)
       if (state.selectedLocation) {
         filtered.sort((a, b) => {
           const aMatch = (a.village === state.selectedLocation) ? 0 : 1;
           const bMatch = (b.village === state.selectedLocation) ? 0 : 1;
           if (aMatch !== bMatch) return aMatch - bMatch;
           // Сохраняем порядок по дате внутри групп
+          const aDate = a.date?.toDate?.() || new Date(a.date || 0);
+          const bDate = b.date?.toDate?.() || new Date(b.date || 0);
+          return bDate - aDate;
+        });
+      } else if (state.user && state.user.village) {
+        // Если нет временной локации, но есть основная в профиле — сортируем по ней
+        const userVillage = state.user.village;
+        filtered.sort((a, b) => {
+          const aMatch = (a.village === userVillage) ? 0 : 1;
+          const bMatch = (b.village === userVillage) ? 0 : 1;
+          if (aMatch !== bMatch) return aMatch - bMatch;
           const aDate = a.date?.toDate?.() || new Date(a.date || 0);
           const bDate = b.date?.toDate?.() || new Date(b.date || 0);
           return bDate - aDate;
@@ -1634,6 +1619,9 @@
         return ia - ib;
       });
 
+      const totalCount = filtered.length;
+      const totalCounterHTML = `<div class="total-counter" style="text-align:center;padding:6px 10px;font-size:0.85rem;color:var(--text-secondary);font-weight:500;">${t('total_listings')}: ${totalCount}</div>`;
+
       const gridHtml = filtered.length
         ? filtered.map(cardHTML).join('')
         : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
@@ -1651,10 +1639,9 @@
       }
       
       // Добавляем общий счётчик
-      const totalCounter = document.createElement('div');
-      totalCounter.className = 'total-counter';
-      totalCounter.textContent = `${t('total_listings')}: ${filtered.length}`;
-      screenHome.appendChild(totalCounter);
+      const totalCounterEl = document.createElement('div');
+      totalCounterEl.innerHTML = totalCounterHTML;
+      screenHome.appendChild(totalCounterEl.firstChild);
       
       // Добавляем категории (включая кнопку локации)
       const categoriesContainer = document.createElement('div');
@@ -1679,10 +1666,35 @@
           isChangingCategory = false;
         });
       }
+      
+      // Сохраняем позицию скролла категорий
+      const categoriesRow = document.querySelector('.categories-row');
+      if (categoriesRow) {
+        const savedScrollLeft = localStorage.getItem('geran_cat_scroll');
+        if (savedScrollLeft) {
+          categoriesRow.scrollLeft = parseInt(savedScrollLeft, 10);
+        }
+        categoriesRow.addEventListener('scroll', () => {
+          localStorage.setItem('geran_cat_scroll', categoriesRow.scrollLeft);
+        });
+      }
     }
 
-    window._filterCategory = (cat) => { state.activeCategory = cat; save(); shouldRestoreScroll = false; isChangingCategory = true; renderHome(); };
-    window._clearCategory = () => { state.activeCategory = null; save(); shouldRestoreScroll = false; isChangingCategory = true; renderHome(); };
+    window._filterCategory = (cat) => { 
+      state.activeCategory = cat; 
+      save();
+      shouldRestoreScroll = false; 
+      isChangingCategory = true; 
+      renderHome(); 
+    };
+    
+    window._clearCategory = () => { 
+      state.activeCategory = null; 
+      save();
+      shouldRestoreScroll = false; 
+      isChangingCategory = true; 
+      renderHome(); 
+    };
 
     function renderFavorites() {
       const favs = state.listings.filter(l => state.favorites.includes(l.id));
@@ -1691,14 +1703,28 @@
 
     function renderMy() {
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
-      document.getElementById('my-container').innerHTML = my.length ? my.map(l => `
+      document.getElementById('my-container').innerHTML = my.length ? my.map(l => {
+        let priceDisplay = '';
+        const bizTypes = ['Магазин', 'Аптека', 'Сервис'];
+        if (l.bizType && bizTypes.includes(l.bizType)) {
+          priceDisplay = l.bizType;
+        } else if (l.isFree || l.price === 'Бесплатно') {
+          priceDisplay = t('free');
+        } else if (l.price && isNaN(Number(l.price))) {
+          priceDisplay = l.price;
+        } else {
+          priceDisplay = (l.price || 0).toLocaleString() + ' с.';
+        }
+        
+        return `
         <div class="card" style="padding:14px;margin-bottom:10px">
-          <b>${l.title}</b> - ${l.isFree ? t('free') : (l.price||0).toLocaleString()+' с.'}
+          <b>${l.title}</b> - ${priceDisplay}
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn btn-outline" style="flex:0;padding:8px 12px" onclick="window._editListing('${l.id}')">✏️</button>
             <button class="btn btn-outline" style="flex:0;padding:8px 12px;color:red;border-color:red" onclick="window._deleteListing('${l.id}')">🗑️</button>
           </div>
-        </div>`).join('') : `<p>${t('no_my')}</p>`;
+        </div>`;
+      }).join('') : `<p>${t('no_my')}</p>`;
     }
 
     function renderProfile() {
@@ -1709,9 +1735,8 @@
       document.getElementById('edit-phone').value = state.user?.phone || '';
       const editVillageSelect = document.getElementById('edit-village');
       if (editVillageSelect) {
-        const villages = ["Дехаи Геран","Дехаи Якум","Дехаи Дуввум","Дехаи Севвум","Дехаи Чахорум","Дехаи Панчум","Дехаи Шашум","Дехаи Хафтум","Дехаи Хаштум","Дехаи Нухум","Дехаи Дахум","Раёни Чайхун","Бозор","Аэрапорт","Новая Земля","Рисавхоз","Карадум","Каврак","Турмано","Далин 1","Далин 2","Далин 3","Далин 4","Панч"];
-        editVillageSelect.innerHTML = villages.map(name => `<option value="${name}">${name}</option>`).join('');
-        editVillageSelect.value = state.user?.village || 'Деҳаи Геран';
+        editVillageSelect.innerHTML = allVillages.map(name => `<option value="${name}">${name}</option>`).join('');
+        editVillageSelect.value = state.user?.village || 'Дехаи Геран';
       }
       document.getElementById('edit-lang').value = currentLang;
       if (state.user?.avatar) document.getElementById('profile-avatar-img').src = state.user.avatar;
@@ -1729,21 +1754,18 @@
       document.getElementById('create-price').value = '';
       document.getElementById('create-phone').value = state.user?.phone || '';
       document.getElementById('create-whatsapp').value = '';
-      document.getElementById('create-village').value = state.user?.village || 'Деҳаи Геран';
+      document.getElementById('create-village').value = state.user?.village || 'Дехаи Геран';
       document.getElementById('create-category').value = 'Электроника';
       state.selectedCondition = 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => {
         el.classList.toggle('active', el.dataset.condition === 'new');
       });
-      
-      // Сбрасываем бизнес-тип
-      const bizRadios = document.querySelectorAll('input[name="bizType"]');
-      if (bizRadios.length > 0) bizRadios[0].checked = true;
-      const priceInput = document.getElementById('create-price');
-      const freeCheckbox = document.getElementById('create-free');
-      if (priceInput) priceInput.disabled = false;
-      if (freeCheckbox) freeCheckbox.disabled = false;
-      
+      document.getElementById('create-free').checked = false;
+      document.getElementById('create-vip').checked = false;
+      document.querySelector('input[name="bizType"][value=""]').checked = true;
+      document.getElementById('create-price').disabled = false;
+      document.getElementById('create-price').style.display = '';
+      document.getElementById('create-free').disabled = false;
       selectedImages = [];
       renderSelectedPhotos();
       updatePhotoCounter();
@@ -1841,24 +1863,22 @@
             imageUrls = [...existingImages, ...uploadedUrls];
           } else { imageUrls = [...existingImages]; }
         }
-        
-        // Определяем тип бизнеса
-        const bizTypeRadio = document.querySelector('input[name="bizType"]:checked');
-        const bizType = bizTypeRadio ? bizTypeRadio.value : '';
-        const isBizType = bizType && ['Магазин', 'Аптека', 'Сервис/Услуги'].includes(bizType);
-        
-        const isFree = !isBizType && (document.getElementById('create-free')?.checked || false);
+        const isFree = document.getElementById('create-free')?.checked || false;
         const priceInput = document.getElementById('create-price');
         const activeCondition = document.querySelector('#condition-selector .condition-option.active');
         const whatsappValue = document.getElementById('create-whatsapp').value.trim();
+        const bizTypeRadio = document.querySelector('input[name="bizType"]:checked');
+        const bizType = bizTypeRadio ? bizTypeRadio.value : '';
+        const isBizType = bizType && ['Магазин', 'Аптека', 'Сервис'].includes(bizType);
         
-        let priceValue;
+        // Определяем цену как строку
+        let priceValue = '';
         if (isBizType) {
-          priceValue = bizType; // Сохраняем тип бизнеса в поле price
+          priceValue = bizType;
         } else if (isFree) {
           priceValue = 'Бесплатно';
         } else {
-          priceValue = parseInt(priceInput?.value) || 0;
+          priceValue = priceInput?.value.trim() || '0';
         }
         
         const listingData = {
@@ -1866,7 +1886,7 @@
           desc: document.getElementById('create-desc').value.trim(),
           price: priceValue,
           phone: phone,
-          village: document.getElementById('create-village').value.trim() || 'Деҳаи Геран',
+          village: document.getElementById('create-village').value.trim() || 'Дехаи Геран',
           images: imageUrls,
           date: firebase.firestore.FieldValue.serverTimestamp(),
           userId: state.user?.uid || 'demo',
@@ -1874,8 +1894,8 @@
           isVIP: document.getElementById('create-vip')?.checked || false,
           category: document.getElementById('create-category').value,
           whatsapp: whatsappValue || null,
-          bizType: isBizType ? bizType : null,
-          isFree: isFree
+          isFree: isFree,
+          bizType: isBizType ? bizType : ''
         };
         if (state.editId) {
           await db.collection('listings').doc(state.editId).update(listingData);
@@ -1890,10 +1910,14 @@
         if (priceInput) priceInput.value = '';
         document.getElementById('create-phone').value = '+992 ';
         document.getElementById('create-whatsapp').value = '';
-        document.getElementById('create-village').value = 'Деҳаи Геран';
+        document.getElementById('create-village').value = 'Дехаи Геран';
         document.getElementById('create-category').value = 'Электроника';
         document.getElementById('create-free').checked = false;
         document.getElementById('create-vip').checked = false;
+        document.querySelector('input[name="bizType"][value=""]').checked = true;
+        document.getElementById('create-price').disabled = false;
+        document.getElementById('create-price').style.display = '';
+        document.getElementById('create-free').disabled = false;
         document.getElementById('create-photo-input').value = '';
         selectedImages = [];
         renderSelectedPhotos();
@@ -1924,19 +1948,16 @@
       
       if (images.length === 0) images = [PLACEHOLDER_IMG];
       
-      let priceText;
-      const bizTypes = ['Магазин', 'Аптека', 'Сервис/Услуги'];
+      const bizTypes = ['Магазин', 'Аптека', 'Сервис'];
+      let priceText = '';
       if (l.bizType && bizTypes.includes(l.bizType)) {
-        const bizNameMap = {
-          'Магазин': t('shop'),
-          'Аптека': t('pharmacy'),
-          'Сервис/Услуги': t('service_type')
-        };
-        priceText = bizNameMap[l.bizType] || l.bizType;
+        priceText = l.bizType;
       } else if (l.isFree || l.price === 'Бесплатно') {
         priceText = t('free');
+      } else if (l.price && isNaN(Number(l.price))) {
+        priceText = l.price;
       } else {
-        priceText = `${(l.price||0).toLocaleString()} с.`;
+        priceText = `${(Number(l.price) || 0).toLocaleString()} с.`;
       }
       
       const catDisplayName = t(categoryTransKeys[l.category]) || l.category || '';
@@ -1973,7 +1994,7 @@
           <h2>${l.title}</h2>
           <h3 class="product-price">${priceText}</h3>
           <p class="product-desc">${l.desc}</p>
-          <p class="product-meta">📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
+          <p class="product-meta">📍 ${l.village || 'Дехаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
           <p class="product-date">📅 Дата публикации: ${dateFormatted}</p>
           <div class="detail-actions">
             <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;">
@@ -2000,79 +2021,73 @@
       document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : `<p>${t('no_search')}</p>`;
     }
 
-    // ==================== СИСТЕМА УВЕДОМЛЕНИЙ ====================
-    async function loadNotifications() {
-      if (!db || !firebaseReady) return [];
-      try {
-        const snapshot = await db.collection("notifications").orderBy("date", "desc").limit(50).get();
-        const notifs = [];
-        snapshot.forEach(doc => notifs.push({ id: doc.id, ...doc.data() }));
-        return notifs;
-      } catch (e) {
-        console.error('Notifications load error:', e);
-        return [];
-      }
-    }
-
-    function renderNotifications(notifications) {
-      const container = document.getElementById('notifications-container');
-      if (!container) return;
-      
-      if (!notifications || notifications.length === 0) {
-        container.innerHTML = '<p style="text-align:center;padding:20px;">Нет уведомлений</p>';
+    async function renderNotifications() {
+      if (!db || !firebaseReady) {
+        document.getElementById('notifications-container').innerHTML = `<p>${t('no_notifications')}</p>`;
         return;
       }
       
-      container.innerHTML = notifications.map(n => {
-        const dateFormatted = formatDate(n.date);
-        return `
-          <div style="padding:14px;border-bottom:1px solid var(--border);margin-bottom:4px;background:var(--surface);border-radius:12px;">
-            <div style="font-weight:600;margin-bottom:4px;">${n.title || 'Уведомление'}</div>
-            <div style="font-size:0.9rem;color:var(--text-secondary);">${n.message || ''}</div>
-            <div style="font-size:0.7rem;color:var(--text-tertiary);margin-top:8px;">${dateFormatted}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function showNotifications() {
-      showScreen('notifications');
-      const notifications = await loadNotifications();
-      renderNotifications(notifications);
-      
-      // Скрываем точку уведомлений и сохраняем время просмотра
-      const badge = document.getElementById('notif-badge');
-      if (badge) badge.style.display = 'none';
-      localStorage.setItem('geran_notif_last_seen', Date.now().toString());
+      try {
+        const snapshot = await db.collection('notifications').orderBy('timestamp', 'desc').limit(50).get();
+        const notifications = [];
+        snapshot.forEach(doc => {
+          notifications.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Update last viewed timestamp
+        const now = Date.now();
+        localStorage.setItem('geran_last_notif_view', now);
+        
+        // Hide notification dot
+        const dot = document.getElementById('notification-dot');
+        if (dot) dot.style.display = 'none';
+        
+        const container = document.getElementById('notifications-container');
+        if (!container) return;
+        
+        if (notifications.length === 0) {
+          container.innerHTML = `<p style="padding:20px;text-align:center;">Нет уведомлений</p>`;
+          return;
+        }
+        
+        container.innerHTML = notifications.map(n => {
+          const time = n.timestamp ? formatDate(n.timestamp) : '';
+          return `
+            <div style="background: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 8px; border: 1px solid var(--border);">
+              <div style="font-weight: 600; margin-bottom: 4px;">${n.title || 'Без названия'}</div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">${n.text || ''}</div>
+              <div style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 6px;">${time}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Error loading notifications:', e);
+        document.getElementById('notifications-container').innerHTML = `<p>${t('no_notifications')}</p>`;
+      }
     }
 
     async function checkNewNotifications() {
       if (!db || !firebaseReady) return;
-      const lastSeen = parseInt(localStorage.getItem('geran_notif_last_seen') || '0');
+      
       try {
-        const snapshot = await db.collection("notifications")
-          .where("date", ">", new Date(lastSeen))
-          .limit(1)
-          .get();
+        const lastView = parseInt(localStorage.getItem('geran_last_notif_view') || '0');
+        let query = db.collection('notifications').orderBy('timestamp', 'desc').limit(1);
         
-        const badge = document.getElementById('notif-badge');
-        if (badge) {
-          if (!snapshot.empty) {
-            badge.style.display = 'block';
-            badge.style.background = '#10b981'; // зелёная точка
-          } else {
-            badge.style.display = 'none';
-          }
+        if (lastView > 0) {
+          const lastViewDate = new Date(lastView);
+          query = query.where('timestamp', '>', lastViewDate);
+        }
+        
+        const snapshot = await query.get();
+        const dot = document.getElementById('notification-dot');
+        
+        if (!snapshot.empty && dot) {
+          dot.style.display = 'block';
         }
       } catch (e) {
-        // Тихо игнорируем ошибки
+        console.warn('Error checking notifications:', e);
       }
     }
-
-    // Проверяем уведомления при загрузке и периодически
-    setInterval(checkNewNotifications, 30000);
-    setTimeout(checkNewNotifications, 2000);
-    // ==================== КОНЕЦ СИСТЕМЫ УВЕДОМЛЕНИЙ ====================
 
     window._editListing = (id) => {
       const l = state.listings.find(x => x.id === id);
@@ -2081,26 +2096,40 @@
       document.getElementById('create-title').value = l.title;
       document.getElementById('create-desc').value = l.desc;
       document.getElementById('create-category').value = l.category;
-      document.getElementById('create-price').value = (typeof l.price === 'number') ? l.price : '';
+      document.getElementById('create-price').value = (typeof l.price === 'string' && isNaN(Number(l.price))) ? l.price : (l.price || '');
       document.getElementById('create-phone').value = l.phone;
       document.getElementById('create-whatsapp').value = l.whatsapp || '';
-      document.getElementById('create-village').value = l.village || 'Деҳаи Геран';
+      document.getElementById('create-village').value = l.village || 'Дехаи Геран';
       state.selectedCondition = l.condition || 'new';
       document.querySelectorAll('#condition-selector .condition-option').forEach(el => el.classList.toggle('active', el.dataset.condition === state.selectedCondition));
       
-      // Восстанавливаем bizType
-      const bizRadios = document.querySelectorAll('input[name="bizType"]');
-      bizRadios.forEach(r => r.checked = (r.value === (l.bizType || '')));
+      document.getElementById('create-free').checked = l.isFree || l.price === 'Бесплатно';
+      document.getElementById('create-vip').checked = l.isVIP || false;
       
-      // Управляем чекбоксами
-      const freeCheck = document.getElementById('create-free');
+      const bizTypeRadio = document.querySelector(`input[name="bizType"][value="${l.bizType || ''}"]`);
+      if (bizTypeRadio) bizTypeRadio.checked = true;
+      else document.querySelector('input[name="bizType"][value=""]').checked = true;
+      
       const priceInput = document.getElementById('create-price');
-      if (l.isFree || l.price === 'Бесплатно') {
-        if (freeCheck) freeCheck.checked = true;
-        if (priceInput) { priceInput.value = '0'; priceInput.disabled = true; }
+      const freeCheckbox = document.getElementById('create-free');
+      const isBizType = l.bizType && ['Магазин', 'Аптека', 'Сервис'].includes(l.bizType);
+      
+      if (isBizType) {
+        priceInput.disabled = true;
+        priceInput.style.display = 'none';
+        freeCheckbox.disabled = true;
+        freeCheckbox.checked = false;
+      } else if (l.isFree || l.price === 'Бесплатно') {
+        priceInput.disabled = true;
+        priceInput.value = '0';
+        priceInput.style.display = '';
+        freeCheckbox.checked = true;
+        freeCheckbox.disabled = false;
       } else {
-        if (freeCheck) freeCheck.checked = false;
-        if (priceInput) priceInput.disabled = false;
+        priceInput.disabled = false;
+        priceInput.style.display = '';
+        freeCheckbox.checked = false;
+        freeCheckbox.disabled = false;
       }
       
       selectedImages = [...(l.images || [])];
@@ -2135,6 +2164,7 @@
 
     function showScreen(id) {
       if (id === 'profile' && !state.user) id = 'login';
+      if (id === 'notifications' && !state.user) id = 'login';
       if (state.currentScreen === 'home' && id !== 'home') {
         savedScrollPosition = window.scrollY;
         shouldRestoreScroll = true;
@@ -2143,7 +2173,7 @@
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
       mainHeader.style.display = (id === 'login') ? 'none' : 'flex';
-      bottomNav.classList.toggle('hidden', id === 'login');
+      bottomNav.classList.toggle('hidden', id === 'login' || id === 'notifications');
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const navItem = document.querySelector(`.nav-item[data-tab="${id}"]`);
       if (navItem) navItem.classList.add('active');
@@ -2158,27 +2188,9 @@
         case 'profile': renderProfile(); break;
         case 'search': renderSearch(); break;
         case 'create': renderCreateForm(); break;
-        case 'notifications': showNotifications(); break;
+        case 'notifications': renderNotifications(); break;
       }
     }
-
-    // Обработчик для бизнес-типа: блокируем поле цены
-    document.addEventListener('change', function(e) {
-      if (e.target.name === 'bizType') {
-        const priceInput = document.getElementById('create-price');
-        const freeCheckbox = document.getElementById('create-free');
-        const bizType = e.target.value;
-        const isBizType = bizType && ['Магазин', 'Аптека', 'Сервис/Услуги'].includes(bizType);
-        
-        if (isBizType) {
-          if (priceInput) { priceInput.value = ''; priceInput.disabled = true; priceInput.placeholder = bizType; }
-          if (freeCheckbox) { freeCheckbox.checked = false; freeCheckbox.disabled = true; }
-        } else {
-          if (priceInput) { priceInput.disabled = false; priceInput.placeholder = t('price_placeholder'); }
-          if (freeCheckbox) freeCheckbox.disabled = false;
-        }
-      }
-    });
 
     document.getElementById('condition-selector')?.addEventListener('click', (e) => {
       const option = e.target.closest('.condition-option');
@@ -2191,15 +2203,43 @@
     document.getElementById('create-free')?.addEventListener('change', function() {
       const priceInput = document.getElementById('create-price');
       const bizTypeRadio = document.querySelector('input[name="bizType"]:checked');
-      const isBizType = bizTypeRadio && ['Магазин', 'Аптека', 'Сервис/Услуги'].includes(bizTypeRadio.value);
+      const isBizType = bizTypeRadio && ['Магазин', 'Аптека', 'Сервис'].includes(bizTypeRadio.value);
       
       if (isBizType) {
         this.checked = false;
         return;
       }
       
-      if (this.checked) { priceInput.value = '0'; priceInput.disabled = true; }
-      else { priceInput.disabled = false; priceInput.value = ''; }
+      if (this.checked) { 
+        priceInput.value = '0'; 
+        priceInput.disabled = true; 
+      } else { 
+        priceInput.disabled = false; 
+        priceInput.value = ''; 
+      }
+    });
+
+    // Handle biz type radio buttons
+    document.querySelectorAll('input[name="bizType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const priceInput = document.getElementById('create-price');
+        const freeCheckbox = document.getElementById('create-free');
+        const isBizType = this.value && ['Магазин', 'Аптека', 'Сервис'].includes(this.value);
+        
+        if (isBizType) {
+          priceInput.style.display = 'none';
+          priceInput.disabled = true;
+          priceInput.value = '';
+          freeCheckbox.checked = false;
+          freeCheckbox.disabled = true;
+        } else {
+          priceInput.style.display = '';
+          priceInput.disabled = false;
+          priceInput.value = '';
+          freeCheckbox.disabled = false;
+          freeCheckbox.checked = false;
+        }
+      });
     });
 
     document.getElementById('photo-upload-btn')?.addEventListener('click', () => {
@@ -2269,37 +2309,122 @@
       reader.onload = (ev) => { if (state.user) { state.user.avatar = ev.target.result; save(); document.getElementById('profile-avatar-img').src = ev.target.result; } };
       reader.readAsDataURL(file);
     });
-    document.getElementById('save-profile-btn')?.addEventListener('click', () => {
+    
+    document.getElementById('save-profile-btn')?.addEventListener('click', async () => {
       if (!state.user) return;
       state.user.name = document.getElementById('edit-name').value.trim() || state.user.name;
       state.user.phone = document.getElementById('edit-phone').value.trim() || state.user.phone;
-      state.user.village = document.getElementById('edit-village').value;
+      const newVillage = document.getElementById('edit-village').value;
+      state.user.village = newVillage;
       save();
+      
+      // Сбрасываем временную локацию, чтобы основная из профиля применилась
+      state.selectedLocation = null;
+      
+      // Обновляем профиль в Firestore если есть
+      if (db && firebaseReady && state.user.uid) {
+        try {
+          await db.collection('users').doc(state.user.uid).set({
+            name: state.user.name,
+            phone: state.user.phone,
+            village: state.user.village,
+            avatar: state.user.avatar || null,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Failed to update user profile in Firestore:', e);
+        }
+      }
+      
       renderProfile();
       alert(t('profile_updated'));
+      
+      // Если мы на главной, перерендерим с новой основной локацией
+      if (state.currentScreen === 'home') {
+        renderHome();
+      }
     });
 
     document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
     document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
     document.getElementById('back-detail').addEventListener('click', () => { shouldRestoreScroll = true; showScreen('home'); });
     document.getElementById('back-notif')?.addEventListener('click', () => showScreen('home'));
-    document.getElementById('notif-btn').addEventListener('click', () => showNotifications());
+    
+    document.getElementById('notif-btn').addEventListener('click', () => {
+      const dot = document.getElementById('notification-dot');
+      if (dot) dot.style.display = 'none';
+      localStorage.setItem('geran_last_notif_view', Date.now());
+      showScreen('notifications');
+    });
+    
     document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
+    
     document.getElementById('logout-btn').addEventListener('click', () => { 
       localStorage.removeItem('geran_user'); 
-      if (auth) auth.signOut().catch(() => {});
-      state.user = null; 
+      state.user = null;
+      state.selectedLocation = null;
+      if (auth && firebaseReady) {
+        auth.signOut().catch(() => {});
+      }
       showScreen('login'); 
     });
+    
     document.getElementById('login-btn').addEventListener('click', () => {
       const phone = document.getElementById('login-phone').value.trim();
       if (phone) {
-        state.user = { uid: 'user_'+Date.now(), phone, name: '', avatar: null, village: 'Деҳаи Геран' };
+        const uid = 'user_'+Date.now();
+        state.user = { uid: uid, phone, name: '', avatar: null, village: 'Дехаи Геран' };
         localStorage.setItem('geran_user', JSON.stringify(state.user));
-        localStorage.setItem('geran_phone_fallback', phone);
+        
+        // Try anonymous auth for persistence
+        if (auth && firebaseReady) {
+          auth.signInAnonymously()
+            .then((result) => {
+              state.user.uid = result.user.uid;
+              localStorage.setItem('geran_user', JSON.stringify(state.user));
+              console.log("Anonymous auth successful, uid:", result.user.uid);
+            })
+            .catch((error) => {
+              console.warn("Anonymous auth failed, using local uid:", error.message);
+            });
+        }
+        
         showScreen('home');
       }
     });
+
+    // Firebase Auth state observer
+    if (auth && firebaseReady) {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          console.log("Auth state: user signed in", user.uid);
+          if (state.user && state.user.uid && !state.user.uid.startsWith('firebase_')) {
+            const localUser = JSON.parse(localStorage.getItem('geran_user') || '{}');
+            if (localUser && localUser.uid && !user.isAnonymous) {
+              state.listings.forEach(l => {
+                if (l.userId === localUser.uid) {
+                  db.collection('listings').doc(l.id).update({ userId: user.uid }).catch(() => {});
+                }
+              });
+            }
+            state.user.uid = user.uid;
+            localStorage.setItem('geran_user', JSON.stringify(state.user));
+          } else if (!state.user) {
+            const savedUser = JSON.parse(localStorage.getItem('geran_user') || 'null');
+            if (savedUser && savedUser.phone) {
+              savedUser.uid = user.uid;
+              state.user = savedUser;
+              localStorage.setItem('geran_user', JSON.stringify(savedUser));
+              if (state.currentScreen === 'login') {
+                showScreen('home');
+              }
+            }
+          }
+        } else {
+          console.log("Auth state: user signed out");
+        }
+      });
+    }
 
     const themeCheckbox = document.getElementById('theme-checkbox');
     themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
@@ -2463,6 +2588,18 @@
           startAutoPlay();
         }
       });
+    }
+
+    // Periodically check for new notifications
+    setInterval(() => {
+      if (state.user && state.currentScreen !== 'notifications') {
+        checkNewNotifications();
+      }
+    }, 30000);
+    
+    // Initial notification check
+    if (state.user) {
+      setTimeout(checkNewNotifications, 2000);
     }
 
     applyLanguage();

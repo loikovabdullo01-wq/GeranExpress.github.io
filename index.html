@@ -1276,10 +1276,21 @@
       "Карадум", "Каврак", "Турмано", "Далин 1", "Далин 2", "Далин 3", "Далин 4", "Панч"
     ];
 
+    // Нормализация названия деревни для сравнения
+    function normalizeVillageName(name) {
+      if (!name) return '';
+      // Убираем пробелы по краям, заменяем множественные пробелы на один, приводим к нижнему регистру
+      let normalized = name.trim().replace(/\s+/g, ' ').toLowerCase();
+      // Заменяем таджикские буквы на русские аналоги для унификации
+      normalized = normalized.replace(/ҳ/g, 'х').replace(/ҷ/g, 'ч').replace(/ғ/g, 'г').replace(/ӣ/g, 'и').replace(/қ/g, 'к').replace(/ӯ/g, 'у');
+      return normalized;
+    }
+
     function getFilteredListings() {
       let filtered = state.listings.filter(l => l.isActive !== false);
       if (state.selectedVillage) {
-        filtered = filtered.filter(l => l.village === state.selectedVillage);
+        const normalizedSelected = normalizeVillageName(state.selectedVillage);
+        filtered = filtered.filter(l => normalizeVillageName(l.village) === normalizedSelected);
       }
       return filtered;
     }

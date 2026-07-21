@@ -1444,6 +1444,7 @@
       clearBtn.onclick = () => {
         state.selectedVillage = null;
         state.activeCategory = null;
+        localStorage.setItem('geran_selected_village', '');
         modal.remove();
         renderHome();
       };
@@ -1461,6 +1462,7 @@
         btn.onclick = () => {
           state.selectedVillage = village;
           state.activeCategory = null;
+          localStorage.setItem('geran_selected_village', village);
           modal.remove();
           renderHome();
         };
@@ -1916,6 +1918,14 @@
       state.user.phone = document.getElementById('edit-phone').value.trim() || state.user.phone;
       state.user.village = document.getElementById('edit-village').value;
       save();
+      
+      // Если пользователь еще не выбирал локацию вручную, применяем адрес из профиля
+      const savedManualVillage = localStorage.getItem('geran_selected_village');
+      if (!savedManualVillage || savedManualVillage === '') {
+        state.selectedVillage = state.user.village;
+        localStorage.setItem('geran_selected_village', state.user.village);
+      }
+      
       renderProfile();
       alert(t('profile_updated'));
     });
@@ -1931,6 +1941,9 @@
       if (phone) {
         state.user = { uid: 'user_'+Date.now(), phone, name: '', avatar: null, village: 'Деҳаи Геран' };
         localStorage.setItem('geran_user', JSON.stringify(state.user));
+        
+        // Инициализация локации после входа
+        initLocationFromStorage();
         showScreen('home');
       }
     });
@@ -1965,6 +1978,22 @@
     });
 
     validateLoginPhone();
+
+    // Инициализация выбранной локации из localStorage
+    function initLocationFromStorage() {
+      const savedVillage = localStorage.getItem('geran_selected_village');
+      
+      if (savedVillage && savedVillage !== '') {
+        // Приоритет 1: ранее выбранная вручную локация
+        state.selectedVillage = savedVillage;
+      } else if (state.user && state.user.village) {
+        // Приоритет 2: адрес из профиля
+        state.selectedVillage = state.user.village;
+      } else {
+        // Приоритет 3: значение по умолчанию
+        state.selectedVillage = null;
+      }
+    }
 
     function initBannerCarousel() {
       const track = document.getElementById('g-express-track');
@@ -2100,6 +2129,10 @@
     }
 
     applyLanguage();
+    
+    // Инициализация локации перед показом экрана
+    initLocationFromStorage();
+    
     if (state.user) {
       showScreen('home');
     } else {

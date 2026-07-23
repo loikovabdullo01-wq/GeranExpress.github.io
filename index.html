@@ -18,24 +18,62 @@
       --header-height:56px;--nav-height:64px;
       --transition:0.2s cubic-bezier(0.2,0,0,1)
     }
-    body{
-      font-family:var(--font);background:var(--bg);color:var(--text-primary);
-      display:flex;justify-content:center;align-items:flex-start;
-      min-height:100vh;-webkit-tap-highlight-color:transparent;margin:0
-    }
-    #app{
-      width:100%;max-width:1200px;min-height:100vh;background:var(--bg);
-      display:flex;flex-direction:column;position:relative;overflow:hidden;
-      box-shadow:0 0 30px rgba(0,0,0,0.03)
-    }
-    .header{
-      position:fixed;top:0;z-index:100;background:var(--bg);
-      border-bottom:1px solid var(--border);width:100%;padding:0 16px;
-      height:var(--header-height);display:flex;align-items:center;
-      justify-content:space-between;
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      left:50%;transform:translateX(-50%);max-width:1200px
-    }
+   body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Жестко запрещаем боковой скролл на смартфонах */
+}
+
+#app {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden; /* Защита от вылетов баннеров вправо */
+  box-shadow: 0 0 30px rgba(0,0,0,0.03);
+  box-sizing: border-box;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;             /* Прижимаем к левому краю на смартфонах */
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  padding: 0 16px;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-sizing: border-box; /* Чтобы padding не раздувал шапку шире экрана */
+}
+
+/* На больших экранах возвращаем центрирование для шапки, чтобы она не растягивалась бесконечно */
+@media (min-width: 1201px) {
+  .header {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 1200px;
+  }
+}
+
+    
     .logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0;cursor:pointer}
     .logo img{height:35px!important;width:auto!important;object-fit:contain!important;display:block}
     .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-grow:0;margin-left:auto}
@@ -152,44 +190,60 @@
     }
     
     .filter-bar {
-      display: flex;
-      gap: 8px;
-      padding: 6px 16px 4px;
-      margin-bottom: 4px;
-      align-items: center;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-    .filter-bar.visible {
-      opacity: 1;
-    }
-    .filter-bar::-webkit-scrollbar {
-      display: none;
-    }
-    .filter-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 12px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      transition: all var(--transition);
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      white-space: nowrap;
-      flex-shrink: 0;
-      font-family: var(--font);
-      position: relative;
-      height: 32px;
-      line-height: 1;
-    }
+  display: flex;
+  gap: 6px;                           /* Компактное расстояние между кнопками */
+  padding: 4px 10px;                  /* Уменьшили отступы панели, чтобы убрать жирность */
+  margin-bottom: 4px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0;                         /* Изначально скрыто, пока не загрузится Firebase */
+  transition: opacity 0.25s ease;
+  width: 100%;                        /* На весь экран */
+  box-sizing: border-box;
+}
+
+.filter-bar.visible {
+  opacity: 1;
+}
+
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-btn {
+  flex: 1;                            /* Кнопки будут красиво и равномерно делиться по ширине */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;            /* Идеально центрируем текст и иконку внутри */
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;                /* Более аккуратное скругление для коротких кнопок */
+  padding: 0 8px;                     /* Убрали верхний/нижний паддинг, оставили только боковые */
+  font-size: 13px;                    /* Оптимальный компактный размер шрифта */
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  white-space: nowrap;                /* Запрещаем тексту прыгать на вторую строку */
+  flex-shrink: 0;
+  font-family: var(--font);
+  position: relative;
+  height: 30px;                       /* Сделали аккуратную короткую высоту 30px вместо 32px */
+  line-height: 30px;                  /* Выравниваем строку ровно по высоте кнопки */
+  box-sizing: border-box;
+}
+
+/* Принудительно делаем иконки внутри кнопок аккуратными */
+.filter-btn .material-symbols-rounded {
+  font-size: 16px !important;         /* Иконка теперь не будет распирать кнопку по высоте */
+  display: inline-block;
+  vertical-align: middle;
+}
+
     .filter-btn:hover {
       border-color: var(--primary);
       background: var(--primary-soft);
@@ -761,8 +815,6 @@
       <div class="g-express-slider-wrapper" id="g-express-banner">
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
-            <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
-            <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 1" loading="lazy"></div>
             <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
            
            

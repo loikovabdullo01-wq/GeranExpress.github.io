@@ -30,7 +30,7 @@
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden; /* Жестко запрещаем боковой скролл на смартфонах */
+  overflow-x: hidden;
 }
 
 #app {
@@ -41,7 +41,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden; /* Защита от вылетов баннеров вправо */
+  overflow-x: hidden;
   box-shadow: 0 0 30px rgba(0,0,0,0.03);
   box-sizing: border-box;
 }
@@ -49,7 +49,7 @@
 .header {
   position: fixed;
   top: 0;
-  left: 0;             /* Прижимаем к левому краю на смартфонах */
+  left: 0;
   z-index: 100;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
@@ -61,10 +61,9 @@
   justify-content: space-between;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-sizing: border-box; /* Чтобы padding не раздувал шапку шире экрана */
+  box-sizing: border-box;
 }
 
-/* На больших экранах возвращаем центрирование для шапки, чтобы она не растягивалась бесконечно */
 @media (min-width: 1201px) {
   .header {
     left: 50%;
@@ -191,16 +190,16 @@
     
     .filter-bar {
   display: flex;
-  gap: 6px;                           /* Компактное расстояние между кнопками */
-  padding: 4px 10px;                  /* Уменьшили отступы панели, чтобы убрать жирность */
+  gap: 6px;
+  padding: 4px 10px;
   margin-bottom: 4px;
   align-items: center;
   flex-wrap: nowrap;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  opacity: 0;                         /* Изначально скрыто, пока не загрузится Firebase */
+  opacity: 0;
   transition: opacity 0.25s ease;
-  width: 100%;                        /* На весь экран */
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -213,33 +212,32 @@
 }
 
 .filter-btn {
-  flex: 1;                            /* Кнопки будут красиво и равномерно делиться по ширине */
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  justify-content: center;            /* Идеально центрируем текст и иконку внутри */
+  justify-content: center;
   gap: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;                /* Более аккуратное скругление для коротких кнопок */
-  padding: 0 8px;                     /* Убрали верхний/нижний паддинг, оставили только боковые */
-  font-size: 13px;                    /* Оптимальный компактный размер шрифта */
+  border-radius: 16px;
+  padding: 0 8px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   transition: all var(--transition);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  white-space: nowrap;                /* Запрещаем тексту прыгать на вторую строку */
+  white-space: nowrap;
   flex-shrink: 0;
   font-family: var(--font);
   position: relative;
-  height: 30px;                       /* Сделали аккуратную короткую высоту 30px вместо 32px */
-  line-height: 30px;                  /* Выравниваем строку ровно по высоте кнопки */
+  height: 30px;
+  line-height: 30px;
   box-sizing: border-box;
 }
 
-/* Принудительно делаем иконки внутри кнопок аккуратными */
 .filter-btn .material-symbols-rounded {
-  font-size: 16px !important;         /* Иконка теперь не будет распирать кнопку по высоте */
+  font-size: 16px !important;
   display: inline-block;
   vertical-align: middle;
 }
@@ -311,13 +309,13 @@
     .card {
       background: var(--surface); border-radius: 12px; overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--border);
-      transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;
+      transition: none; cursor: pointer;
       display: flex; flex-direction: column;
     }
     .card:hover {
-      transform: scale(1.04);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
-      z-index: 2;
+      transform: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      z-index: auto;
       position: relative;
     }
     .card.vip-card {
@@ -325,7 +323,7 @@
       box-shadow: 0 4px 14px rgba(212,160,23,0.25);
     }
     .card.vip-card:hover {
-      box-shadow: 0 16px 36px rgba(212,160,23,0.35), 0 6px 14px rgba(212,160,23,0.2);
+      box-shadow: 0 4px 14px rgba(212,160,23,0.25);
     }
     .card-img {
       position: relative; width: 100%; height: 200px; background: var(--border);
@@ -333,10 +331,10 @@
     }
     .card-img img {
       width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
-      transition: transform 0.3s ease;
+      transition: none;
     }
     .card:hover .card-img img {
-      transform: scale(1.05);
+      transform: none;
     }
     .card-badge {
       position: absolute; top: 6px; left: 6px;
@@ -1510,10 +1508,6 @@
 
     async function renderHome() {
       console.log("renderHome");
-      if (shouldRestoreScroll && !isChangingCategory) {
-        window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
-        shouldRestoreScroll = false;
-      }
       
       const cloudListings = await loadFirestoreListings();
       const merged = [...cloudListings];
@@ -2126,10 +2120,6 @@
 
     function showScreen(id) {
       if (id === 'profile' && !state.user) id = 'login';
-      if (state.currentScreen === 'home' && id !== 'home') {
-        savedScrollPosition = window.scrollY;
-        shouldRestoreScroll = true;
-      }
       Object.values(screens).forEach(s => s.classList.remove('active'));
       if (screens[id]) screens[id].classList.add('active');
       state.currentScreen = id;
@@ -2138,6 +2128,13 @@
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const navItem = document.querySelector(`.nav-item[data-tab="${id}"]`);
       if (navItem) navItem.classList.add('active');
+      if (id !== 'home' || !shouldRestoreScroll) {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+      if (id === 'home' && shouldRestoreScroll) {
+        window.scrollTo({ top: savedScrollPosition, behavior: 'instant' });
+        shouldRestoreScroll = false;
+      }
       renderScreen(id);
     }
 

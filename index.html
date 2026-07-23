@@ -150,18 +150,22 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .categories-row {
-      display: flex !important;
-      flex-wrap: nowrap !important;
-      overflow-x: auto !important;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
+    
+    /* ===== НОВЫЙ КОМПАКТНЫЙ РЯД ФИЛЬТРОВ ===== */
+    .filter-bar {
+      display: flex;
       gap: 8px;
-      padding: 12px 16px 8px;
-      margin-bottom: 8px;
+      padding: 10px 16px 6px;
+      margin-bottom: 6px;
+      align-items: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .categories-row::-webkit-scrollbar { display: none; }
-    .cat-chip {
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .filter-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -177,10 +181,70 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       white-space: nowrap;
       flex-shrink: 0;
+      font-family: var(--font);
+      position: relative;
     }
-    .cat-chip .material-symbols-rounded { font-size: 18px; }
-    .cat-chip:hover { border-color: var(--primary); background: var(--primary-soft); }
-    .cat-chip.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+    .filter-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .filter-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-btn .material-symbols-rounded {
+      font-size: 18px;
+    }
+    
+    /* Модальное окно (используется для локации и категорий) */
+    .filter-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInBackdrop 0.2s ease;
+    }
+    @keyframes fadeInBackdrop {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .filter-modal-content {
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: slideUpModal 0.25s cubic-bezier(0.2, 0, 0, 1);
+    }
+    @keyframes slideUpModal {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .filter-modal-content h3 {
+      margin-bottom: 16px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    .filter-modal-content .btn-outline {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    /* ========================================== */
+
+    /* Старая лента категорий больше не отображается */
+    .categories-row {
+      display: none !important;
+    }
     .listings-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
     }
@@ -705,11 +769,28 @@
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
             <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
            
            
           </div>
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>
+      </div>
+      <!-- НОВЫЙ КОМПАКТНЫЙ РЯД ФИЛЬТРОВ -->
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn" id="filter-btn-location">
+          <span class="material-symbols-rounded">location_on</span>
+          <span id="filter-btn-location-text">📍 Локация</span>
+        </button>
+        <button class="filter-btn" id="filter-btn-sort">
+          <span class="material-symbols-rounded">sort</span>
+          <span id="filter-btn-sort-text">Все</span>
+        </button>
+        <button class="filter-btn" id="filter-btn-category">
+          <span class="material-symbols-rounded">category</span>
+          <span id="filter-btn-category-text">Все категории</span>
+        </button>
       </div>
     </div>
     <div id="screen-favorites" class="screen"><h2 style="margin:8px 0 12px" id="fav-title">Интихобшуда</h2><div id="favorites-container" class="listings-grid"></div></div>
@@ -1025,6 +1106,7 @@
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Кӯчонанда', cat_tools: 'Асбобҳо', cat_parts: 'Қисмҳои эҳтиётӣ',
         cat_clothes: 'Либос', cat_services: 'Хизматрасониҳо', cat_other: 'Дигар',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_btn: '📍 Локация',
+        sort_all: 'Ҳама', sort_new: 'Нав', sort_old: 'Кӯҳна',
       },
       ru: {
         search: 'поиск', search_placeholder: 'Поиск по названию...', home: 'Главная', favorites: 'Избранное',
@@ -1043,6 +1125,7 @@
         cat_auto: 'Авто', cat_moto: 'Мото', cat_realestate: 'Недвижимость', cat_tools: 'Инструменты', cat_parts: 'Запчасти',
         cat_clothes: 'Одежда', cat_services: 'Услуги', cat_other: 'Другое',
         online_text: 'онлайн', whatsapp_btn: 'WhatsApp', location_btn: '📍 Локация',
+        sort_all: 'Все', sort_new: 'Новые', sort_old: 'Старые',
       }
     };
 
@@ -1156,6 +1239,10 @@
           opt.textContent = translations[currentLang][translationKey];
         }
       });
+      
+      // Обновляем текст в новом фильтр-баре
+      updateFilterBarTexts();
+      
       if (state.currentScreen) renderScreen(state.currentScreen);
     }
 
@@ -1173,10 +1260,13 @@
       currentScreen: 'home',
       editId: null,
       searchQuery: '',
-      activeCategory: null,
+      activeCategory: null, // оставлено для обратной совместимости, но не используется в UI
       selectedCondition: 'new',
       uploadedPhotos: [],
       selectedVillage: null,
+      // НОВЫЕ поля для фильтрации
+      dateSort: null, // null (Все), 'new', 'old'
+      filterCategory: null, // null (Все категории) или строка категории
     };
 
     let selectedImages = [];
@@ -1280,53 +1370,76 @@
     // Нормализация названия деревни для сравнения
     function normalizeVillageName(name) {
       if (!name) return '';
-      // Убираем пробелы по краям, заменяем множественные пробелы на один, приводим к нижнему регистру
       let normalized = name.trim().replace(/\s+/g, ' ').toLowerCase();
-      // Заменяем таджикские буквы на русские аналоги для унификации
       normalized = normalized.replace(/ҳ/g, 'х').replace(/ҷ/g, 'ч').replace(/ғ/g, 'г').replace(/ӣ/g, 'и').replace(/қ/g, 'к').replace(/ӯ/g, 'у');
       return normalized;
     }
 
+    function getDateMs(dateField) {
+      if (!dateField) return 0;
+      try {
+        if (dateField && typeof dateField.toDate === 'function') {
+          return dateField.toDate().getTime();
+        } else if (dateField instanceof Date) {
+          return dateField.getTime();
+        } else if (typeof dateField === 'number') {
+          return dateField;
+        } else if (typeof dateField === 'string') {
+          return new Date(dateField).getTime();
+        }
+      } catch (e) {}
+      return 0;
+    }
+
     function getFilteredListings() {
       let filtered = state.listings.filter(l => l.isActive !== false);
+      
+      // 1. Локация
       if (state.selectedVillage) {
         const normalizedSelected = normalizeVillageName(state.selectedVillage);
         filtered = filtered.filter(l => normalizeVillageName(l.village) === normalizedSelected);
       }
+      
+      // 2. Категория (новая кнопка)
+      if (state.filterCategory) {
+        filtered = filtered.filter(l => l.category === state.filterCategory);
+      }
+      
+      // 3. Сортировка по дате
+      if (state.dateSort === 'new') {
+        filtered.sort((a, b) => getDateMs(b.date) - getDateMs(a.date));
+      } else if (state.dateSort === 'old') {
+        filtered.sort((a, b) => getDateMs(a.date) - getDateMs(b.date));
+      }
+      
       return filtered;
     }
 
-    function getCountForCategory(category, listings) {
-      if (!category) return listings.length;
-      return listings.filter(l => l.category === category).length;
-    }
-
-    function renderCategories() {
-      const filteredListings = getFilteredListings();
-      let html = '<div class="categories-row">';
+    function updateFilterBarTexts() {
+      const locText = document.getElementById('filter-btn-location-text');
+      const sortText = document.getElementById('filter-btn-sort-text');
+      const catText = document.getElementById('filter-btn-category-text');
+      const locBtn = document.getElementById('filter-btn-location');
+      const sortBtn = document.getElementById('filter-btn-sort');
+      const catBtn = document.getElementById('filter-btn-category');
       
-      // Кнопка локации
-      html += `<div class="cat-chip ${state.selectedVillage ? 'active' : ''}" id="location-filter-btn" onclick="window._openLocationFilter()">
-        <span class="material-symbols-rounded">location_on</span> ${state.selectedVillage ? state.selectedVillage : t('location_btn')}
-      </div>`;
+      if (locText) locText.textContent = state.selectedVillage || t('location_btn');
+      if (sortText) {
+        if (state.dateSort === 'new') sortText.textContent = t('sort_new');
+        else if (state.dateSort === 'old') sortText.textContent = t('sort_old');
+        else sortText.textContent = t('sort_all');
+      }
+      if (catText) {
+        if (!state.filterCategory) catText.textContent = t('cat_all') || 'Все категории';
+        else {
+          const catKey = categoryTransKeys[state.filterCategory] || ('cat_' + state.filterCategory);
+          catText.textContent = t(catKey) || state.filterCategory;
+        }
+      }
       
-      // Кнопка "Все"
-      const allCount = filteredListings.length;
-      html += `<div class="cat-chip ${!state.activeCategory?'active':''}" onclick="window._clearCategory()">
-        <span class="material-symbols-rounded">apps</span> ${t('cat_all')} (${allCount})
-      </div>`;
-      
-      // Категории с подсчетом
-      categoryKeys.forEach(cat => {
-        const icon = categoryIcons[cat] || 'label';
-        const name = t(categoryTransKeys[cat]) || cat;
-        const count = getCountForCategory(cat, filteredListings);
-        html += `<div class="cat-chip ${state.activeCategory===cat?'active':''}" onclick="window._filterCategory('${cat}')">
-          <span class="material-symbols-rounded">${icon}</span> ${name} (${count})
-        </div>`;
-      });
-      
-      return html + '</div>';
+      if (locBtn) locBtn.classList.toggle('active', !!state.selectedVillage);
+      if (sortBtn) sortBtn.classList.toggle('active', state.dateSort !== null);
+      if (catBtn) catBtn.classList.toggle('active', state.filterCategory !== null);
     }
 
     let cachedListings = null;
@@ -1369,35 +1482,43 @@
         if (!merged.some(l => l.id === item.id)) merged.push(item);
       });
       state.listings = merged;
+      
       let filtered = getFilteredListings();
-      if (state.activeCategory) filtered = filtered.filter(l => l.category === state.activeCategory);
+      
+      // Старый фильтр activeCategory (не отображается, но для обратной совместимости)
+      if (state.activeCategory) {
+        filtered = filtered.filter(l => l.category === state.activeCategory);
+      }
 
-      const sessionId = sessionStorage.getItem("sessionId");
-      const currentSessionId = window._sessionId || (window._sessionId = Date.now().toString());
-      if (!sessionId || sessionId !== currentSessionId) {
-        sessionStorage.removeItem("homeOrder");
-        sessionStorage.setItem("sessionId", currentSessionId);
-      }
-      let order = sessionStorage.getItem("homeOrder");
-      if (!order) {
-        const allActive = state.listings.filter(l => l.isActive !== false);
-        const shuffled = [...allActive];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      // Если сортировка не выбрана — стандартный случайный порядок
+      if (state.dateSort === null) {
+        const sessionId = sessionStorage.getItem("sessionId");
+        const currentSessionId = window._sessionId || (window._sessionId = Date.now().toString());
+        if (!sessionId || sessionId !== currentSessionId) {
+          sessionStorage.removeItem("homeOrder");
+          sessionStorage.setItem("sessionId", currentSessionId);
         }
-        order = shuffled.map(x => x.id);
-        sessionStorage.setItem("homeOrder", JSON.stringify(order));
-      } else {
-        order = JSON.parse(order);
+        let order = sessionStorage.getItem("homeOrder");
+        if (!order) {
+          const allActive = state.listings.filter(l => l.isActive !== false);
+          const shuffled = [...allActive];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
+          order = shuffled.map(x => x.id);
+          sessionStorage.setItem("homeOrder", JSON.stringify(order));
+        } else {
+          order = JSON.parse(order);
+        }
+        filtered.sort((a, b) => {
+          const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
+          if (ia === -1 && ib === -1) return 0;
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
       }
-      filtered.sort((a, b) => {
-        const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
-        if (ia === -1 && ib === -1) return 0;
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
-      });
 
       const gridHtml = filtered.length
         ? filtered.map(cardHTML).join('')
@@ -1405,6 +1526,7 @@
       
       const screenHome = document.getElementById('screen-home');
       const banner = document.getElementById('g-express-banner');
+      const filterBar = document.getElementById('filter-bar');
       
       screenHome.innerHTML = '';
       
@@ -1415,10 +1537,10 @@
         });
       }
       
-      const categoriesContainer = document.createElement('div');
-      categoriesContainer.innerHTML = renderCategories();
-      while (categoriesContainer.firstChild) {
-        screenHome.appendChild(categoriesContainer.firstChild);
+      // Добавляем компактный фильтр-бар
+      if (filterBar) {
+        screenHome.appendChild(filterBar);
+        updateFilterBarTexts();
       }
       
       const listingsGrid = document.createElement('div');
@@ -1436,26 +1558,24 @@
       }
     }
 
-    window._openLocationFilter = () => {
+    // ОТКРЫТИЕ МОДАЛКИ ЛОКАЦИИ (старая логика сохранена)
+    function openLocationModal() {
       const modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.className = 'filter-modal-backdrop';
       modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
       
       const content = document.createElement('div');
-      content.style.cssText = 'background:var(--bg);border-radius:16px;padding:20px;width:90%;max-width:400px;max-height:80vh;overflow-y:auto;';
+      content.className = 'filter-modal-content';
       
       const title = document.createElement('h3');
       title.textContent = '📍 Выберите локацию';
-      title.style.cssText = 'margin-bottom:16px;text-align:center;';
       content.appendChild(title);
       
       const clearBtn = document.createElement('button');
       clearBtn.textContent = 'Сбросить локацию';
       clearBtn.className = 'btn btn-outline';
-      clearBtn.style.cssText = 'width:100%;margin-bottom:12px;';
       clearBtn.onclick = () => {
         state.selectedVillage = null;
-        state.activeCategory = null;
         localStorage.setItem('geran_selected_village', 'ALL');
         modal.remove();
         renderHome();
@@ -1466,14 +1586,12 @@
         const btn = document.createElement('button');
         btn.textContent = village;
         btn.className = 'btn btn-outline';
-        btn.style.cssText = 'width:100%;margin-bottom:8px;';
         if (state.selectedVillage === village) {
           btn.style.background = 'var(--primary)';
           btn.style.color = 'white';
         }
         btn.onclick = () => {
           state.selectedVillage = village;
-          state.activeCategory = null;
           localStorage.setItem('geran_selected_village', village);
           modal.remove();
           renderHome();
@@ -1483,17 +1601,105 @@
       
       modal.appendChild(content);
       document.body.appendChild(modal);
-    };
+    }
 
+    // ОТКРЫТИЕ МОДАЛКИ СОРТИРОВКИ
+    function openSortModal() {
+      const modal = document.createElement('div');
+      modal.className = 'filter-modal-backdrop';
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      
+      const content = document.createElement('div');
+      content.className = 'filter-modal-content';
+      
+      const title = document.createElement('h3');
+      title.textContent = 'Сортировка по дате';
+      content.appendChild(title);
+      
+      const options = [
+        { value: null, label: t('sort_all') },
+        { value: 'new', label: t('sort_new') },
+        { value: 'old', label: t('sort_old') }
+      ];
+      
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.label;
+        btn.className = 'btn btn-outline';
+        if (state.dateSort === opt.value) {
+          btn.style.background = 'var(--primary)';
+          btn.style.color = 'white';
+        }
+        btn.onclick = () => {
+          state.dateSort = opt.value;
+          modal.remove();
+          renderHome();
+        };
+        content.appendChild(btn);
+      });
+      
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+    }
+
+    // ОТКРЫТИЕ МОДАЛКИ КАТЕГОРИЙ
+    function openCategoryModal() {
+      const modal = document.createElement('div');
+      modal.className = 'filter-modal-backdrop';
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      
+      const content = document.createElement('div');
+      content.className = 'filter-modal-content';
+      
+      const title = document.createElement('h3');
+      title.textContent = 'Выберите категорию';
+      content.appendChild(title);
+      
+      const allBtn = document.createElement('button');
+      allBtn.textContent = t('cat_all') || 'Все категории';
+      allBtn.className = 'btn btn-outline';
+      if (state.filterCategory === null) {
+        allBtn.style.background = 'var(--primary)';
+        allBtn.style.color = 'white';
+      }
+      allBtn.onclick = () => {
+        state.filterCategory = null;
+        modal.remove();
+        renderHome();
+      };
+      content.appendChild(allBtn);
+      
+      categoryKeys.forEach(cat => {
+        const catName = t(categoryTransKeys[cat]) || cat;
+        const btn = document.createElement('button');
+        btn.textContent = catName;
+        btn.className = 'btn btn-outline';
+        if (state.filterCategory === cat) {
+          btn.style.background = 'var(--primary)';
+          btn.style.color = 'white';
+        }
+        btn.onclick = () => {
+          state.filterCategory = cat;
+          modal.remove();
+          renderHome();
+        };
+        content.appendChild(btn);
+      });
+      
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+    }
+
+    // Старые глобальные функции, если где-то ещё используются
+    window._openLocationFilter = openLocationModal;
     window._filterCategory = (cat) => { 
-      state.activeCategory = cat; 
+      state.filterCategory = cat; 
       shouldRestoreScroll = false; 
       isChangingCategory = true; 
       renderHome(); 
     };
-    
     window._clearCategory = () => { 
-      state.activeCategory = null; 
+      state.filterCategory = null; 
       shouldRestoreScroll = false; 
       isChangingCategory = true; 
       renderHome(); 
@@ -1842,6 +2048,11 @@
         case 'create': renderCreateForm(); break;
       }
     }
+
+    // Привязка новых кнопок
+    document.getElementById('filter-btn-location')?.addEventListener('click', openLocationModal);
+    document.getElementById('filter-btn-sort')?.addEventListener('click', openSortModal);
+    document.getElementById('filter-btn-category')?.addEventListener('click', openCategoryModal);
 
     document.getElementById('condition-selector')?.addEventListener('click', (e) => {
       const option = e.target.closest('.condition-option');

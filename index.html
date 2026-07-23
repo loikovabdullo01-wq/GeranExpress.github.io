@@ -151,16 +151,20 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    /* ===== НОВЫЙ КОМПАКТНЫЙ РЯД ФИЛЬТРОВ ===== */
     .filter-bar {
       display: flex;
       gap: 8px;
-      padding: 10px 16px 6px;
-      margin-bottom: 6px;
+      padding: 6px 16px 4px;
+      margin-bottom: 4px;
       align-items: center;
       flex-wrap: nowrap;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .filter-bar.visible {
+      opacity: 1;
     }
     .filter-bar::-webkit-scrollbar {
       display: none;
@@ -168,12 +172,12 @@
     .filter-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
       font-weight: 500;
       color: var(--text-secondary);
       transition: all var(--transition);
@@ -183,6 +187,8 @@
       flex-shrink: 0;
       font-family: var(--font);
       position: relative;
+      height: 32px;
+      line-height: 1;
     }
     .filter-btn:hover {
       border-color: var(--primary);
@@ -194,10 +200,9 @@
       color: var(--primary);
     }
     .filter-btn .material-symbols-rounded {
-      font-size: 18px;
+      font-size: 16px;
     }
     
-    /* Модальное окно (используется для локации и категорий) */
     .filter-modal-backdrop {
       position: fixed;
       top: 0;
@@ -239,9 +244,7 @@
       width: 100%;
       margin-bottom: 8px;
     }
-    /* ========================================== */
 
-    /* Старая лента категорий больше не отображается */
     .categories-row {
       display: none !important;
     }
@@ -471,7 +474,6 @@
       margin: 16px 0; font-weight: 500; text-align: center;
     }
 
-    /* === ONLINE INDICATOR === */
     .online-indicator {
       display: inline-flex;
       align-items: center;
@@ -499,9 +501,7 @@
     .online-dot.zero {
       background: #9ca3af;
     }
-    /* ================================ */
 
-    /* === G-EXPRESS BANNER CAROUSEL === */
     .g-express-slider-wrapper {
       width: 100%;
       padding: 0 5px;
@@ -572,11 +572,7 @@
       width: 20px;
       background: #ffffff;
     }
-    /* === END G-EXPRESS BANNER === */
 
-    /* ==========================================
-       PRODUCT SLIDER STYLES
-       ========================================== */
     .product-slider {
       position: relative;
       width: 100%;
@@ -707,19 +703,16 @@
       color: var(--text-tertiary);
       margin-bottom: 12px;
     }
-    /* ========================================== */
 
-    /* Красим кнопку "Позвонить" в приятный зелёный */
 .detail-actions a[href^="tel:"] {
-    background: #1e5e48 !important; /* Насыщенный зелёный, слегка приглушённый */
+    background: #1e5e48 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     filter: none !important;
 }
 
-/* Красим кнопку "WhatsApp" в точно такой же цвет */
 .detail-actions a[href*="wa.me"], .btn-whatsapp {
-    background: #1e5e48 !important; /* Идентичный приятный зелёный цвет */
+    background: #1e5e48 !important;
     color: #ffffff !important;
     opacity: 1 !important;
     filter: none !important;
@@ -777,7 +770,6 @@
           <div class="g-express-dots" id="g-express-dots"></div>
         </div>
       </div>
-      <!-- НОВЫЙ КОМПАКТНЫЙ РЯД ФИЛЬТРОВ -->
       <div class="filter-bar" id="filter-bar">
         <button class="filter-btn" id="filter-btn-location">
           <span class="material-symbols-rounded">location_on</span>
@@ -984,7 +976,6 @@
       console.warn('Firebase init error:', e.message);
     }
 
-    // ==================== PRESENCE SYSTEM (OPTIMIZED) ====================
     (function() {
       if (!db || !firebaseReady) {
         console.warn('Presence: Firestore not available');
@@ -1086,7 +1077,6 @@
         console.warn('Presence: listener error', error.message);
       });
     })();
-    // ===========================================================================
 
     const translations = {
       tg: {
@@ -1240,7 +1230,6 @@
         }
       });
       
-      // Обновляем текст в новом фильтр-баре
       updateFilterBarTexts();
       
       if (state.currentScreen) renderScreen(state.currentScreen);
@@ -1260,13 +1249,12 @@
       currentScreen: 'home',
       editId: null,
       searchQuery: '',
-      activeCategory: null, // оставлено для обратной совместимости, но не используется в UI
+      activeCategory: null,
       selectedCondition: 'new',
       uploadedPhotos: [],
       selectedVillage: null,
-      // НОВЫЕ поля для фильтрации
-      dateSort: null, // null (Все), 'new', 'old'
-      filterCategory: null, // null (Все категории) или строка категории
+      dateSort: null,
+      filterCategory: null,
     };
 
     let selectedImages = [];
@@ -1367,7 +1355,6 @@
       "Карадум", "Каврак", "Турмано", "Далин 1", "Далин 2", "Далин 3", "Далин 4", "Панч"
     ];
 
-    // Нормализация названия деревни для сравнения
     function normalizeVillageName(name) {
       if (!name) return '';
       let normalized = name.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -1394,18 +1381,15 @@
     function getFilteredListings() {
       let filtered = state.listings.filter(l => l.isActive !== false);
       
-      // 1. Локация
       if (state.selectedVillage) {
         const normalizedSelected = normalizeVillageName(state.selectedVillage);
         filtered = filtered.filter(l => normalizeVillageName(l.village) === normalizedSelected);
       }
       
-      // 2. Категория (новая кнопка)
       if (state.filterCategory) {
         filtered = filtered.filter(l => l.category === state.filterCategory);
       }
       
-      // 3. Сортировка по дате
       if (state.dateSort === 'new') {
         filtered.sort((a, b) => getDateMs(b.date) - getDateMs(a.date));
       } else if (state.dateSort === 'old') {
@@ -1430,10 +1414,13 @@
         else sortText.textContent = t('sort_all');
       }
       if (catText) {
-        if (!state.filterCategory) catText.textContent = t('cat_all') || 'Все категории';
-        else {
+        if (!state.filterCategory) {
+          const totalCount = state.listings.filter(l => l.isActive !== false).length;
+          catText.textContent = (t('cat_all') || 'Все категории') + ' (' + totalCount + ')';
+        } else {
           const catKey = categoryTransKeys[state.filterCategory] || ('cat_' + state.filterCategory);
-          catText.textContent = t(catKey) || state.filterCategory;
+          const catCount = state.listings.filter(l => l.isActive !== false && l.category === state.filterCategory).length;
+          catText.textContent = (t(catKey) || state.filterCategory) + ' (' + catCount + ')';
         }
       }
       
@@ -1485,12 +1472,10 @@
       
       let filtered = getFilteredListings();
       
-      // Старый фильтр activeCategory (не отображается, но для обратной совместимости)
       if (state.activeCategory) {
         filtered = filtered.filter(l => l.category === state.activeCategory);
       }
 
-      // Если сортировка не выбрана — стандартный случайный порядок
       if (state.dateSort === null) {
         const sessionId = sessionStorage.getItem("sessionId");
         const currentSessionId = window._sessionId || (window._sessionId = Date.now().toString());
@@ -1537,10 +1522,10 @@
         });
       }
       
-      // Добавляем компактный фильтр-бар
       if (filterBar) {
         screenHome.appendChild(filterBar);
         updateFilterBarTexts();
+        filterBar.classList.add('visible');
       }
       
       const listingsGrid = document.createElement('div');
@@ -1558,7 +1543,6 @@
       }
     }
 
-    // ОТКРЫТИЕ МОДАЛКИ ЛОКАЦИИ (старая логика сохранена)
     function openLocationModal() {
       const modal = document.createElement('div');
       modal.className = 'filter-modal-backdrop';
@@ -1603,7 +1587,6 @@
       document.body.appendChild(modal);
     }
 
-    // ОТКРЫТИЕ МОДАЛКИ СОРТИРОВКИ
     function openSortModal() {
       const modal = document.createElement('div');
       modal.className = 'filter-modal-backdrop';
@@ -1642,7 +1625,6 @@
       document.body.appendChild(modal);
     }
 
-    // ОТКРЫТИЕ МОДАЛКИ КАТЕГОРИЙ
     function openCategoryModal() {
       const modal = document.createElement('div');
       modal.className = 'filter-modal-backdrop';
@@ -1656,7 +1638,7 @@
       content.appendChild(title);
       
       const allBtn = document.createElement('button');
-      allBtn.textContent = t('cat_all') || 'Все категории';
+      allBtn.textContent = (t('cat_all') || 'Все категории') + ' (' + state.listings.filter(l => l.isActive !== false).length + ')';
       allBtn.className = 'btn btn-outline';
       if (state.filterCategory === null) {
         allBtn.style.background = 'var(--primary)';
@@ -1671,8 +1653,9 @@
       
       categoryKeys.forEach(cat => {
         const catName = t(categoryTransKeys[cat]) || cat;
+        const catCount = state.listings.filter(l => l.isActive !== false && l.category === cat).length;
         const btn = document.createElement('button');
-        btn.textContent = catName;
+        btn.textContent = catName + ' (' + catCount + ')';
         btn.className = 'btn btn-outline';
         if (state.filterCategory === cat) {
           btn.style.background = 'var(--primary)';
@@ -1690,7 +1673,6 @@
       document.body.appendChild(modal);
     }
 
-    // Старые глобальные функции, если где-то ещё используются
     window._openLocationFilter = openLocationModal;
     window._filterCategory = (cat) => { 
       state.filterCategory = cat; 
@@ -1905,11 +1887,23 @@
       renderScreen(state.currentScreen);
     };
 
-    window._openDetail = (id) => {
+    window._openDetail = async (id) => {
       savedScrollPosition = window.scrollY;
       shouldRestoreScroll = true;
       const l = state.listings.find(x => x.id === id);
       if (!l) return;
+
+      if (db && firebaseReady) {
+        try {
+          await db.collection('listings').doc(id).update({
+            views: firebase.firestore.FieldValue.increment(1)
+          });
+          if (l.views !== undefined) l.views += 1;
+          else l.views = 1;
+        } catch (e) {
+          console.warn('View increment error:', e);
+        }
+      }
       
       let images = (l.images && l.images.length > 0) 
         ? l.images.filter(src => src && (src.startsWith('data:image/') || src.startsWith('http')))
@@ -1924,6 +1918,9 @@
       const rawWhatsapp = l.whatsapp || '';
       const cleanWhatsapp = rawWhatsapp.replace(/\D/g, '');
       const hasWhatsapp = cleanWhatsapp.length >= 9;
+      
+      const likesCount = l.likes || 0;
+      const viewsCount = l.views || 0;
       
       const whatsappButtonHtml = hasWhatsapp 
         ? `<a href="https://wa.me/${cleanWhatsapp}?text=Здравствуйте! Меня заинтересовало ваше объявление." target="_blank" class="btn-whatsapp" style="text-decoration:none;">
@@ -1954,6 +1951,14 @@
           <p class="product-desc">${l.desc}</p>
           <p class="product-meta">📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
           <p class="product-date">📅 Дата публикации: ${dateFormatted}</p>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+            <span style="display: flex; align-items: center; gap: 4px; cursor: pointer;" id="like-btn" data-id="${l.id}">
+              <span class="material-symbols-rounded" style="font-size: 20px; color: ${state.favorites.includes(l.id) ? 'var(--accent-heart)' : 'inherit'};">favorite</span> ${likesCount}
+            </span>
+            <span style="display: flex; align-items: center; gap: 4px;">
+              <span class="material-symbols-rounded" style="font-size: 18px;">visibility</span> ${viewsCount}
+            </span>
+          </div>
           <div class="detail-actions">
             <a href="tel:${l.phone.replace(/\s+/g,'')}" class="btn" style="text-decoration:none;">
               <span class="material-symbols-rounded">call</span>${t('call')}
@@ -1970,6 +1975,26 @@
       
       setTimeout(function() {
         initProductSlider();
+        const likeBtn = document.getElementById('like-btn');
+        if (likeBtn) {
+          likeBtn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const listingId = this.dataset.id;
+            if (!listingId || !db || !firebaseReady) return;
+            try {
+              await db.collection('listings').doc(listingId).update({
+                likes: firebase.firestore.FieldValue.increment(1)
+              });
+              const listing = state.listings.find(x => x.id === listingId);
+              if (listing) {
+                listing.likes = (listing.likes || 0) + 1;
+                this.querySelector('span:last-child').textContent = ' ' + listing.likes;
+              }
+            } catch (e) {
+              console.warn('Like increment error:', e);
+            }
+          });
+        }
       }, 10);
     };
 
@@ -2049,7 +2074,6 @@
       }
     }
 
-    // Привязка новых кнопок
     document.getElementById('filter-btn-location')?.addEventListener('click', openLocationModal);
     document.getElementById('filter-btn-sort')?.addEventListener('click', openSortModal);
     document.getElementById('filter-btn-category')?.addEventListener('click', openCategoryModal);

@@ -762,7 +762,7 @@
         <div class="g-express-slider-container">
           <div class="g-express-slider-track" id="g-express-track">
             <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
-            <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
+            <div class="g-express-slide"><img class="g-express-slide-img" src="ll.jpg" alt="Ad 1" loading="lazy"></div>
             <div class="g-express-slide"><img class="g-express-slide-img" src="uu.jpg" alt="Ad 1" loading="lazy"></div>
            
            
@@ -1637,8 +1637,14 @@
       title.textContent = 'Выберите категорию';
       content.appendChild(title);
       
+      const activeListings = state.listings.filter(l => l.isActive !== false);
+      const filteredByVillage = state.selectedVillage 
+        ? activeListings.filter(l => normalizeVillageName(l.village) === normalizeVillageName(state.selectedVillage))
+        : activeListings;
+      
+      const totalCount = filteredByVillage.length;
       const allBtn = document.createElement('button');
-      allBtn.textContent = (t('cat_all') || 'Все категории') + ' (' + state.listings.filter(l => l.isActive !== false).length + ')';
+      allBtn.textContent = (t('cat_all') || 'Все категории') + ' (' + totalCount + ')';
       allBtn.className = 'btn btn-outline';
       if (state.filterCategory === null) {
         allBtn.style.background = 'var(--primary)';
@@ -1653,7 +1659,7 @@
       
       categoryKeys.forEach(cat => {
         const catName = t(categoryTransKeys[cat]) || cat;
-        const catCount = state.listings.filter(l => l.isActive !== false && l.category === cat).length;
+        const catCount = filteredByVillage.filter(l => l.category === cat).length;
         const btn = document.createElement('button');
         btn.textContent = catName + ' (' + catCount + ')';
         btn.className = 'btn btn-outline';
@@ -1921,6 +1927,7 @@
       
       const likesCount = l.likes || 0;
       const viewsCount = l.views || 0;
+      const likedByUser = localStorage.getItem('liked_listing_' + id) === 'true';
       
       const whatsappButtonHtml = hasWhatsapp 
         ? `<a href="https://wa.me/${cleanWhatsapp}?text=Здравствуйте! Меня заинтересовало ваше объявление." target="_blank" class="btn-whatsapp" style="text-decoration:none;">
@@ -1953,7 +1960,7 @@
           <p class="product-date">📅 Дата публикации: ${dateFormatted}</p>
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-secondary);">
             <span style="display: flex; align-items: center; gap: 4px; cursor: pointer;" id="like-btn" data-id="${l.id}">
-              <span class="material-symbols-rounded" style="font-size: 20px; color: ${state.favorites.includes(l.id) ? 'var(--accent-heart)' : 'inherit'};">favorite</span> ${likesCount}
+              <span class="material-symbols-rounded" style="font-size: 18px; color: ${likedByUser ? 'var(--accent-heart)' : 'inherit'};">favorite</span> <span id="likes-count-display">${likesCount}</span>
             </span>
             <span style="display: flex; align-items: center; gap: 4px;">
               <span class="material-symbols-rounded" style="font-size: 18px;">visibility</span> ${viewsCount}
@@ -1981,17 +1988,36 @@
             e.stopPropagation();
             const listingId = this.dataset.id;
             if (!listingId || !db || !firebaseReady) return;
+            
+            const likedKey = 'liked_listing_' + listingId;
+            const currentlyLiked = localStorage.getItem(likedKey) === 'true';
+            
             try {
-              await db.collection('listings').doc(listingId).update({
-                likes: firebase.firestore.FieldValue.increment(1)
-              });
-              const listing = state.listings.find(x => x.id === listingId);
-              if (listing) {
-                listing.likes = (listing.likes || 0) + 1;
-                this.querySelector('span:last-child').textContent = ' ' + listing.likes;
+              if (currentlyLiked) {
+                await db.collection('listings').doc(listingId).update({
+                  likes: firebase.firestore.FieldValue.increment(-1)
+                });
+                localStorage.setItem(likedKey, 'false');
+                const listing = state.listings.find(x => x.id === listingId);
+                if (listing) {
+                  listing.likes = Math.max(0, (listing.likes || 0) - 1);
+                  document.getElementById('likes-count-display').textContent = listing.likes;
+                }
+                this.querySelector('.material-symbols-rounded').style.color = 'inherit';
+              } else {
+                await db.collection('listings').doc(listingId).update({
+                  likes: firebase.firestore.FieldValue.increment(1)
+                });
+                localStorage.setItem(likedKey, 'true');
+                const listing = state.listings.find(x => x.id === listingId);
+                if (listing) {
+                  listing.likes = (listing.likes || 0) + 1;
+                  document.getElementById('likes-count-display').textContent = listing.likes;
+                }
+                this.querySelector('.material-symbols-rounded').style.color = 'var(--accent-heart)';
               }
             } catch (e) {
-              console.warn('Like increment error:', e);
+              console.warn('Like toggle error:', e);
             }
           });
         }

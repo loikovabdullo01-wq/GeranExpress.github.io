@@ -364,7 +364,7 @@
     .card-price.free { color: #00a86b; }
     .card-title {
       font-weight: 500; font-size: 0.78rem; color: var(--text-primary);
-      line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2;
+      line-height: 1.35; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2;
       -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px;
     }
     .card-meta {
@@ -1502,6 +1502,42 @@
       return filtered;
     }
 
+    const HOME_RENDER_CHUNK = 20;
+    let homeRenderToken = 0;
+
+    function renderHomeListingsChunked(container, listings) {
+      const token = ++homeRenderToken;
+      container.innerHTML = '';
+      const template = document.createElement('template');
+      let index = 0;
+
+      function renderNext() {
+        if (token !== homeRenderToken) return;
+
+        const end = Math.min(index + HOME_RENDER_CHUNK, listings.length);
+        let html = '';
+        for (; index < end; index++) {
+          html += cardHTML(listings[index]);
+        }
+
+        template.innerHTML = html;
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(template.content.cloneNode(true));
+        container.appendChild(fragment);
+        template.innerHTML = '';
+
+        if (index < listings.length) {
+          if (window.requestIdleCallback) {
+            requestIdleCallback(renderNext, { timeout: 50 });
+          } else {
+            setTimeout(renderNext, 16);
+          }
+        }
+      }
+
+      renderNext();
+    }
+
     function updateFilterBarTexts() {
       const locText = document.getElementById('filter-btn-location-text');
       const sortText = document.getElementById('filter-btn-sort-text');
@@ -1575,9 +1611,9 @@
       const cloudListings = await loadFirestoreListings();
       const merged = [...cloudListings];
       DEFAULT_LISTINGS.forEach(item => {
-        if (!merged.some(l => l.id === item.id)) merged.push(item);
+        if (!merged.some(l => l.id === item.id)) merged.push(normalizeListing({ ...item }));
       });
-      state.listings = merged;
+      state.listings = merged.map(normalizeListing);
       
       let filtered = getFilteredListings();
       
@@ -1605,11 +1641,10 @@
         } else {
           order = JSON.parse(order);
         }
+        const orderIndex = new Map(order.map((id, idx) => [id, idx]));
         filtered.sort((a, b) => {
-          const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
-          if (ia === -1 && ib === -1) return 0;
-          if (ia === -1) return 1;
-          if (ib === -1) return -1;
+          const ia = orderIndex.has(a.id) ? orderIndex.get(a.id) : Number.MAX_SAFE_INTEGER;
+          const ib = orderIndex.has(b.id) ? orderIndex.get(b.id) : Number.MAX_SAFE_INTEGER;
           return ia - ib;
         });
       }
@@ -1617,9 +1652,13 @@
       // ЗАДАЧА №1: Используем статический контейнер вместо динамического создания
       const gridContainer = document.getElementById('home-listings-container');
       if (gridContainer) {
-        gridContainer.innerHTML = filtered.length
-          ? filtered.map(cardHTML).join('')
-          : `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
+        if (!filtered.length) {
+          gridContainer.innerHTML = `<p style="padding:20px;text-align:center;">${t('no_listings')}</p>`;
+        } else if (filtered.length > HOME_RENDER_CHUNK) {
+          renderHomeListingsChunked(gridContainer, filtered);
+        } else {
+          gridContainer.innerHTML = filtered.map(cardHTML).join('');
+        }
       }
 
       // ЗАДАЧА №1: Показываем баннер и фильтры, которые уже есть в HTML
@@ -1744,8 +1783,9 @@
       content.appendChild(title);
       
       const activeListings = state.listings.filter(l => l.isActive !== false);
-      const filteredByVillage = state.selectedVillage 
-        ? activeListings.filter(l => normalizeVillageName(l.village) === normalizeVillageName(state.selectedVillage))
+      const selectedVillageNormalized = state.selectedVillage ? normalizeVillageName(state.selectedVillage) : null;
+      const filteredByVillage = selectedVillageNormalized
+        ? activeListings.filter(l => l.villageNormalized === selectedVillageNormalized)
         : activeListings;
       
       const totalCount = filteredByVillage.length;
@@ -1763,9 +1803,14 @@
       };
       content.appendChild(allBtn);
       
+      const categoryCounts = filteredByVillage.reduce((counts, l) => {
+        counts[l.category] = (counts[l.category] || 0) + 1;
+        return counts;
+      }, {});
+
       categoryKeys.forEach(cat => {
         const catName = t(categoryTransKeys[cat]) || cat;
-        const catCount = filteredByVillage.filter(l => l.category === cat).length;
+        const catCount = categoryCounts[cat] || 0;
         const btn = document.createElement('button');
         btn.textContent = catName + ' (' + catCount + ')';
         btn.className = 'btn btn-outline';
@@ -1799,21 +1844,52 @@
       renderHome(); 
     };
 
+    var LIST_RENDER_IDLE = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : function(fn) { return setTimeout(fn, 0); };
+    var LIST_RENDER_CANCEL = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : function(id) { clearTimeout(id); };
+
+    function renderHtmlListChunked(container, htmlItems, emptyHtml) {
+      if (!container) return;
+      if (container._renderTaskId) {
+        LIST_RENDER_CANCEL(container._renderTaskId);
+        container._renderTaskId = null;
+      }
+      container.innerHTML = '';
+      if (!htmlItems.length) {
+        container.innerHTML = emptyHtml;
+        return;
+      }
+      var index = 0;
+      var chunkSize = 50;
+      function renderChunk() {
+        var end = Math.min(index + chunkSize, htmlItems.length);
+        var chunkHtml = htmlItems.slice(index, end).join('');
+        container.insertAdjacentHTML('beforeend', chunkHtml);
+        index = end;
+        if (index < htmlItems.length) {
+          container._renderTaskId = LIST_RENDER_IDLE(renderChunk);
+        } else {
+          container._renderTaskId = null;
+        }
+      }
+      renderChunk();
+    }
+
     function renderFavorites() {
-      const favs = state.listings.filter(l => state.favorites.includes(l.id));
-      document.getElementById('favorites-container').innerHTML = favs.length ? favs.map(cardHTML).join('') : `<p>${t('no_favs')}</p>`;
+      const favs = state.listings.filter(l => favoritesSet.has(l.id));
+      renderHtmlListChunked(document.getElementById('favorites-container'), favs.map(cardHTML), `<p>${t('no_favs')}</p>`);
     }
 
     function renderMy() {
       const my = state.listings.filter(l => l.userId === (state.user?.uid || ''));
-      document.getElementById('my-container').innerHTML = my.length ? my.map(l => `
+      const items = my.map(l => `
         <div class="card" style="padding:14px;margin-bottom:10px">
           <b>${l.title}</b> - ${l.isFree ? t('free') : (l.price||0).toLocaleString()+' с.'}
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn btn-outline" style="flex:0;padding:8px 12px" onclick="window._editListing('${l.id}')">✏️</button>
             <button class="btn btn-outline" style="flex:0;padding:8px 12px;color:red;border-color:red" onclick="window._deleteListing('${l.id}')">🗑️</button>
           </div>
-        </div>`).join('') : `<p>${t('no_my')}</p>`;
+        </div>`);
+      renderHtmlListChunked(document.getElementById('my-container'), items, `<p>${t('no_my')}</p>`);
     }
 
     function renderProfile() {
@@ -1824,7 +1900,10 @@
       document.getElementById('edit-phone').value = state.user?.phone || '';
       const editVillageSelect = document.getElementById('edit-village');
       if (editVillageSelect) {
-        editVillageSelect.innerHTML = villagesList.map(name => `<option value="${name}">${name}</option>`).join('');
+        if (!editVillageSelect.dataset.optionsPopulated) {
+          editVillageSelect.innerHTML = villagesList.map(name => `<option value="${name}">${name}</option>`).join('');
+          editVillageSelect.dataset.optionsPopulated = 'true';
+        }
         editVillageSelect.value = state.user?.village || 'Дехаи Геран';
       }
       document.getElementById('edit-lang').value = currentLang;
@@ -1858,7 +1937,23 @@
     function renderSelectedPhotos() {
       const container = document.getElementById('photo-previews-container');
       if (!container) return;
+      if (!container.dataset.removeHandlerAttached) {
+        container.addEventListener('click', function(e) {
+          const btn = e.target.closest('.photo-thumb-remove');
+          if (!btn) return;
+          e.stopPropagation();
+          const index = parseInt(btn.dataset.index, 10);
+          if (!Number.isNaN(index) && index >= 0) {
+            selectedImages.splice(index, 1);
+            renderSelectedPhotos();
+            updatePhotoCounter();
+            updateUploadButtonState();
+          }
+        });
+        container.dataset.removeHandlerAttached = 'true';
+      }
       container.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       selectedImages.forEach((photo, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'photo-thumb';
@@ -1866,17 +1961,9 @@
         thumb.style.width = '60px';
         thumb.style.height = '60px';
         thumb.innerHTML = `<img src="${photo}" alt=""><span class="photo-thumb-remove" data-index="${index}">×</span>`;
-        container.appendChild(thumb);
+        fragment.appendChild(thumb);
       });
-      container.querySelectorAll('.photo-thumb-remove').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          selectedImages.splice(parseInt(btn.dataset.index), 1);
-          renderSelectedPhotos();
-          updatePhotoCounter();
-          updateUploadButtonState();
-        });
-      });
+      container.appendChild(fragment);
     }
 
     function updatePhotoCounter() {
@@ -2130,54 +2217,56 @@
         window.scrollTo({ top: 0, behavior: 'instant' });
       });
       
-      setTimeout(function() {
-        initProductSlider();
-        const likeBtn = document.getElementById('like-btn');
-        if (likeBtn) {
-          likeBtn.addEventListener('click', async function(e) {
-            // ЗАДАЧА №3: Предотвращаем дефолтное поведение для кнопки лайка в детальной карточке
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const listingId = this.dataset.id;
-            if (!listingId || !db || !firebaseReady) return;
-            
-            const likedKey = 'liked_listing_' + listingId;
-            const currentlyLiked = localStorage.getItem(likedKey) === 'true';
-            
-            try {
-              if (currentlyLiked) {
-                await db.collection('listings').doc(listingId).update({
-                  likes: firebase.firestore.FieldValue.increment(-1)
-                });
-                localStorage.setItem(likedKey, 'false');
-                const listing = state.listings.find(x => x.id === listingId);
-                if (listing) {
-                  listing.likes = Math.max(0, (listing.likes || 0) - 1);
-                  document.getElementById('likes-count-display').textContent = listing.likes;
-                }
-                this.querySelector('.material-symbols-rounded').style.color = 'inherit';
-              } else {
-                await db.collection('listings').doc(listingId).update({
-                  likes: firebase.firestore.FieldValue.increment(1)
-                });
-                localStorage.setItem(likedKey, 'true');
-                const listing = state.listings.find(x => x.id === listingId);
-                if (listing) {
-                  listing.likes = (listing.likes || 0) + 1;
-                  document.getElementById('likes-count-display').textContent = listing.likes;
-                }
-                this.querySelector('.material-symbols-rounded').style.color = 'var(--accent-heart)';
-              }
-            } catch (e) {
-              console.warn('Like toggle error:', e);
+      initProductSlider();
+      const detailContent = document.getElementById('detail-content');
+      if (detailContent) {
+        detailContent.removeEventListener('click', detailLikeHandler);
+        detailContent.addEventListener('click', detailLikeHandler);
+      }
+    }
+
+    function detailLikeHandler(e) {
+      const likeBtn = e.target.closest('#like-btn');
+      if (!likeBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const listingId = likeBtn.dataset.id;
+      if (!listingId || !db || !firebaseReady) return;
+      
+      const likedKey = 'liked_listing_' + listingId;
+      const currentlyLiked = localStorage.getItem(likedKey) === 'true';
+      
+      (async function() {
+        try {
+          if (currentlyLiked) {
+            await db.collection('listings').doc(listingId).update({
+              likes: firebase.firestore.FieldValue.increment(-1)
+            });
+            localStorage.setItem(likedKey, 'false');
+            const listing = state.listings.find(x => x.id === listingId);
+            if (listing) {
+              listing.likes = Math.max(0, (listing.likes || 0) - 1);
+              document.getElementById('likes-count-display').textContent = listing.likes;
             }
-            
-            return false; // Дополнительная страховка
-          });
+            likeBtn.querySelector('.material-symbols-rounded').style.color = 'inherit';
+          } else {
+            await db.collection('listings').doc(listingId).update({
+              likes: firebase.firestore.FieldValue.increment(1)
+            });
+            localStorage.setItem(likedKey, 'true');
+            const listing = state.listings.find(x => x.id === listingId);
+            if (listing) {
+              listing.likes = (listing.likes || 0) + 1;
+              document.getElementById('likes-count-display').textContent = listing.likes;
+            }
+            likeBtn.querySelector('.material-symbols-rounded').style.color = 'var(--accent-heart)';
+          }
+        } catch (innerErr) {
+          console.warn('Like toggle error:', innerErr);
         }
-      }, 10);
-    };
+      })();
+    }
 
     function debounce(fn, delay) {
       let timer = null;

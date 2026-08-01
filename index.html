@@ -1313,9 +1313,30 @@
       { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false }
     ] : [];
 
+    function normalizeListing(listing) {
+      if (!listing || typeof listing !== 'object') return listing;
+      listing.normalizedVillage = normalizeVillageName(listing.village);
+      listing.titleLower = (listing.title || '').toLowerCase();
+      listing.dateMs = getDateMs(listing.date);
+      return listing;
+    }
+
+    function normalizeListings(listings = []) {
+      return listings.map(normalizeListing);
+    }
+
+    function getActiveListings() {
+      return state.listings.filter(l => l.isActive !== false);
+    }
+
+    let favoritesSet = new Set(JSON.parse(localStorage.getItem('geran_favorites')) || []);
+    function refreshFavoritesSet() {
+      favoritesSet = new Set(state.favorites);
+    }
+
     const state = {
       user: JSON.parse(localStorage.getItem('geran_user')) || null,
-      listings: [...DEFAULT_LISTINGS],
+      listings: normalizeListings([...DEFAULT_LISTINGS]),
       favorites: JSON.parse(localStorage.getItem('geran_favorites')) || [],
       currentScreen: 'home',
       editId: null,
@@ -1328,6 +1349,8 @@
       filterCategory: null,
     };
 
+    refreshFavoritesSet();
+
     let selectedImages = [];
     const MAX_PHOTOS = 5;
     const PLACEHOLDER_IMG = 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png';
@@ -1338,6 +1361,7 @@
     const save = () => {
       localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
       if (state.user) localStorage.setItem('geran_user', JSON.stringify(state.user));
+      refreshFavoritesSet();
     };
 
     function formatDate(timestamp) {
@@ -1367,7 +1391,7 @@
     }
 
     function cardHTML(l) {
-      const liked = state.favorites.includes(l.id);
+      const liked = favoritesSet.has(l.id);
       const priceVal = l.price || 0;
       const hasCurrency = typeof priceVal === 'string' && (priceVal.includes('Р') || priceVal.includes('р') || priceVal.includes('P'));
       
@@ -1395,7 +1419,7 @@
       return `
         <div class="card ${vipClass}" onclick="window._openDetail('${l.id}')">
           <div class="card-img">
-            <img src="${finalSrc}" alt="${l.title}" onerror="this.style.display='none';" onload="this.style.display='block';">
+            <img src="${finalSrc}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';" onload="this.style.display='block';">
             ${vipBadge}
             <div class="card-heart ${liked?'liked':''}" onclick="window._toggleFav(event, '${l.id}')">
               <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
@@ -1458,11 +1482,11 @@
     }
 
     function getFilteredListings() {
-      let filtered = state.listings.filter(l => l.isActive !== false);
+      let filtered = getActiveListings();
       
       if (state.selectedVillage) {
         const normalizedSelected = normalizeVillageName(state.selectedVillage);
-        filtered = filtered.filter(l => normalizeVillageName(l.village) === normalizedSelected);
+        filtered = filtered.filter(l => l.normalizedVillage === normalizedSelected);
       }
       
       if (state.filterCategory) {
@@ -1470,9 +1494,9 @@
       }
       
       if (state.dateSort === 'new') {
-        filtered.sort((a, b) => getDateMs(b.date) - getDateMs(a.date));
+        filtered = filtered.slice().sort((a, b) => getDateMs(b.date) - getDateMs(a.date));
       } else if (state.dateSort === 'old') {
-        filtered.sort((a, b) => getDateMs(a.date) - getDateMs(b.date));
+        filtered = filtered.slice().sort((a, b) => getDateMs(a.date) - getDateMs(b.date));
       }
       
       return filtered;
@@ -1509,6 +1533,7 @@
     }
 
     let cachedListings = null;
+    let listingsPromise = null;
     let cacheTimestamp = 0;
     const CACHE_DURATION = 5 * 60 * 1000;
 
@@ -1520,19 +1545,28 @@
         return cachedListings;
       }
       
-      try {
-        const snapshot = await db.collection("listings").orderBy("date", "desc").get();
-        const cloud = [];
-        snapshot.forEach(doc => cloud.push({ id: doc.id, ...doc.data() }));
-        
-        cachedListings = cloud;
-        cacheTimestamp = Date.now();
-        
-        return cloud;
-      } catch (e) {
-        console.error('Firestore read error:', e);
-        return cachedListings || [];
+      if (!forceRefresh && listingsPromise) {
+        return listingsPromise;
       }
+      
+      listingsPromise = (async () => {
+        try {
+          const snapshot = await db.collection("listings").orderBy("date", "desc").get();
+          const cloud = [];
+          snapshot.forEach(doc => cloud.push(normalizeListing({ id: doc.id, ...doc.data() })));
+          
+          cachedListings = cloud;
+          cacheTimestamp = Date.now();
+          return cloud;
+        } catch (e) {
+          console.error('Firestore read error:', e);
+          return cachedListings || [];
+        } finally {
+          listingsPromise = null;
+        }
+      })();
+      
+      return listingsPromise;
     }
 
     async function renderHome() {
@@ -2145,11 +2179,21 @@
       }, 10);
     };
 
+    function debounce(fn, delay) {
+      let timer = null;
+      return (...args) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    }
+
     function renderSearch() {
       const q = state.searchQuery.toLowerCase();
-      const results = state.listings.filter(l => l.title.toLowerCase().includes(q));
+      const results = state.listings.filter(l => l.titleLower.includes(q));
       document.getElementById('search-results').innerHTML = results.length ? results.map(cardHTML).join('') : `<p>${t('no_search')}</p>`;
     }
+
+    const debouncedRenderSearch = debounce(renderSearch, 120);
 
     window._editListing = (id) => {
       const l = state.listings.find(x => x.id === id);
@@ -2358,7 +2402,7 @@
 
     const themeCheckbox = document.getElementById('theme-checkbox');
     themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
-    document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; renderSearch(); });
+    document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; debouncedRenderSearch(); });
     document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
 
     if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }

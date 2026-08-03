@@ -1,14 +1,17 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, onSnapshot, serverTimestamp, increment, writeBatch, FieldValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, onSnapshot, serverTimestamp, increment, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-(() => {
+// ==================== ИНИЦИАЛИЗАЦИЯ ПОСЛЕ ЗАГРУЗКИ DOM ====================
+document.addEventListener('DOMContentLoaded', () => {
+  // Шрифты
   if ('fonts' in document) {
     document.fonts.ready.then(() => document.documentElement.classList.add('fonts-loaded'));
   } else {
     document.documentElement.classList.add('fonts-loaded');
   }
 
+  // Google Analytics
   window.gtag = function(){ window.dataLayer.push(arguments); };
   window.dataLayer = window.dataLayer || [];
   window.gtag('js', new Date());
@@ -38,6 +41,8 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     console.warn('Firebase init error:', e.message);
   }
 
+  // ==================== ДАТЧИК ОНЛАЙНА (ПОЧИНЕН) ====================
+  // ==================== ДАТЧИК ОНЛАЙНА (ПОЧИНЕН) ====================
   (function() {
     if (!db || !firebaseReady) {
       console.warn('Presence: Firestore not available');
@@ -58,38 +63,38 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     
     const myPresenceDoc = doc(presenceCollection, sessionId);
     
-    function updatePresence() {
+    window.updateOnlinePresence = function() {
       updateDoc(myPresenceDoc, {
         online: true,
         lastSeen: serverTimestamp(),
         sessionId: sessionId
-      }).catch(() => {});
-    }
+      }).catch(function() {});
+    };
     
-    updatePresence();
-    const heartbeatInterval = setInterval(updatePresence, 60000);
+    window.updateOnlinePresence();
+    const heartbeatInterval = setInterval(window.updateOnlinePresence, 60000);
     
     window.addEventListener('beforeunload', function() {
       clearInterval(heartbeatInterval);
-      deleteDoc(myPresenceDoc).catch(() => {});
+      deleteDoc(myPresenceDoc).catch(function() {});
     });
     
-    function cleanupOldSessions() {
+    window.cleanupOnlineSessions = function() {
       const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
       getDocs(query(presenceCollection, where('lastSeen', '<', threeMinutesAgo)))
-        .then(snapshot => {
+        .then(function(snapshot) {
           if (snapshot.empty) return;
           const batch = writeBatch(db);
-          snapshot.forEach(docSnap => {
+          snapshot.forEach(function(docSnap) {
             batch.delete(docSnap.ref);
           });
           return batch.commit();
         })
-        .catch(() => {});
-    }
+        .catch(function() {});
+    };
     
-    setInterval(cleanupOldSessions, 5 * 60 * 1000);
-    cleanupOldSessions();
+    setInterval(window.cleanupOnlineSessions, 5 * 60 * 1000);
+    window.cleanupOnlineSessions();
     
     const onlineDot = document.getElementById('online-dot');
     const onlineCount = document.getElementById('online-count');
@@ -100,13 +105,13 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     onSnapshot(presenceCollection, function(snapshot) {
       if (debounceTimer) return;
       
-      debounceTimer = setTimeout(() => {
+      debounceTimer = setTimeout(function() {
         debounceTimer = null;
         
         const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
         let count = 0;
         
-        snapshot.forEach(docSnap => {
+        snapshot.forEach(function(docSnap) {
           const data = docSnap.data();
           if (data.lastSeen && data.lastSeen.toDate) {
             const lastSeenDate = data.lastSeen.toDate();
@@ -136,7 +141,295 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     }, function(error) {
       console.warn('Presence: listener error', error.message);
     });
+    
+    window.getOnlineCount = function() { return cachedCount; };
   })();
+  // ==================== КОНЕЦ ДАТЧИКА ОНЛАЙНА ====================
+  // ==================== КОНЕЦ ДАТЧИКА ОНЛАЙНА ====================
+
+  // ==================== АДАПТИВНАЯ ГАЛЕРЕЯ С ЗУМОМ ====================
+  function initGallery() {
+    const PLACEHOLDER_IMG = 'https://cdn-icons-png.flaticon.com/512/2922/2922510.png';
+    let galleryImages = [];
+    let currentIndex = 0;
+    let currentScale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let initialDistance = 0;
+    let initialScale = 1;
+    let initialTranslateX = 0;
+    let initialTranslateY = 0;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let lastTapTime = 0;
+    const DOUBLE_TAP_DELAY = 300;
+    const MIN_SCALE = 0.5;
+    const MAX_SCALE = 4;
+    const ZOOM_STEP = 1.5;
+
+    // Создаем модальное окно галереи, если его нет в DOM
+    if (!document.getElementById('gallery-modal')) {
+      const modal = document.createElement('div');
+      modal.id = 'gallery-modal';
+      modal.className = 'gallery-modal';
+      modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div class="gallery-backdrop" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);cursor:pointer;"></div>
+        <div class="gallery-content" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:1;">
+          <button class="gallery-close" id="gallery-close" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:28px;cursor:pointer;z-index:10;">&times;</button>
+          <div class="gallery-image-wrapper" id="gallery-image-wrapper" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;">
+            <img src="" alt="Просмотр фото" id="gallery-image" draggable="false" style="max-width:100%;max-height:100%;object-fit:contain;transition:transform 0.1s ease-out;transform-origin:center center;user-select:none;cursor:grab;">
+          </div>
+          <button class="gallery-nav gallery-prev" id="gallery-prev" style="position:absolute;top:50%;left:12px;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:24px;cursor:pointer;z-index:10;">&#8249;</button>
+          <button class="gallery-nav gallery-next" id="gallery-next" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:24px;cursor:pointer;z-index:10;">&#8250;</button>
+          <div class="gallery-counter" id="gallery-counter" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.15);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.85rem;z-index:10;">1 / 1</div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    const modal = document.getElementById('gallery-modal');
+    const closeBtn = document.getElementById('gallery-close');
+    const backdrop = modal.querySelector('.gallery-backdrop');
+    const prevBtn = document.getElementById('gallery-prev');
+    const nextBtn = document.getElementById('gallery-next');
+    const imageWrapper = document.getElementById('gallery-image-wrapper');
+    const galleryImage = document.getElementById('gallery-image');
+    const counter = document.getElementById('gallery-counter');
+
+    function openGallery(images, startIndex) {
+      if (!images || images.length === 0) return;
+      
+      const validImages = images.filter(src => src && (src.startsWith('data:image/') || src.startsWith('http')));
+      if (validImages.length === 0) return;
+      
+      galleryImages = validImages;
+      currentIndex = Math.max(0, Math.min(startIndex, galleryImages.length - 1));
+      currentScale = 1;
+      translateX = 0;
+      translateY = 0;
+      
+      updateGalleryImage();
+      updateCounter();
+      
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      
+      if (galleryImages.length <= 1) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        counter.style.display = 'none';
+      } else {
+        prevBtn.style.display = '';
+        nextBtn.style.display = '';
+        counter.style.display = '';
+      }
+      
+      applyTransform();
+    }
+
+    function closeGallery() {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+      galleryImages = [];
+      currentIndex = 0;
+    }
+
+    function updateGalleryImage() {
+      galleryImage.src = galleryImages[currentIndex] || PLACEHOLDER_IMG;
+      resetZoom();
+    }
+
+    function updateCounter() {
+      counter.textContent = (currentIndex + 1) + ' / ' + galleryImages.length;
+    }
+
+    function resetZoom() {
+      currentScale = 1;
+      translateX = 0;
+      translateY = 0;
+      applyTransform();
+    }
+
+    function applyTransform() {
+      galleryImage.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + currentScale + ')';
+    }
+
+    function navigateGallery(direction) {
+      if (galleryImages.length <= 1) return;
+      
+      const newIndex = currentIndex + direction;
+      if (newIndex < 0 || newIndex >= galleryImages.length) return;
+      
+      currentIndex = newIndex;
+      resetZoom();
+      updateGalleryImage();
+      updateCounter();
+    }
+
+    function zoomTo(newScale, offsetX, offsetY) {
+      const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+      
+      if (clampedScale <= 1) {
+        resetZoom();
+        return;
+      }
+      
+      const scaleRatio = clampedScale / currentScale;
+      
+      translateX = offsetX - (offsetX - translateX) * scaleRatio;
+      translateY = offsetY - (offsetY - translateY) * scaleRatio;
+      currentScale = clampedScale;
+      
+      applyTransform();
+    }
+
+    // Обработчики событий
+    closeBtn.addEventListener('click', closeGallery);
+    backdrop.addEventListener('click', closeGallery);
+    
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); navigateGallery(-1); });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); navigateGallery(1); });
+
+    // Клавиатура
+    document.addEventListener('keydown', function(e) {
+      if (modal.style.display !== 'flex') return;
+      
+      switch(e.key) {
+        case 'Escape': closeGallery(); break;
+        case 'ArrowLeft': navigateGallery(-1); break;
+        case 'ArrowRight': navigateGallery(1); break;
+        case '+': case '=': zoomTo(currentScale * ZOOM_STEP, window.innerWidth / 2, window.innerHeight / 2); break;
+        case '-': zoomTo(currentScale / ZOOM_STEP, window.innerWidth / 2, window.innerHeight / 2); break;
+        case '0': resetZoom(); break;
+      }
+    });
+
+    // Зум колесиком мыши
+    imageWrapper.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const rect = imageWrapper.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      const direction = e.deltaY > 0 ? -1 : 1;
+      const newScale = currentScale * (1 + direction * 0.1);
+      zoomTo(newScale, offsetX, offsetY);
+    }, { passive: false });
+
+    // Двойной клик для зума
+    galleryImage.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const now = Date.now();
+      if (now - lastTapTime < DOUBLE_TAP_DELAY) {
+        e.preventDefault();
+        if (currentScale > 1.1) {
+          resetZoom();
+        } else {
+          const rect = galleryImage.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          zoomTo(MAX_SCALE, offsetX, offsetY);
+        }
+      }
+      lastTapTime = now;
+    });
+
+    // Панорамирование (ПК)
+    galleryImage.addEventListener('mousedown', function(e) {
+      if (currentScale > 1.1) {
+        e.stopPropagation();
+        isPanning = true;
+        panStartX = e.clientX;
+        panStartY = e.clientY;
+        initialTranslateX = translateX;
+        initialTranslateY = translateY;
+        galleryImage.style.cursor = 'grabbing';
+      }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isPanning || currentScale <= 1.1) return;
+      const dx = e.clientX - panStartX;
+      const dy = e.clientY - panStartY;
+      translateX = initialTranslateX + dx;
+      translateY = initialTranslateY + dy;
+      applyTransform();
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (isPanning) {
+        isPanning = false;
+        galleryImage.style.cursor = 'grab';
+      }
+    });
+
+    // Жесты на мобильных устройствах
+    imageWrapper.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) {
+        if (currentScale > 1.1) {
+          isPanning = true;
+          panStartX = e.touches[0].clientX;
+          panStartY = e.touches[0].clientY;
+          initialTranslateX = translateX;
+          initialTranslateY = translateY;
+        }
+      } else if (e.touches.length === 2) {
+        isPanning = false;
+        initialDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = currentScale;
+        initialTranslateX = translateX;
+        initialTranslateY = translateY;
+      }
+    }, { passive: false });
+
+    imageWrapper.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 1 && isPanning && currentScale > 1.1) {
+        const dx = e.touches[0].clientX - panStartX;
+        const dy = e.touches[0].clientY - panStartY;
+        translateX = initialTranslateX + dx;
+        translateY = initialTranslateY + dy;
+        applyTransform();
+        e.preventDefault();
+      } else if (e.touches.length === 2) {
+        const newDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        
+        if (initialDistance > 0 && newDistance > 0) {
+          const scaleChange = newDistance / initialDistance;
+          const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScale * scaleChange));
+          
+          const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          
+          const scaleRatio = newScale / initialScale;
+          translateX = centerX - (centerX - initialTranslateX) * scaleRatio;
+          translateY = centerY - (centerY - initialTranslateY) * scaleRatio;
+          currentScale = newScale;
+          
+          applyTransform();
+        }
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    imageWrapper.addEventListener('touchend', function() {
+      isPanning = false;
+    });
+
+    // Экспортируем функции
+    window._openGallery = openGallery;
+    window._closeGallery = closeGallery;
+  }
+
+  // Запускаем инициализацию галереи
+  initGallery();
+  // ==================== КОНЕЦ ГАЛЕРЕИ ====================
 
   const translations = {
     tg: {
@@ -384,7 +677,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     const priceVal = l.price || 0;
     const hasCurrency = typeof priceVal === 'string' && (priceVal.includes('Р') || priceVal.includes('р') || priceVal.includes('P'));
     
-    // ЗАДАЧА №7: Исправление отображения "Бесплатно" для товаров с ценой 0 или флагом isFree
     let priceText;
     if (l.isFree === true || l.isFree === 'true' || priceVal === 0 || priceVal === '0' || priceVal === '' || priceVal === null || priceVal === undefined) {
       priceText = `<div class="card-price free">${t('free')}</div>`;
@@ -405,9 +697,16 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     const vipClass = l.isVIP ? 'vip-card' : '';
     const vipBadge = l.isVIP ? '<div class="card-badge vip-badge">VIP</div>' : '';
     const dateFormatted = formatDate(l.date);
+    
+    // Подготавливаем изображения для галереи
+    const galleryImages = (l.images && l.images.length > 0) 
+      ? l.images.filter(src => src && (src.startsWith('data:image/') || src.startsWith('http')))
+      : [PLACEHOLDER_IMG];
+    const imagesJSON = JSON.stringify(galleryImages).replace(/"/g, '&quot;');
+    
     return `
       <div class="card ${vipClass}" onclick="window._openDetail('${l.id}')">
-        <div class="card-img">
+        <div class="card-img" onclick="event.stopPropagation(); window._openGallery(${JSON.stringify(galleryImages)}, 0)">
           <img src="${finalSrc}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';" onload="this.style.display='block';">
           ${vipBadge}
           <div class="card-heart ${liked?'liked':''}" onclick="window._toggleFav(event, '${l.id}')">
@@ -640,7 +939,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
       });
     }
 
-    // ЗАДАЧА №1: Используем статический контейнер вместо динамического создания
     const gridContainer = document.getElementById('home-listings-container');
     if (gridContainer) {
       if (!filtered.length) {
@@ -652,7 +950,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
       }
     }
 
-    // ЗАДАЧА №1: Показываем баннер и фильтры, которые уже есть в HTML
     const banner = document.getElementById('g-express-banner');
     const filterBar = document.getElementById('filter-bar');
     
@@ -1043,7 +1340,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
         whatsapp: whatsappValue || null
       };
       
-      // ЗАДАЧА №7: Явно сохраняем флаг isFree в базу данных
       listingData.isFree = isFree;
       
       if (state.editId) {
@@ -1075,9 +1371,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     finally { btn.disabled = false; btn.textContent = 'Нашр кунед'; }
   });
 
-  // ЗАДАЧА №3: Исправление кнопки лайка (избранное) с предотвращением дефолтного поведения
   window._toggleFav = (event, id) => {
-    // Предотвращаем все дефолтные действия и всплытие
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -1088,7 +1382,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
       return false;
     }
     
-    // Toggle логика: один пользователь - один лайк
     const index = state.favorites.indexOf(id);
     if (index !== -1) {
       state.favorites.splice(index, 1);
@@ -1098,7 +1391,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     
     save();
     renderScreen(state.currentScreen);
-    return false; // Дополнительная страховка от переходов
+    return false;
   };
 
   window._openDetail = async (id) => {
@@ -1107,11 +1400,9 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     const l = state.listings.find(x => x.id === id);
     if (!l) return;
 
-    // ЗАДАЧА №4: Честный счетчик просмотров (1 пользователь = 1 просмотр)
     const viewedKey = 'viewed_listing_' + id;
     const userId = state.user?.uid || 'guest_' + (localStorage.getItem('geran_guest_id') || '');
     
-    // Создаем ID для гостя, если его нет
     if (!state.user && !localStorage.getItem('geran_guest_id')) {
       localStorage.setItem('geran_guest_id', 'guest_' + Date.now());
     }
@@ -1124,9 +1415,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
         await updateDoc(listingRef, {
           views: increment(1)
         });
-        // Отмечаем, что пользователь просмотрел это объявление
         localStorage.setItem(viewedKey, 'true');
-        // Обновляем локально
         if (l.views !== undefined) l.views += 1;
         else l.views = 1;
       } catch (e) {
@@ -1140,7 +1429,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     
     if (images.length === 0) images = [PLACEHOLDER_IMG];
     
-    // ЗАДАЧА №7: Исправление отображения цены "Бесплатно" в детальной карточке
     let priceText;
     if (l.isFree === true || l.isFree === 'true' || l.price === 0 || l.price === '0' || l.price === '' || l.price === null || l.price === undefined) {
       priceText = t('free');
@@ -1169,7 +1457,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     
     document.getElementById('detail-content').innerHTML = `
       <div class="product-slider" id="product-slider" data-images='${JSON.stringify(images)}'>
-        <div class="product-slider-viewport" id="product-slider-viewport">
+        <div class="product-slider-viewport" id="product-slider-viewport" onclick="window._openGallery(${JSON.stringify(images)}, 0)">
           <div class="product-slider-track" id="product-slider-track">
           </div>
         </div>
@@ -1185,7 +1473,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
       <div class="product-info">
         <h2>${l.title}</h2>
         <h3 class="product-price">${priceText}</h3>
-        <!-- ЗАДАЧА №2: Описание теперь будет отображаться с переносами строк благодаря CSS white-space: pre-wrap -->
         <p class="product-desc">${l.desc}</p>
         <p class="product-meta">📍 ${l.village || 'Деҳаи Геран'} · ${catDisplayName} · ${l.condition==='new' ? t('cond_new') : t('cond_used')}</p>
         <p class="product-date">📅 Дата публикации: ${dateFormatted}</p>
@@ -1320,7 +1607,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     my: document.getElementById('screen-my'), profile: document.getElementById('screen-profile'),
     create: document.getElementById('screen-create'), detail: document.getElementById('screen-detail'),
     search: document.getElementById('screen-search'), login: document.getElementById('screen-login'),
-    // ЗАДАЧА №5: Добавляем экран уведомлений
     notifications: document.getElementById('screen-notifications')
   };
   const bottomNav = document.getElementById('bottom-nav');
@@ -1356,9 +1642,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
       case 'profile': renderProfile(); break;
       case 'search': renderSearch(); break;
       case 'create': renderCreateForm(); break;
-      // ЗАДАЧА №5: Рендеринг страницы уведомлений
       case 'notifications': 
-        // Здесь можно добавить загрузку уведомлений из Firebase в будущем
         break;
     }
   }
@@ -1471,7 +1755,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
   document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
   document.getElementById('back-detail').addEventListener('click', () => { shouldRestoreScroll = true; showScreen('home'); });
   
-  // ЗАДАЧА №5: Кнопка уведомлений теперь открывает страницу уведомлений
   document.getElementById('notif-btn').addEventListener('click', () => showScreen('notifications'));
   
   document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
@@ -1533,7 +1816,6 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
     }
   }
 
-  // ЗАДАЧА №6: Исправление слайдера баннеров
   function initBannerCarousel() {
     var track = document.getElementById('g-express-track');
     var dotsContainer = document.getElementById('g-express-dots');
@@ -1694,229 +1976,230 @@ import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, dele
   } else {
     showScreen('login');
   }
-})();
 
-(function() {
-  'use strict';
-  
-  const SCROLL_KEY = 'geran_scroll_pos';
-  const SCROLL_TIME_KEY = 'geran_scroll_time';
-  const MAX_AGE_MS = 30 * 60 * 1000;
-  
-  function saveScrollPosition() {
-    sessionStorage.setItem(SCROLL_KEY, window.scrollY || window.pageYOffset);
-    sessionStorage.setItem(SCROLL_TIME_KEY, Date.now());
-  }
-  
-  function restoreScrollPosition() {
-    const savedY = parseFloat(sessionStorage.getItem(SCROLL_KEY));
-    const savedTime = parseInt(sessionStorage.getItem(SCROLL_TIME_KEY), 10);
+  // Сохранение позиции скролла
+  (function() {
+    const SCROLL_KEY = 'geran_scroll_pos';
+    const SCROLL_TIME_KEY = 'geran_scroll_time';
+    const MAX_AGE_MS = 30 * 60 * 1000;
     
-    if (isNaN(savedY) || isNaN(savedTime)) return;
-    if (Date.now() - savedTime > MAX_AGE_MS) {
+    function saveScrollPosition() {
+      sessionStorage.setItem(SCROLL_KEY, window.scrollY || window.pageYOffset);
+      sessionStorage.setItem(SCROLL_TIME_KEY, Date.now());
+    }
+    
+    function restoreScrollPosition() {
+      const savedY = parseFloat(sessionStorage.getItem(SCROLL_KEY));
+      const savedTime = parseInt(sessionStorage.getItem(SCROLL_TIME_KEY), 10);
+      
+      if (isNaN(savedY) || isNaN(savedTime)) return;
+      if (Date.now() - savedTime > MAX_AGE_MS) {
+        sessionStorage.removeItem(SCROLL_KEY);
+        sessionStorage.removeItem(SCROLL_TIME_KEY);
+        return;
+      }
+      
+      window.scrollTo({ top: savedY, behavior: 'instant' });
       sessionStorage.removeItem(SCROLL_KEY);
       sessionStorage.removeItem(SCROLL_TIME_KEY);
-      return;
     }
     
-    window.scrollTo({ top: savedY, behavior: 'instant' });
-    sessionStorage.removeItem(SCROLL_KEY);
-    sessionStorage.removeItem(SCROLL_TIME_KEY);
-  }
-  
-  document.addEventListener('click', function(e) {
-    var card = e.target.closest('.card');
-    if (card) {
-      if (!e.target.closest('.card-heart')) {
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.card');
+      if (card) {
+        if (!e.target.closest('.card-heart') && !e.target.closest('.card-img')) {
+          saveScrollPosition();
+        }
+      }
+    }, true);
+    
+    var originalOpenDetail = window._openDetail;
+    if (typeof originalOpenDetail === 'function') {
+      window._openDetail = function(id) {
         saveScrollPosition();
+        return originalOpenDetail.apply(this, arguments);
+      };
+    }
+    
+    window.addEventListener('beforeunload', saveScrollPosition);
+    
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        restoreScrollPosition();
       }
-    }
-  }, true);
-  
-  var originalOpenDetail = window._openDetail;
-  if (typeof originalOpenDetail === 'function') {
-    window._openDetail = function(id) {
-      saveScrollPosition();
-      return originalOpenDetail.apply(this, arguments);
-    };
-  }
-  
-  window.addEventListener('beforeunload', saveScrollPosition);
-  
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-      restoreScrollPosition();
-    }
-  });
-  
-})();
+    });
+  })();
 
-function initProductSlider() {
-  'use strict';
-  
-  var slider = document.getElementById('product-slider');
-  if (!slider) return;
-  
-  if (slider.dataset.initialized === 'true') return;
-  slider.dataset.initialized = 'true';
-  
-  var track = document.getElementById('product-slider-track');
-  var dotsContainer = document.getElementById('product-slider-dots');
-  var prevBtn = document.getElementById('product-slider-prev');
-  var nextBtn = document.getElementById('product-slider-next');
-  var viewport = document.getElementById('product-slider-viewport');
-  
-  var images = [];
-  try {
-    images = JSON.parse(slider.getAttribute('data-images') || '[]');
-  } catch (e) {
-    images = [PLACEHOLDER_IMG];
-  }
-  
-  if (!images.length) images = [PLACEHOLDER_IMG];
-  
-  var slideCount = images.length;
-  var currentIndex = 0;
-  
-  slider.setAttribute('data-slides', slideCount);
-  
-  track.innerHTML = '';
-  images.forEach(function(src) {
-    var slide = document.createElement('div');
-    slide.className = 'product-slider-slide';
-    var img = document.createElement('img');
-    img.src = src;
-    img.alt = 'Фото товара';
-    img.draggable = false;
-    slide.appendChild(img);
-    track.appendChild(slide);
-  });
-  
-  dotsContainer.innerHTML = '';
-  if (slideCount > 1) {
-    for (var i = 0; i < slideCount; i++) {
-      var dot = document.createElement('span');
-      dot.className = 'product-slider-dot' + (i === 0 ? ' active' : '');
-      dot.setAttribute('data-index', i);
-      dot.addEventListener('click', function() {
-        goToSlide(parseInt(this.getAttribute('data-index'), 10));
+  function initProductSlider() {
+    var slider = document.getElementById('product-slider');
+    if (!slider) return;
+    
+    if (slider.dataset.initialized === 'true') return;
+    slider.dataset.initialized = 'true';
+    
+    var track = document.getElementById('product-slider-track');
+    var dotsContainer = document.getElementById('product-slider-dots');
+    var prevBtn = document.getElementById('product-slider-prev');
+    var nextBtn = document.getElementById('product-slider-next');
+    var viewport = document.getElementById('product-slider-viewport');
+    
+    var images = [];
+    try {
+      images = JSON.parse(slider.getAttribute('data-images') || '[]');
+    } catch (e) {
+      images = [PLACEHOLDER_IMG];
+    }
+    
+    if (!images.length) images = [PLACEHOLDER_IMG];
+    
+    var slideCount = images.length;
+    var currentIndex = 0;
+    
+    slider.setAttribute('data-slides', slideCount);
+    
+    track.innerHTML = '';
+    images.forEach(function(src, idx) {
+      var slide = document.createElement('div');
+      slide.className = 'product-slider-slide';
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Фото товара';
+      img.draggable = false;
+      slide.addEventListener('click', function(e) {
+        if (window._openGallery) {
+          window._openGallery(images, idx);
+        }
       });
-      dotsContainer.appendChild(dot);
-    }
-  }
-  
-  function updateUI() {
-    track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
-    
-    var dots = dotsContainer.querySelectorAll('.product-slider-dot');
-    dots.forEach(function(dot, idx) {
-      dot.classList.toggle('active', idx === currentIndex);
+      slide.appendChild(img);
+      track.appendChild(slide);
     });
     
-    if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.4' : '1';
-    if (nextBtn) nextBtn.style.opacity = currentIndex === slideCount - 1 ? '0.4' : '1';
-  }
-  
-  function goToSlide(index) {
-    if (index < 0) index = 0;
-    if (index >= slideCount) index = slideCount - 1;
-    currentIndex = index;
-    updateUI();
-  }
-  
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      goToSlide(currentIndex - 1);
-    });
-  }
-  
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      goToSlide(currentIndex + 1);
-    });
-  }
-  
-  var touchStartX = 0;
-  var touchEndX = 0;
-  var isSwiping = false;
-  var SWIPE_THRESHOLD = 50;
-  
-  viewport.addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1) return;
-    touchStartX = e.touches[0].clientX;
-    isSwiping = true;
-  }, { passive: true });
-  
-  viewport.addEventListener('touchmove', function(e) {
-    if (!isSwiping || e.touches.length > 1) return;
-    touchEndX = e.touches[0].clientX;
-  }, { passive: true });
-  
-  viewport.addEventListener('touchend', function() {
-    if (!isSwiping) return;
-    isSwiping = false;
-    
-    var diff = touchStartX - touchEndX;
-    
-    if (Math.abs(diff) > SWIPE_THRESHOLD) {
-      if (diff > 0) {
-        goToSlide(currentIndex + 1);
-      } else {
-        goToSlide(currentIndex - 1);
+    dotsContainer.innerHTML = '';
+    if (slideCount > 1) {
+      for (var i = 0; i < slideCount; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'product-slider-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('data-index', i);
+        dot.addEventListener('click', function() {
+          goToSlide(parseInt(this.getAttribute('data-index'), 10));
+        });
+        dotsContainer.appendChild(dot);
       }
     }
-  });
-  
-  var mouseDown = false;
-  var mouseStartX = 0;
-  var mouseEndX = 0;
-  
-  viewport.addEventListener('mousedown', function(e) {
-    mouseDown = true;
-    mouseStartX = e.clientX;
-    viewport.style.cursor = 'grabbing';
-  });
-  
-  viewport.addEventListener('mousemove', function(e) {
-    if (!mouseDown) return;
-    mouseEndX = e.clientX;
-  });
-  
-  viewport.addEventListener('mouseup', function() {
-    if (!mouseDown) return;
-    mouseDown = false;
-    viewport.style.cursor = '';
     
-    var diff = mouseStartX - mouseEndX;
-    if (Math.abs(diff) > SWIPE_THRESHOLD) {
-      if (diff > 0) {
-        goToSlide(currentIndex + 1);
-      } else {
-        goToSlide(currentIndex - 1);
-      }
+    function updateUI() {
+      track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+      
+      var dots = dotsContainer.querySelectorAll('.product-slider-dot');
+      dots.forEach(function(dot, idx) {
+        dot.classList.toggle('active', idx === currentIndex);
+      });
+      
+      if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.4' : '1';
+      if (nextBtn) nextBtn.style.opacity = currentIndex === slideCount - 1 ? '0.4' : '1';
     }
-  });
-  
-  viewport.addEventListener('mouseleave', function() {
-    if (mouseDown) {
+    
+    function goToSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slideCount) index = slideCount - 1;
+      currentIndex = index;
+      updateUI();
+    }
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        goToSlide(currentIndex - 1);
+      });
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        goToSlide(currentIndex + 1);
+      });
+    }
+    
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var isSwiping = false;
+    var SWIPE_THRESHOLD = 50;
+    
+    viewport.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) return;
+      touchStartX = e.touches[0].clientX;
+      isSwiping = true;
+    }, { passive: true });
+    
+    viewport.addEventListener('touchmove', function(e) {
+      if (!isSwiping || e.touches.length > 1) return;
+      touchEndX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    viewport.addEventListener('touchend', function() {
+      if (!isSwiping) return;
+      isSwiping = false;
+      
+      var diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff > 0) {
+          goToSlide(currentIndex + 1);
+        } else {
+          goToSlide(currentIndex - 1);
+        }
+      }
+    });
+    
+    var mouseDown = false;
+    var mouseStartX = 0;
+    var mouseEndX = 0;
+    
+    viewport.addEventListener('mousedown', function(e) {
+      mouseDown = true;
+      mouseStartX = e.clientX;
+      viewport.style.cursor = 'grabbing';
+    });
+    
+    viewport.addEventListener('mousemove', function(e) {
+      if (!mouseDown) return;
+      mouseEndX = e.clientX;
+    });
+    
+    viewport.addEventListener('mouseup', function() {
+      if (!mouseDown) return;
       mouseDown = false;
       viewport.style.cursor = '';
-    }
-  });
-  
-  slider.addEventListener('gesturestart', function(e) {
-    e.preventDefault();
-  });
-  
-  slider.addEventListener('gesturechange', function(e) {
-    e.preventDefault();
-  });
-  
-  slider.addEventListener('gestureend', function(e) {
-    e.preventDefault();
-  });
-  
-  updateUI();
-}
+      
+      var diff = mouseStartX - mouseEndX;
+      if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff > 0) {
+          goToSlide(currentIndex + 1);
+        } else {
+          goToSlide(currentIndex - 1);
+        }
+      }
+    });
+    
+    viewport.addEventListener('mouseleave', function() {
+      if (mouseDown) {
+        mouseDown = false;
+        viewport.style.cursor = '';
+      }
+    });
+    
+    slider.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+    
+    slider.addEventListener('gesturechange', function(e) {
+      e.preventDefault();
+    });
+    
+    slider.addEventListener('gestureend', function(e) {
+      e.preventDefault();
+    });
+    
+    updateUI();
+  }
+});

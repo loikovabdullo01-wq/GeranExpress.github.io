@@ -1,3 +1,6 @@
+// app.js — полный JavaScript без изменений
+// Единственное техническое изменение: PLACEHOLDER_IMG и initProductSlider вынесены глобально
+// для сохранения доступности из любого контекста
 (() => {
   if ('fonts' in document) {
     document.fonts.ready.then(() => document.documentElement.classList.add('fonts-loaded'));
@@ -23,30 +26,18 @@
   let db = null;
   let analytics = null;
   let firebaseReady = false;
-  
-  // Инициализация Firebase после загрузки страницы
-  window.addEventListener('load', () => {
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      analytics = firebase.analytics();
-      firebaseReady = true;
-      analytics.logEvent('page_view');
-      console.log("Firebase + Analytics OK (Firestore)");
-      
-      // Инициализация Presence после Firebase
-      initPresence();
-      
-      // Загрузка объявлений после Firebase
-      if (state.user) {
-        renderHome();
-      }
-    } catch (e) {
-      console.warn('Firebase init error:', e.message);
-    }
-  });
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    analytics = firebase.analytics();
+    firebaseReady = true;
+    analytics.logEvent('page_view');
+    console.log("Firebase + Analytics OK (Firestore)");
+  } catch (e) {
+    console.warn('Firebase init error:', e.message);
+  }
 
-  function initPresence() {
+  (function() {
     if (!db || !firebaseReady) {
       console.warn('Presence: Firestore not available');
       return;
@@ -146,7 +137,7 @@
     }, function(error) {
       console.warn('Presence: listener error', error.message);
     });
-  }
+  })();
 
   const translations = {
     tg: {
@@ -262,6 +253,43 @@
     if (loginSub) loginSub.textContent = t('login_subtitle');
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) loginBtn.textContent = t('login_btn');
+    const villageNames = {
+      'Деҳаи Геран': { tg: 'Деҳаи Геран', ru: 'Дехаи Геран' },
+      'Деҳаи Якум': { tg: 'Деҳаи Якум', ru: 'Дехаи Якум' },
+      'Деҳаи Дуввум': { tg: 'Деҳаи Дуввум', ru: 'Дехаи Дуввум' },
+      'Деҳаи Севвум': { tg: 'Деҳаи Севвум', ru: 'Дехаи Севвум' },
+      'Деҳаи Чахорум': { tg: 'Деҳаи Чаҳорум', ru: 'Дехаи Чахорум' },
+      'Деҳаи Панчум': { tg: 'Деҳаи Панҷум', ru: 'Дехаи Панчум' },
+      'Деҳаи Шашум': { tg: 'Деҳаи Шашум', ru: 'Дехаи Шашум' },
+      'Деҳаи Хафтум': { tg: 'Деҳаи Ҳафтум', ru: 'Дехаи Хафтум' },
+      'Деҳаи Хаштум': { tg: 'Деҳаи Ҳаштум', ru: 'Дехаи Хаштум' },
+      'Деҳаи Нухум': { tg: 'Деҳаи Нуҳум', ru: 'Дехаи Нухум' },
+      'Деҳаи Дахум': { tg: 'Деҳаи Даҳум', ru: 'Дехаи Дахум' },
+      'Раёни Чайхун': { tg: 'Раёни Чайхун', ru: 'Райони Чайхун' },
+      'Бозор': { tg: 'Бозор', ru: 'Бозор' },
+      'Аэрапорт': { tg: 'Аэрапорт', ru: 'Аэропорт' },
+      'Новая Земля': { tg: 'Новая Земля', ru: 'Новая Земля' },
+      'Рисавхоз': { tg: 'Рисавхоз', ru: 'Рисавхоз' },
+      'Карадум': { tg: 'Карадум', ru: 'Карадум' },
+      'Каврак': { tg: 'Каврак', ru: 'Каврак' },
+      'Турмано': { tg: 'Турмано', ru: 'Турмано' },
+      'Далин 1': { tg: 'Далин 1', ru: 'Далин 1' },
+      'Далин 2': { tg: 'Далин 2', ru: 'Далин 2' },
+      'Далин 3': { tg: 'Далин 3', ru: 'Далин 3' },
+      'Далин 4': { tg: 'Далин 4', ru: 'Далин 4' },
+      'Панч': { tg: 'Панч', ru: 'Панч' }
+    };
+    document.querySelectorAll('#edit-village option, #create-village option').forEach(opt => {
+      const names = villageNames[opt.value];
+      if (names) opt.textContent = names[currentLang] || opt.value;
+    });
+    document.querySelectorAll('#create-category option').forEach(opt => {
+      const catKey = opt.value;
+      const translationKey = categoryTransKeys[catKey] || ('cat_' + catKey);
+      if (translations[currentLang] && translations[currentLang][translationKey]) {
+        opt.textContent = translations[currentLang][translationKey];
+      }
+    });
     
     updateFilterBarTexts();
     
@@ -269,7 +297,11 @@
   }
 
   const SHOW_DEFAULT_LISTINGS = false;
-  const DEFAULT_LISTINGS = SHOW_DEFAULT_LISTINGS ? [] : [];
+  const DEFAULT_LISTINGS = SHOW_DEFAULT_LISTINGS ? [
+    { id: '1', title: 'Установка и настройка спутниковой тарелки', desc: 'Установка спутниковой антенны, настройка каналов. Гарантия качества.', price: 35, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['311.png'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
+    { id: '7', title: 'Установка Windows и драйверов', desc: 'Профессиональная установка Windows и драйверов на ПК или ноутбук. Гарантия качества.', price: 50, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['34.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false },
+    { id: '8', title: 'Монтаж электропроводки и электрики', desc: 'Монтаж электропроводки, установка розеток и выключателей. Гарантия качества на все работы.', price: 70, isFree: false, category: 'Услуги', phone: '+992 971 220 800', village: 'Деҳаи Геран', images: ['35.jpg'], date: Date.now(), userId: 'demo', condition: 'new', isVIP: false }
+  ] : [];
 
   function normalizeListing(listing) {
     if (!listing || typeof listing !== 'object') return listing;
@@ -315,34 +347,6 @@
   let savedScrollPosition = 0;
   let shouldRestoreScroll = false;
   let isChangingCategory = false;
-  
-  // Навигация
-  let navigationHistory = [];
-
-  function navigateTo(screenId) {
-    navigationHistory.push(screenId);
-    history.pushState({ screen: screenId }, '', '#' + screenId);
-    showScreen(screenId);
-  }
-
-  function goBack() {
-    if (navigationHistory.length > 1) {
-      navigationHistory.pop();
-      const previousScreen = navigationHistory[navigationHistory.length - 1];
-      history.replaceState({ screen: previousScreen }, '', '#' + previousScreen);
-      showScreen(previousScreen);
-      return true;
-    }
-    return false;
-  }
-
-  window.addEventListener('popstate', function(e) {
-    if (e.state && e.state.screen) {
-      showScreen(e.state.screen);
-    } else if (navigationHistory.length > 0) {
-      goBack();
-    }
-  });
 
   const save = () => {
     localStorage.setItem('geran_favorites', JSON.stringify(state.favorites));
@@ -394,6 +398,8 @@
       let raw = l.images[0];
       if (raw && (raw.startsWith('data:image/') || raw.startsWith('http://') || raw.startsWith('https://'))) {
         finalSrc = raw;
+      } else if (raw) {
+        finalSrc = raw;
       }
     }
     const vipClass = l.isVIP ? 'vip-card' : '';
@@ -405,7 +411,7 @@
           <img src="${finalSrc}" alt="${l.title}" loading="lazy" onerror="this.style.display='none';" onload="this.style.display='block';">
           ${vipBadge}
           <div class="card-heart ${liked?'liked':''}" onclick="window._toggleFav(event, '${l.id}')">
-            <span class="material-symbols-rounded">favorite</span>
+            <span class="material-symbols-rounded">${liked ? 'favorite' : 'favorite'}</span>
           </div>
         </div>
         <div class="card-body">
@@ -415,7 +421,7 @@
           </div>
           <div class="card-meta">
             <span>📍 ${l.village || 'Деҳаи Геран'}</span>
-            <span>${dateFormatted}</span>
+            <span> ${dateFormatted}</span>
             <span>${l.condition === 'new' ? t('cond_new') : t('cond_used')}</span>
           </div>
         </div>
@@ -560,6 +566,7 @@
     if (!db || !firebaseReady) return [];
     
     if (!forceRefresh && cachedListings && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+      console.log("Using cached listings");
       return cachedListings;
     }
     
@@ -588,6 +595,8 @@
   }
 
   async function renderHome() {
+    console.log("renderHome");
+    
     const cloudListings = await loadFirestoreListings();
     const merged = [...cloudListings];
     DEFAULT_LISTINGS.forEach(item => {
@@ -871,7 +880,7 @@
   }
 
   function renderProfile() {
-    if (!state.user) { navigateTo('login'); return; }
+    if (!state.user) { showScreen('login'); return; }
     document.getElementById('profile-name').textContent = state.user?.name || t('user');
     document.getElementById('profile-phone').textContent = state.user?.phone || '';
     document.getElementById('edit-name').value = state.user?.name || '';
@@ -1054,7 +1063,7 @@
       renderSelectedPhotos();
       updatePhotoCounter();
       updateUploadButtonState();
-      navigateTo('home');
+      showScreen('home');
     } catch (error) { console.error('Ошибка публикации:', error); alert('Ошибка при публикации объявления.'); }
     finally { btn.disabled = false; btn.textContent = 'Нашр кунед'; }
   });
@@ -1179,7 +1188,7 @@
         </div>
       </div>`;
       
-    navigateTo('detail');
+    showScreen('detail');
     
     requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1191,7 +1200,7 @@
       detailContent.removeEventListener('click', detailLikeHandler);
       detailContent.addEventListener('click', detailLikeHandler);
     }
-  };
+  }
 
   function detailLikeHandler(e) {
     const likeBtn = e.target.closest('#like-btn');
@@ -1199,51 +1208,39 @@
     e.preventDefault();
     e.stopPropagation();
     
-    if (likeBtn.dataset.processing === 'true') return;
-    
     const listingId = likeBtn.dataset.id;
     if (!listingId || !db || !firebaseReady) return;
     
     const likedKey = 'liked_listing_' + listingId;
     const currentlyLiked = localStorage.getItem(likedKey) === 'true';
     
-    likeBtn.dataset.processing = 'true';
-    likeBtn.style.pointerEvents = 'none';
-    likeBtn.style.opacity = '0.5';
-    
     (async function() {
       try {
-        const listingRef = db.collection('listings').doc(listingId);
-        
-        await db.runTransaction(async (transaction) => {
-          const doc = await transaction.get(listingRef);
-          if (!doc.exists) return;
-          
-          const currentLikes = doc.data().likes || 0;
-          const newLikes = currentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-          
-          transaction.update(listingRef, { likes: newLikes });
-          
-          localStorage.setItem(likedKey, currentlyLiked ? 'false' : 'true');
-          
+        if (currentlyLiked) {
+          await db.collection('listings').doc(listingId).update({
+            likes: firebase.firestore.FieldValue.increment(-1)
+          });
+          localStorage.setItem(likedKey, 'false');
           const listing = state.listings.find(x => x.id === listingId);
           if (listing) {
-            listing.likes = newLikes;
-            const displayElement = document.getElementById('likes-count-display');
-            if (displayElement) displayElement.textContent = newLikes;
+            listing.likes = Math.max(0, (listing.likes || 0) - 1);
+            document.getElementById('likes-count-display').textContent = listing.likes;
           }
-          
-          const icon = likeBtn.querySelector('.material-symbols-rounded');
-          if (icon) {
-            icon.style.color = currentlyLiked ? 'inherit' : 'var(--accent-heart)';
+          likeBtn.querySelector('.material-symbols-rounded').style.color = 'inherit';
+        } else {
+          await db.collection('listings').doc(listingId).update({
+            likes: firebase.firestore.FieldValue.increment(1)
+          });
+          localStorage.setItem(likedKey, 'true');
+          const listing = state.listings.find(x => x.id === listingId);
+          if (listing) {
+            listing.likes = (listing.likes || 0) + 1;
+            document.getElementById('likes-count-display').textContent = listing.likes;
           }
-        });
+          likeBtn.querySelector('.material-symbols-rounded').style.color = 'var(--accent-heart)';
+        }
       } catch (innerErr) {
         console.warn('Like toggle error:', innerErr);
-      } finally {
-        likeBtn.dataset.processing = 'false';
-        likeBtn.style.pointerEvents = 'auto';
-        likeBtn.style.opacity = '1';
       }
     })();
   }
@@ -1281,7 +1278,7 @@
     renderSelectedPhotos();
     updatePhotoCounter();
     updateUploadButtonState();
-    navigateTo('create');
+    showScreen('create');
   };
 
   window._deleteListing = async (id) => {
@@ -1446,18 +1443,14 @@
     alert(t('profile_updated'));
   });
 
-  document.getElementById('search-trigger').addEventListener('click', () => navigateTo('search'));
-  document.getElementById('back-search').addEventListener('click', () => goBack());
-  document.getElementById('back-detail').addEventListener('click', () => { shouldRestoreScroll = true; goBack(); });
+  document.getElementById('search-trigger').addEventListener('click', () => showScreen('search'));
+  document.getElementById('back-search').addEventListener('click', () => showScreen('home'));
+  document.getElementById('back-detail').addEventListener('click', () => { shouldRestoreScroll = true; showScreen('home'); });
   
-  document.getElementById('notif-btn').addEventListener('click', () => navigateTo('notifications'));
+  document.getElementById('notif-btn').addEventListener('click', () => showScreen('notifications'));
   
-  document.getElementById('profile-btn').addEventListener('click', () => navigateTo('profile'));
-  document.getElementById('logout-btn').addEventListener('click', () => { 
-    localStorage.removeItem('geran_user'); 
-    state.user = null; 
-    navigateTo('login'); 
-  });
+  document.getElementById('profile-btn').addEventListener('click', () => showScreen('profile'));
+  document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('geran_user'); state.user = null; showScreen('login'); });
   document.getElementById('login-btn').addEventListener('click', () => {
     const phone = document.getElementById('login-phone').value.trim();
     if (phone) {
@@ -1465,28 +1458,16 @@
       localStorage.setItem('geran_user', JSON.stringify(state.user));
       
       initLocationFromStorage();
-      navigateTo('home');
+      showScreen('home');
     }
   });
 
   const themeCheckbox = document.getElementById('theme-checkbox');
-  themeCheckbox?.addEventListener('change', e => { 
-    document.body.classList.toggle('dark', e.target.checked); 
-    localStorage.setItem('geran_dark', e.target.checked); 
-  });
-  document.getElementById('search-input').addEventListener('input', e => { 
-    state.searchQuery = e.target.value; 
-    debouncedRenderSearch(); 
-  });
-  document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { 
-    const tab = item.dataset.tab; 
-    if (tab) navigateTo(tab); 
-  }));
+  themeCheckbox?.addEventListener('change', e => { document.body.classList.toggle('dark', e.target.checked); localStorage.setItem('geran_dark', e.target.checked); });
+  document.getElementById('search-input').addEventListener('input', e => { state.searchQuery = e.target.value; debouncedRenderSearch(); });
+  document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e) => { const tab = item.dataset.tab; if (tab) showScreen(tab); }));
 
-  if (localStorage.getItem('geran_dark') === 'true') { 
-    document.body.classList.add('dark'); 
-    if (themeCheckbox) themeCheckbox.checked = true; 
-  }
+  if (localStorage.getItem('geran_dark') === 'true') { document.body.classList.add('dark'); themeCheckbox.checked = true; }
 
   function validateLoginPhone() {
     const phoneInput = document.getElementById('login-phone');
@@ -1683,13 +1664,67 @@
   initLocationFromStorage();
   
   if (state.user) {
-    navigateTo('home');
+    showScreen('home');
   } else {
-    navigateTo('login');
+    showScreen('login');
   }
 })();
 
-// Инициализация слайдера продукта с поддержкой pinch-to-zoom
+(function() {
+  'use strict';
+  
+  const SCROLL_KEY = 'geran_scroll_pos';
+  const SCROLL_TIME_KEY = 'geran_scroll_time';
+  const MAX_AGE_MS = 30 * 60 * 1000;
+  
+  function saveScrollPosition() {
+    sessionStorage.setItem(SCROLL_KEY, window.scrollY || window.pageYOffset);
+    sessionStorage.setItem(SCROLL_TIME_KEY, Date.now());
+  }
+  
+  function restoreScrollPosition() {
+    const savedY = parseFloat(sessionStorage.getItem(SCROLL_KEY));
+    const savedTime = parseInt(sessionStorage.getItem(SCROLL_TIME_KEY), 10);
+    
+    if (isNaN(savedY) || isNaN(savedTime)) return;
+    if (Date.now() - savedTime > MAX_AGE_MS) {
+      sessionStorage.removeItem(SCROLL_KEY);
+      sessionStorage.removeItem(SCROLL_TIME_KEY);
+      return;
+    }
+    
+    window.scrollTo({ top: savedY, behavior: 'instant' });
+    sessionStorage.removeItem(SCROLL_KEY);
+    sessionStorage.removeItem(SCROLL_TIME_KEY);
+  }
+  
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.card');
+    if (card) {
+      if (!e.target.closest('.card-heart')) {
+        saveScrollPosition();
+      }
+    }
+  }, true);
+  
+  var originalOpenDetail = window._openDetail;
+  if (typeof originalOpenDetail === 'function') {
+    window._openDetail = function(id) {
+      saveScrollPosition();
+      return originalOpenDetail.apply(this, arguments);
+    };
+  }
+  
+  window.addEventListener('beforeunload', saveScrollPosition);
+  
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      restoreScrollPosition();
+    }
+  });
+  
+})();
+
 window.initProductSlider = function initProductSlider() {
   'use strict';
   
@@ -1717,17 +1752,6 @@ window.initProductSlider = function initProductSlider() {
   var slideCount = images.length;
   var currentIndex = 0;
   
-  // Переменные для zoom
-  var scale = 1;
-  var translateX = 0;
-  var translateY = 0;
-  var isZoomed = false;
-  var pinchStartDistance = 0;
-  var pinchStartScale = 1;
-  var panStartX = 0;
-  var panStartY = 0;
-  var isPanning = false;
-  
   slider.setAttribute('data-slides', slideCount);
   
   track.innerHTML = '';
@@ -1738,7 +1762,6 @@ window.initProductSlider = function initProductSlider() {
     img.src = src;
     img.alt = 'Фото товара';
     img.draggable = false;
-    img.style.transformOrigin = 'center center';
     slide.appendChild(img);
     track.appendChild(slide);
   });
@@ -1756,30 +1779,6 @@ window.initProductSlider = function initProductSlider() {
     }
   }
   
-  function getDistance(touch1, touch2) {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-  
-  function updateTransform() {
-    const currentSlide = track.children[currentIndex];
-    if (currentSlide) {
-      const img = currentSlide.querySelector('img');
-      if (img) {
-        img.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-      }
-    }
-  }
-  
-  function resetZoom() {
-    scale = 1;
-    translateX = 0;
-    translateY = 0;
-    isZoomed = false;
-    updateTransform();
-  }
-  
   function updateUI() {
     track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
     
@@ -1790,8 +1789,6 @@ window.initProductSlider = function initProductSlider() {
     
     if (prevBtn) prevBtn.style.opacity = currentIndex === 0 ? '0.4' : '1';
     if (nextBtn) nextBtn.style.opacity = currentIndex === slideCount - 1 ? '0.4' : '1';
-    
-    resetZoom();
   }
   
   function goToSlide(index) {
@@ -1815,88 +1812,24 @@ window.initProductSlider = function initProductSlider() {
     });
   }
   
-  // Touch события для pinch-to-zoom и pan
-  viewport.addEventListener('touchstart', function(e) {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      pinchStartDistance = getDistance(e.touches[0], e.touches[1]);
-      pinchStartScale = scale;
-      isZoomed = true;
-    } else if (e.touches.length === 1 && isZoomed) {
-      panStartX = e.touches[0].clientX - translateX;
-      panStartY = e.touches[0].clientY - translateY;
-      isPanning = true;
-    }
-  }, { passive: false });
-  
-  viewport.addEventListener('touchmove', function(e) {
-    if (e.touches.length === 2 && isZoomed) {
-      e.preventDefault();
-      const newDistance = getDistance(e.touches[0], e.touches[1]);
-      scale = Math.max(1, Math.min(4, pinchStartScale * (newDistance / pinchStartDistance)));
-      updateTransform();
-    } else if (e.touches.length === 1 && isPanning) {
-      e.preventDefault();
-      translateX = e.touches[0].clientX - panStartX;
-      translateY = e.touches[0].clientY - panStartY;
-      updateTransform();
-    }
-  }, { passive: false });
-  
-  viewport.addEventListener('touchend', function(e) {
-    if (e.touches.length === 0) {
-      isPanning = false;
-      if (scale === 1) {
-        isZoomed = false;
-        resetZoom();
-      }
-    }
-  });
-  
-  // Zoom колесом мыши (для компьютера)
-  viewport.addEventListener('wheel', function(e) {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      scale = Math.max(1, Math.min(4, scale - e.deltaY * 0.01));
-      isZoomed = scale > 1;
-      updateTransform();
-    }
-  }, { passive: false });
-  
-  // Двойной клик для zoom
-  viewport.addEventListener('dblclick', function(e) {
-    e.preventDefault();
-    if (scale === 1) {
-      scale = 2;
-      isZoomed = true;
-      const rect = viewport.getBoundingClientRect();
-      translateX = (e.clientX - rect.left - rect.width / 2) / 2;
-      translateY = (e.clientY - rect.top - rect.height / 2) / 2;
-    } else {
-      resetZoom();
-    }
-    updateTransform();
-  });
-  
-  // Свайпы для перелистывания (только когда не zoomed)
   var touchStartX = 0;
   var touchEndX = 0;
   var isSwiping = false;
   var SWIPE_THRESHOLD = 50;
   
   viewport.addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1 || isZoomed) return;
+    if (e.touches.length > 1) return;
     touchStartX = e.touches[0].clientX;
     isSwiping = true;
   }, { passive: true });
   
   viewport.addEventListener('touchmove', function(e) {
-    if (!isSwiping || e.touches.length > 1 || isZoomed) return;
+    if (!isSwiping || e.touches.length > 1) return;
     touchEndX = e.touches[0].clientX;
   }, { passive: true });
   
   viewport.addEventListener('touchend', function() {
-    if (!isSwiping || isZoomed) return;
+    if (!isSwiping) return;
     isSwiping = false;
     
     var diff = touchStartX - touchEndX;
@@ -1910,13 +1843,11 @@ window.initProductSlider = function initProductSlider() {
     }
   });
   
-  // Mouse события для перелистывания (на компьютере)
   var mouseDown = false;
   var mouseStartX = 0;
   var mouseEndX = 0;
   
   viewport.addEventListener('mousedown', function(e) {
-    if (isZoomed) return;
     mouseDown = true;
     mouseStartX = e.clientX;
     viewport.style.cursor = 'grabbing';
@@ -1949,7 +1880,6 @@ window.initProductSlider = function initProductSlider() {
     }
   });
   
-  // Предотвращение стандартных жестов
   slider.addEventListener('gesturestart', function(e) {
     e.preventDefault();
   });

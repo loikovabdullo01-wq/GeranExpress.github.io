@@ -205,6 +205,7 @@
     if (tab === "profile") renderProfileTab();
     document.getElementById("appMain").scrollTop = 0;
     document.getElementById("appHeader").classList.remove("collapsed");
+    requestAnimationFrame(syncHeaderHeight);
   }
 
   const SORT_OPTIONS = [
@@ -1479,6 +1480,7 @@
     }
     if (typeof updateQuickFilterUI === "function") updateQuickFilterUI();
     if (document.getElementById("promoTrack").children.length) initPromoBanner();
+    requestAnimationFrame(syncHeaderHeight);
     renderHomeTab();
     renderFavoritesTab();
     renderMyListingsTab();
@@ -1526,6 +1528,14 @@
     const o = document.getElementById("langOverlay");
     if (poppingFromHistory) { o.classList.remove("open"); return; }
     if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  function syncHeaderHeight() {
+    const header = document.getElementById("appHeader");
+    const frame = document.getElementById("appFrame");
+    if (!header || !frame) return;
+    if (header.classList.contains("collapsed")) return;
+    frame.style.setProperty("--header-h", header.offsetHeight + "px");
   }
 
   function initHeaderCollapse() {
@@ -1669,6 +1679,8 @@
     initPromoBanner();
     initZoomViewer();
     initHeaderCollapse();
+    syncHeaderHeight();
+    window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);
     switchTab("home");

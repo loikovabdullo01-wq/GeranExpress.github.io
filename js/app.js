@@ -11,6 +11,7 @@
     notifSeen: "bh_notif_seen",
     meProfile: "bh_me_profile",
     authed: "bh_authed",
+    lang: "bh_lang",
   };
 
   function loadJSON(key, fallback) {
@@ -48,14 +49,15 @@
   }
 
   const state = {
-    theme: loadJSON(LS.theme, null) || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+    theme: loadJSON(LS.theme, null) || "light",
     favorites: new Set(loadJSON(LS.favorites, [])),
     listings: loadCatalog(),
     chats: loadJSON(LS.chats, {}),
     meProfile: loadJSON(LS.meProfile, {}),
     isAuthed: loadJSON(LS.authed, false),
+    lang: loadJSON(LS.lang, null) || "ru",
     currentTab: "home",
-    filters: { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "new" },
+    filters: { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
   saveJSON(LS.listings, state.listings);
   saveJSON(LS.dataVersion, DATA_VERSION);
@@ -141,8 +143,8 @@
     <article class="card" data-id="${listing.id}" role="button" tabindex="0">
       <div class="card-photo">
         ${cardPhotoInner(listing)}
-        ${sold ? '<div class="badge-sold"><span>ПРОДАНО</span></div>' : ""}
-        <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" aria-label="В избранное">
+        ${sold ? `<div class="badge-sold"><span>${t("pd.sold")}</span></div>` : ""}
+        <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" aria-label="${t('fav.add')}">
           <svg viewBox="0 0 24 24"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
         </button>
       </div>
@@ -188,7 +190,7 @@
     }
     document.querySelectorAll(`[data-fav="${id}"]`).forEach((b) => b.classList.toggle("active", !isFav));
     if (document.getElementById("tab-favorites").classList.contains("active")) renderFavoritesTab();
-    if (!isFav) showToast("Добавлено в избранное ❤️");
+    if (!isFav) showToast(t("fav.added"));
   }
 
   function switchTab(tab) {
@@ -202,35 +204,59 @@
     if (tab === "listings") renderMyListingsTab();
     if (tab === "profile") renderProfileTab();
     document.getElementById("appMain").scrollTop = 0;
+    document.getElementById("appHeader").classList.remove("collapsed");
   }
+
+  const SORT_OPTIONS = [
+    { id: "all",       emo: "\u2195\ufe0f", key: "sort.all" },
+    { id: "new",       emo: "\ud83d\udd52", key: "sort.new" },
+    { id: "old",       emo: "\ud83d\uddc3\ufe0f", key: "sort.old" },
+    { id: "popular",   emo: "\ud83d\udd25", key: "sort.popular" },
+    { id: "cheap",     emo: "\u2b07\ufe0f", key: "sort.cheap" },
+    { id: "expensive", emo: "\u2b06\ufe0f", key: "sort.expensive" },
+  ];
 
   function updateQuickFilterUI() {
     const cat = CATEGORIES.find((c) => c.id === state.filters.category) || CATEGORIES[0];
-    const isAll = state.filters.category === "all";
-    document.getElementById("qfCategoryLabel").textContent = isAll ? "Категории" : cat.name;
-    document.getElementById("qfCategoryEmo").textContent = isAll ? "\u{1F4C2}" : cat.icon;
-    document.getElementById("qfCategory").classList.toggle("active", !isAll);
+    const isAllCats = state.filters.category === "all";
+    document.getElementById("qfCategoryLabel").textContent = isAllCats ? t("qf.allCategories") : cat.name;
+    document.getElementById("qfCategoryEmo").textContent = isAllCats ? "\ud83d\udcc2" : cat.icon;
+    document.getElementById("qfCategory").classList.toggle("active", !isAllCats);
 
-    document.getElementById("qfLocationLabel").textContent = state.filters.location || "Локация";
+    document.getElementById("qfLocationLabel").textContent = state.filters.location || t("qf.allLocations");
     document.getElementById("qfLocation").classList.toggle("active", !!state.filters.location);
 
-    const oldFirst = state.filters.sort === "old";
-    document.getElementById("qfSortLabel").textContent = oldFirst ? "Сначала старые" : "Сначала новые";
-    document.getElementById("qfSort").classList.toggle("active", oldFirst);
-    document.getElementById("qfPopular").classList.toggle("active", state.filters.sort === "popular");
+    const sort = SORT_OPTIONS.find((o) => o.id === state.filters.sort) || SORT_OPTIONS[0];
+    document.getElementById("qfSortLabel").textContent = t(sort.key);
+    document.getElementById("qfSortEmo").textContent = sort.emo;
+    document.getElementById("qfSort").classList.toggle("active", state.filters.sort !== "all");
+  }
+
+  function openSortSheet() {
+    const list = document.getElementById("sortList");
+    list.innerHTML = SORT_OPTIONS.map(
+      (o) => `<div class="option-item ${o.id === state.filters.sort ? "active" : ""}" data-sort="${o.id}">
+        <span class="opt-emo">${o.emo}</span><span class="opt-name">${esc(t(o.key))}</span><span class="check">✓</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-sort]").forEach((item) =>
+      item.addEventListener("click", () => {
+        state.filters.sort = item.dataset.sort;
+        updateQuickFilterUI();
+        renderHomeTab();
+        closeSortSheet();
+      })
+    );
+    document.getElementById("sortOverlay").classList.add("open");
+    openLayer(() => document.getElementById("sortOverlay").classList.remove("open"));
+  }
+  function closeSortSheet() {
+    if (poppingFromHistory) { document.getElementById("sortOverlay").classList.remove("open"); return; }
+    if (document.getElementById("sortOverlay").classList.contains("open")) closeTopLayer();
   }
 
   function initQuickFilterRow() {
-    document.getElementById("qfSort").addEventListener("click", () => {
-      state.filters.sort = state.filters.sort === "old" ? "new" : "old";
-      updateQuickFilterUI();
-      renderHomeTab();
-    });
-    document.getElementById("qfPopular").addEventListener("click", () => {
-      state.filters.sort = state.filters.sort === "popular" ? "new" : "popular";
-      updateQuickFilterUI();
-      renderHomeTab();
-    });
+    document.getElementById("qfSort").addEventListener("click", openSortSheet);
     document.getElementById("qfCategory").addEventListener("click", openCategorySheet);
     document.getElementById("qfLocation").addEventListener("click", () =>
       openLocationSheet(state.filters.location, (loc) => {
@@ -239,6 +265,8 @@
         renderHomeTab();
       })
     );
+    document.getElementById("closeSortBtn").addEventListener("click", closeSortSheet);
+    document.getElementById("sortOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeSortSheet(); });
     document.getElementById("closeCategoryBtn").addEventListener("click", closeCategorySheet);
     document.getElementById("categoryOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCategorySheet(); });
     document.getElementById("closeLocationBtn").addEventListener("click", closeLocationSheet);
@@ -259,8 +287,12 @@
       });
     });
     document.getElementById("categoryOverlay").classList.add("open");
+    openLayer(() => document.getElementById("categoryOverlay").classList.remove("open"));
   }
-  function closeCategorySheet() { document.getElementById("categoryOverlay").classList.remove("open"); }
+  function closeCategorySheet() {
+    if (poppingFromHistory) { document.getElementById("categoryOverlay").classList.remove("open"); return; }
+    if (document.getElementById("categoryOverlay").classList.contains("open")) closeTopLayer();
+  }
 
   function openLocationSheet(currentValue, onSelect) {
     const majors = new Set(CITIES);
@@ -279,12 +311,12 @@
 
     document.getElementById("locationList").innerHTML =
       `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
-         <span class="loc-name">Все локации</span>
+         <span class="loc-name">${t("qf.allLocations")}</span>
          <span class="loc-count">${state.listings.length}</span>
          <span class="check">✓</span>
        </div>` +
-      (villages.length ? `<div class="location-group-label">Районы и сёла</div>` + villages.map(row).join("") : "") +
-      `<div class="location-group-label">Крупные города</div>` + cityList.map(row).join("");
+      (villages.length ? `<div class="location-group-label">${t("loc.districts")}</div>` + villages.map(row).join("") : "") +
+      `<div class="location-group-label">${t("loc.majorCities")}</div>` + cityList.map(row).join("");
 
     document.getElementById("locationList").querySelectorAll("[data-loc]").forEach((item) => {
       item.addEventListener("click", () => {
@@ -293,8 +325,12 @@
       });
     });
     document.getElementById("locationOverlay").classList.add("open");
+    openLayer(() => document.getElementById("locationOverlay").classList.remove("open"));
   }
-  function closeLocationSheet() { document.getElementById("locationOverlay").classList.remove("open"); }
+  function closeLocationSheet() {
+    if (poppingFromHistory) { document.getElementById("locationOverlay").classList.remove("open"); return; }
+    if (document.getElementById("locationOverlay").classList.contains("open")) closeTopLayer();
+  }
 
   function computeFilteredListings() {
     const f = state.filters;
@@ -309,6 +345,8 @@
     if (f.priceMax != null) list = list.filter((l) => l.price <= f.priceMax);
     if (f.condition) list = list.filter((l) => l.condition.startsWith(f.condition === "Новое" ? "Новое" : "Б/у"));
     switch (f.sort) {
+      case "all": break;
+      case "new": list = list.slice().sort((a, b) => b.createdAt - a.createdAt); break;
       case "old": list = list.slice().sort((a, b) => a.createdAt - b.createdAt); break;
       case "cheap": list = list.slice().sort((a, b) => a.price - b.price); break;
       case "expensive": list = list.slice().sort((a, b) => b.price - a.price); break;
@@ -324,12 +362,12 @@
     renderGrid(grid, list);
     document.getElementById("homeEmpty").hidden = list.length !== 0;
     grid.style.display = list.length ? "grid" : "none";
-    document.getElementById("homeResultsCount").textContent = list.length ? list.length + " объявл." : "";
+    document.getElementById("homeResultsCount").textContent = list.length ? list.length + " " + t("home.count") : "";
     const cat = CATEGORIES.find((c) => c.id === state.filters.category);
     document.getElementById("homeResultsTitle").textContent =
-      state.filters.category === "all" ? "Все объявления" : cat.name;
+      state.filters.category === "all" ? t("home.all") : cat.name;
 
-    const hasActiveFilters = state.filters.priceMin != null || state.filters.priceMax != null || state.filters.condition || state.filters.sort !== "new";
+    const hasActiveFilters = state.filters.priceMin != null || state.filters.priceMax != null || state.filters.condition || state.filters.sort !== "all";
     document.getElementById("openFilterBtn").classList.toggle("has-active", hasActiveFilters);
   }
 
@@ -358,16 +396,16 @@
         <div class="my-info">
           <div class="my-title">${esc(l.title)}</div>
           <div class="my-price">${formatPrice(l)}</div>
-          <span class="my-status ${l.status}">${l.status === "sold" ? "● Продано" : "● Активно"}</span>
+          <span class="my-status ${l.status}">${l.status === "sold" ? t("my.sold") : t("my.active")}</span>
         </div>
         <div class="my-actions">
-          <button class="icon-action" data-edit="${l.id}" aria-label="Редактировать" title="Редактировать">
+          <button class="icon-action" data-edit="${l.id}" aria-label="${t('my.edit')}" title="${t('my.edit')}">
             <svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z"/></svg>
           </button>
-          <button class="icon-action" data-toggle-sold="${l.id}" aria-label="Статус" title="Отметить продано">
+          <button class="icon-action" data-toggle-sold="${l.id}" aria-label="${t('my.markSold')}" title="${t('my.markSold')}">
             <svg viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7"/></svg>
           </button>
-          <button class="icon-action danger" data-delete="${l.id}" aria-label="Удалить" title="Удалить">
+          <button class="icon-action danger" data-delete="${l.id}" aria-label="${t('my.delete')}" title="${t('my.delete')}">
             <svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg>
           </button>
         </div>
@@ -385,7 +423,7 @@
         l.status = l.status === "sold" ? "active" : "sold";
         persistListings();
         renderMyListingsTab();
-        showToast(l.status === "sold" ? "Отмечено как продано" : "Снова активно");
+        showToast(l.status === "sold" ? t("status.sold") : t("status.active"));
       })
     );
     box.querySelectorAll("[data-delete]").forEach((b) =>
@@ -397,7 +435,7 @@
         persistListings();
         persistFavorites();
         renderMyListingsTab();
-        showToast("Объявление удалено");
+        showToast(t("form.deleted"));
       })
     );
     box.querySelectorAll(".my-item").forEach((item) =>
@@ -420,7 +458,7 @@
     if (addr) addr.textContent = me.city || "";
     const ph = document.getElementById("phoneValue");
     if (ph) ph.textContent = me.phone || "";
-    document.getElementById("profileMemberSince").textContent = "На Geran Express с " + (me.memberSince || "2026");
+    document.getElementById("profileMemberSince").textContent = t("profile.memberSince") + " " + (me.memberSince || "2026");
     document.getElementById("profileCity").textContent = "📍 " + me.city;
     const mine = state.listings.filter((l) => l.mine);
     document.getElementById("statListings").textContent = mine.filter((l) => l.status !== "sold").length;
@@ -433,6 +471,27 @@
     return "★".repeat(full) + "☆".repeat(5 - full);
   }
 
+  const navLayers = [];
+  let poppingFromHistory = false;
+
+  function openLayer(closeFn) {
+    navLayers.push(closeFn);
+    history.pushState({ layer: navLayers.length }, "");
+  }
+
+  function closeTopLayer() {
+    if (!navLayers.length) return;
+    history.back();
+  }
+
+  window.addEventListener("popstate", () => {
+    const closeFn = navLayers.pop();
+    if (!closeFn) return;
+    poppingFromHistory = true;
+    closeFn();
+    poppingFromHistory = false;
+  });
+
   const stackEl = document.getElementById("screenStack");
   let stack = [];
 
@@ -442,6 +501,7 @@
     el.innerHTML = innerHTML;
     stackEl.appendChild(el);
     stack.push(el);
+    openLayer(removeTopScreen);
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("enter")));
     const backBtn = el.querySelector("[data-back]");
     if (backBtn) backBtn.addEventListener("click", popScreen);
@@ -449,7 +509,7 @@
     return el;
   }
 
-  function popScreen() {
+  function removeTopScreen() {
     const el = stack.pop();
     if (!el) return;
     el.classList.remove("enter");
@@ -457,10 +517,15 @@
     setTimeout(() => el.remove(), 400);
   }
 
+  function popScreen() {
+    if (poppingFromHistory) { removeTopScreen(); return; }
+    closeTopLayer();
+  }
+
   function screenHeader(title) {
     return `
     <div class="screen-header">
-      <button class="back-btn" data-back aria-label="Назад">
+      <button class="back-btn" data-back aria-label="${t('pd.back')}">
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 19 8 12l7-7"/></svg>
       </button>
       <div class="screen-title">${esc(title)}</div>
@@ -480,7 +545,7 @@
     const contactPhone = listing.phone || seller.phone || "";
 
     const html = `
-      ${screenHeader("Объявление")}
+      ${screenHeader(t("pd.title"))}
       <div class="screen-body">
         <div class="pd-gallery" id="pdGallery" style="${photos ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
           ${photos
@@ -495,7 +560,7 @@
         <div class="pd-top-row">
           <div>
             <div class="pd-price">${formatPrice(listing)}</div>
-            <span class="pd-condition">${esc(listing.condition)}</span>
+            <span class="pd-condition">${esc(conditionLabel(listing.condition))}</span>
           </div>
         </div>
         <div class="pd-title">${esc(listing.title)}</div>
@@ -504,11 +569,11 @@
           <span>· ${timeAgo(listing.createdAt)}</span>
           <span>· 👁 ${listing.views}</span>
         </div>
-        <div class="pd-desc"><h4>Описание</h4>${esc(listing.description)}</div>
+        <div class="pd-desc"><h4>${t("pd.description")}</h4>${esc(listing.description)}</div>
         ${hasCoords ? `
         <div class="pd-map-section">
           <div class="pd-map-head">
-            <h4>Расположение</h4>
+            <h4>${t("pd.location")}</h4>
             <span class="pd-map-place">${esc(listing.city)}</span>
           </div>
           <div class="pd-map-card">
@@ -519,7 +584,7 @@
                 <div class="mb-place">${esc(listing.city)}</div>
                 <div class="mb-coords">${listing.lat.toFixed(4)}, ${listing.lng.toFixed(4)}</div>
               </div>
-              <a class="mb-open" href="https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=14/${listing.lat}/${listing.lng}" target="_blank" rel="noopener">Открыть</a>
+              <a class="mb-open" href="https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=14/${listing.lat}/${listing.lng}" target="_blank" rel="noopener">${t("pd.open")}</a>
             </div>
           </div>
         </div>` : ""}
@@ -527,22 +592,22 @@
           <div class="seller-avatar">${seller.avatar}</div>
           <div class="seller-info">
             <div class="seller-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
-            <div class="seller-rating">${seller.rating ? `★ ${seller.rating.toFixed(1)} · ${seller.reviews} отзывов` : esc(seller.city || "")}</div>
+            <div class="seller-rating">${seller.rating ? `★ ${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}` : esc(seller.city || "")}</div>
           </div>
           <span class="chev">›</span>
         </div>
         <div class="pd-actions">
           ${isMine
-            ? `<button class="btn btn-ghost btn-block" data-edit-mine>✎ Редактировать объявление</button>`
+            ? `<button class="btn btn-ghost btn-block" data-edit-mine>${t("pd.edit")}</button>`
             : `<a class="btn btn-call" href="tel:${telHref(contactPhone)}">
                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6.6 3.5h3l1.5 3.7-1.9 1.4a12.5 12.5 0 0 0 5.2 5.2l1.4-1.9 3.7 1.5v3a1.8 1.8 0 0 1-1.9 1.8A15.6 15.6 0 0 1 4.8 5.4 1.8 1.8 0 0 1 6.6 3.5Z"/></svg>
-                 Позвонить
+                 ${t("pd.call")}
                </a>
                <a class="btn btn-whatsapp" href="${waHref(contactPhone, listing)}" target="_blank" rel="noopener">
                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.18-.3-.02-.46.13-.6.13-.14.3-.35.45-.53.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.03 1.02-1.03 2.48 0 1.46 1.06 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.62.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.7.25-1.29.18-1.42-.08-.12-.27-.2-.57-.34m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.37l-.36-.22-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26A9.88 9.88 0 0 1 20.05 5.1a9.83 9.83 0 0 1 2.9 7 9.88 9.88 0 0 1-9.9 9.68m8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.89-11.9a11.82 11.82 0 0 0-3.48-8.41"/></svg>
                  WhatsApp
                </a>
-               <button class="fav-square ${fav ? "active" : ""}" data-fav-btn2="${listing.id}" aria-label="В избранное" title="В избранное">
+               <button class="fav-square ${fav ? "active" : ""}" data-fav-btn2="${listing.id}" aria-label="${t('fav.add')}" title="${t('fav.add')}">
                  <svg viewBox="0 0 24 24" width="21" height="21"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
                </button>`}
         </div>
@@ -579,17 +644,17 @@
           <div class="seller-hero-avatar">${seller.avatar}</div>
           <div class="seller-hero-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
           <div class="profile-meta" style="justify-content:center;margin-top:4px;">
-            ${seller.rating ? `<span class="stars">${starString(seller.rating)}</span><span>${seller.rating.toFixed(1)} · ${seller.reviews} отзывов</span>` : `<span>${esc(seller.city || "")}</span>`}
+            ${seller.rating ? `<span class="stars">${starString(seller.rating)}</span><span>${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}</span>` : `<span>${esc(seller.city || "")}</span>`}
           </div>
           ${seller.about ? `<p class="seller-hero-about">${esc(seller.about)}</p>` : ""}
           <div class="profile-stats" style="max-width:280px;margin:18px auto 0;">
-            <div class="stat"><b>${sellerListings.length}</b><span>Объявления</span></div>
-            <div class="stat"><b>${seller.sales != null ? seller.sales : sellerSold}</b><span>Продано</span></div>
-            <div class="stat"><b>${seller.memberSince}</b><span>На сайте с</span></div>
+            <div class="stat"><b>${sellerListings.length}</b><span>${t("seller.listings")}</span></div>
+            <div class="stat"><b>${seller.sales != null ? seller.sales : sellerSold}</b><span>${t("seller.sold")}</span></div>
+            <div class="stat"><b>${seller.memberSince}</b><span>${t("seller.since")}</span></div>
           </div>
         </div>
-        ${sellerListings.length ? `<h4 style="margin:18px 0 10px;font-size:14px;">Объявления продавца</h4><div class="grid" id="sellerGrid"></div>` : ""}
-        ${reviews.length ? `<h4 style="margin:22px 0 4px;font-size:14px;">Отзывы (${reviews.length})</h4>` : ""}
+        ${sellerListings.length ? `<h4 style="margin:18px 0 10px;font-size:14px;">${t("seller.itsListings")}</h4><div class="grid" id="sellerGrid"></div>` : ""}
+        ${reviews.length ? `<h4 style="margin:22px 0 4px;font-size:14px;">${t("seller.reviews")} (${reviews.length})</h4>` : ""}
         ${reviews.length ? `<div id="sellerReviews">${reviews.map(reviewHTML).join("")}</div>` : ""}
       </div>`;
 
@@ -611,7 +676,7 @@
         <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
       </div>
       <div class="review-text">${esc(r.text)}</div>
-      <div class="review-time">${r.daysAgo} дн. назад</div>
+      <div class="review-time">${r.daysAgo} ${t("seller.daysAgo")}</div>
     </div>`;
   }
 
@@ -650,9 +715,9 @@
   function openChatList() {
     const entries = Object.entries(state.chats).sort((a, b) => lastMsgTime(b[1]) - lastMsgTime(a[1]));
     const html = `
-      ${screenHeader("Сообщения")}
+      ${screenHeader(t("chat.title"))}
       <div class="screen-body" id="chatListBody">
-        ${entries.length ? "" : `<div class="empty-state"><div class="empty-emoji">💬</div><p>Пока нет сообщений</p><span>Напишите продавцу из карточки товара</span></div>`}
+        ${entries.length ? "" : `<div class="empty-state"><div class="empty-emoji">💬</div><p>${t("chat.emptyTitle")}</p><span>${t("chat.emptySub")}</span></div>`}
         <div id="chatListItems"></div>
       </div>`;
     pushScreen(html, (el) => {
@@ -696,8 +761,8 @@
       ${screenHeader(seller.name)}
       <div class="chat-screen-body" id="chatBody"></div>
       <div class="chat-input-row">
-        <input type="text" id="chatInput" placeholder="Написать сообщение..." autocomplete="off" />
-        <button class="send-btn" id="chatSendBtn" aria-label="Отправить">
+        <input type="text" id="chatInput" placeholder="${t('chat.placeholder')}" autocomplete="off" />
+        <button class="send-btn" id="chatSendBtn" aria-label="${t('chat.send')}">
           <svg viewBox="0 0 24 24" width="17" height="17"><path d="M4 12l16-7-6.5 16-2.7-6.8L4 12Z"/></svg>
         </button>
       </div>`;
@@ -760,61 +825,61 @@
     const catOptions = CATEGORIES.filter((c) => c.id !== "all");
 
     const html = `
-      ${screenHeader(isEdit ? "Редактировать объявление" : "Новое объявление")}
+      ${screenHeader(isEdit ? t("form.editTitle") : t("form.newTitle"))}
       <div class="screen-body">
         <div class="form-group">
-          <label>Фотографии</label>
+          <label>${t("form.photos")}</label>
           <div class="photo-grid" id="photoGrid"></div>
-          <div class="form-hint">Первое фото будет обложкой. До 6 фото.</div>
+          <div class="form-hint">${t("form.photosHint")}</div>
           <input type="file" id="photoInput" accept="image/*" multiple hidden />
         </div>
 
         <div class="form-group">
-          <label>Название</label>
-          <input class="form-input" id="fTitle" maxlength="70" placeholder="Например: iPhone 13, 128 ГБ" value="${esc(draft.title)}" />
+          <label>${t("form.name")}</label>
+          <input class="form-input" id="fTitle" maxlength="70" placeholder="${t('form.namePlaceholder')}" value="${esc(draft.title)}" />
         </div>
 
         <div class="form-group">
-          <label>Категория</label>
+          <label>${t("form.category")}</label>
           <div class="category-grid" id="categoryGrid">
             ${catOptions.map((c) => `<div class="category-opt ${c.id === draft.category ? "active" : ""}" data-cat="${c.id}"><span class="emo">${c.icon}</span>${c.name}</div>`).join("")}
           </div>
         </div>
 
         <div class="form-group">
-          <label>Цена, с.</label>
+          <label>${t("form.price")}</label>
           <input class="form-input" id="fPrice" type="number" inputmode="numeric" placeholder="0" value="${esc(draft.price)}" />
         </div>
 
         <div class="form-group">
-          <label>Локация</label>
+          <label>${t("form.location")}</label>
           <button type="button" class="form-picker" id="fCityBtn">
-            <span class="fp-left"><span class="fp-emo">📍</span><span id="fCityLabel">${esc(draft.city || "Выберите локацию")}</span></span>
+            <span class="fp-left"><span class="fp-emo">📍</span><span id="fCityLabel">${esc(draft.city || t("form.pickLocation"))}</span></span>
             <span class="chev">›</span>
           </button>
         </div>
 
         <div class="form-group">
-          <label>Телефон для связи</label>
+          <label>${t("form.phone")}</label>
           <input class="form-input" id="fPhone" type="tel" inputmode="tel" placeholder="+992 90 000 00 00" value="${esc(draft.phone || "")}" />
-          <div class="form-hint">По этому номеру покупатели позвонят и напишут в WhatsApp.</div>
+          <div class="form-hint">${t("form.phoneHint")}</div>
         </div>
 
         <div class="form-group">
-          <label>Состояние</label>
+          <label>${t("form.condition")}</label>
           <div class="cond-toggle" id="condToggle">
-            <button type="button" class="${draft.condition.startsWith("Новое") ? "active" : ""}" data-cond="Новое">Новое</button>
-            <button type="button" class="${draft.condition.startsWith("Б/у") ? "active" : ""}" data-cond="Б/у, хорошее">Б/у</button>
+            <button type="button" class="${draft.condition.startsWith("Новое") ? "active" : ""}" data-cond="Новое">${t("cond.new")}</button>
+            <button type="button" class="${draft.condition.startsWith("Б/у") ? "active" : ""}" data-cond="Б/у, хорошее">${t("cond.used")}</button>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Описание</label>
-          <textarea class="form-textarea" id="fDesc" maxlength="600" placeholder="Расскажите подробнее о товаре...">${esc(draft.description)}</textarea>
+          <label>${t("form.description")}</label>
+          <textarea class="form-textarea" id="fDesc" maxlength="600" placeholder="${t('form.descPlaceholder')}">${esc(draft.description)}</textarea>
         </div>
 
-        <button class="btn btn-primary btn-block" id="submitListingBtn">${isEdit ? "Сохранить изменения" : "Опубликовать объявление"}</button>
-        ${isEdit ? `<button class="btn btn-danger btn-block" id="deleteListingBtn" style="margin-top:10px;">Удалить объявление</button>` : ""}
+        <button class="btn btn-primary btn-block" id="submitListingBtn">${isEdit ? t("form.save") : t("form.publish")}</button>
+        ${isEdit ? `<button class="btn btn-danger btn-block" id="deleteListingBtn" style="margin-top:10px;">${t("form.delete")}</button>` : ""}
       </div>`;
 
     pushScreen(html, (el) => {
@@ -878,10 +943,10 @@
         const phone = el.querySelector("#fPhone").value.trim();
         const description = el.querySelector("#fDesc").value.trim();
 
-        if (!title) { showToast("Укажите название"); el.querySelector("#fTitle").focus(); return; }
-        if (!price || price <= 0) { showToast("Укажите корректную цену"); el.querySelector("#fPrice").focus(); return; }
-        if (!description) { showToast("Добавьте описание"); el.querySelector("#fDesc").focus(); return; }
-        if (!phone || phone.replace(/\D/g, "").length < 9) { showToast("Укажите телефон для связи"); el.querySelector("#fPhone").focus(); return; }
+        if (!title) { showToast(t("form.needName")); el.querySelector("#fTitle").focus(); return; }
+        if (!price || price <= 0) { showToast(t("form.needPrice")); el.querySelector("#fPrice").focus(); return; }
+        if (!description) { showToast(t("form.needDesc")); el.querySelector("#fDesc").focus(); return; }
+        if (!phone || phone.replace(/\D/g, "").length < 9) { showToast(t("form.needPhone")); el.querySelector("#fPhone").focus(); return; }
 
         const cat = CATEGORIES.find((c) => c.id === draft.category) || CATEGORIES[1];
 
@@ -889,7 +954,7 @@
           const [eLat, eLng] = coordsForLocation(city);
           Object.assign(existing, { title, price, city, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng });
           persistListings();
-          showToast("Изменения сохранены");
+          showToast(t("form.saved"));
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
           const newListing = {
@@ -910,7 +975,7 @@
           };
           state.listings.unshift(newListing);
           persistListings();
-          showToast("Объявление опубликовано 🎉");
+          showToast(t("form.published"));
         }
         renderHomeTab();
         renderMyListingsTab();
@@ -926,7 +991,7 @@
         persistFavorites();
         renderHomeTab();
         renderMyListingsTab();
-        showToast("Объявление удалено");
+        showToast(t("form.deleted"));
         popScreen();
       });
     });
@@ -947,8 +1012,12 @@
       condPills.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.dataset.cond === state.filters.condition));
       sortPills.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.dataset.sort === state.filters.sort));
       overlay.classList.add("open");
+      openLayer(() => overlay.classList.remove("open"));
     }
-    function close() { overlay.classList.remove("open"); }
+    function close() {
+      if (poppingFromHistory) { overlay.classList.remove("open"); return; }
+      if (overlay.classList.contains("open")) closeTopLayer();
+    }
 
     openBtn.addEventListener("click", open);
     closeBtn.addEventListener("click", close);
@@ -974,13 +1043,13 @@
       const activeCond = condPills.querySelector(".pill.active");
       state.filters.condition = activeCond ? activeCond.dataset.cond : null;
       const activeSort = sortPills.querySelector(".pill.active");
-      state.filters.sort = activeSort ? activeSort.dataset.sort : "new";
+      state.filters.sort = activeSort ? activeSort.dataset.sort : "all";
       close();
       updateQuickFilterUI();
       renderHomeTab();
     });
     document.getElementById("clearFilterBtn").addEventListener("click", () => {
-      state.filters.priceMin = null; state.filters.priceMax = null; state.filters.condition = null; state.filters.sort = "new";
+      state.filters.priceMin = null; state.filters.priceMax = null; state.filters.condition = null; state.filters.sort = "all";
       priceMin.value = ""; priceMax.value = "";
       condPills.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
       sortPills.querySelectorAll(".pill").forEach((p, i) => p.classList.toggle("active", i === 0));
@@ -988,7 +1057,7 @@
       renderHomeTab();
     });
     document.getElementById("resetFiltersBtn").addEventListener("click", () => {
-      state.filters = { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "new" };
+      state.filters = { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" };
       document.getElementById("searchInput").value = "";
       document.getElementById("clearSearchBtn").hidden = true;
       updateQuickFilterUI();
@@ -1018,7 +1087,7 @@
     saveJSON(LS.notifSeen, NEWS_ITEMS.length);
     updateNotifBadge();
     const html = `
-      ${screenHeader("\u041d\u043e\u0432\u043e\u0441\u0442\u0438 Geran Express")}
+      ${screenHeader(t("news.title"))}
       <div class="screen-body">
         ${NEWS_ITEMS.map((n) => `
           <div class="news-item">
@@ -1026,7 +1095,7 @@
             <div>
               <div class="news-title">${esc(n.title)}</div>
               <div class="news-text">${esc(n.text)}</div>
-              <div class="news-time">${n.daysAgo === 0 ? "\u0441\u0435\u0433\u043e\u0434\u043d\u044f" : n.daysAgo + " \u0434\u043d. \u043d\u0430\u0437\u0430\u0434"}</div>
+              <div class="news-time">${n.daysAgo === 0 ? t("news.today") : n.daysAgo + " " + t("news.daysAgo")}</div>
             </div>
           </div>`).join("")}
       </div>`;
@@ -1034,10 +1103,10 @@
   }
 
   const PROMO_SLIDES = [
-    { title: "\u0421\u043a\u0438\u0434\u043a\u0438 \u043d\u0430 \u0443\u0441\u043b\u0443\u0433\u0438 \u0440\u0430\u0439\u043e\u043d\u0430", sub: "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0430, \u0440\u0435\u043c\u043e\u043d\u0442, \u0434\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u2014 \u0440\u044f\u0434\u043e\u043c \u0441 \u0432\u0430\u043c\u0438", emo: "\ud83d\udee0\ufe0f", grad: ["#16A34A", "#4ADE80"] },
-    { title: "255 \u043e\u0431\u044a\u044f\u0432\u043b\u0435\u043d\u0438\u0439 \u0438 \u0440\u0430\u0441\u0442\u0451\u0442", sub: "\u041d\u043e\u0432\u044b\u0435 \u0442\u043e\u0432\u0430\u0440\u044b \u043a\u0430\u0436\u0434\u044b\u0439 \u0434\u0435\u043d\u044c", emo: "\ud83d\udce6", grad: ["#22C58B", "#4FACFE"] },
-    { title: "\u041f\u0440\u043e\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u0437\u0430 \u043f\u0430\u0440\u0443 \u043c\u0438\u043d\u0443\u0442", sub: "\u0420\u0430\u0437\u043c\u0435\u0441\u0442\u0438\u0442\u0435 \u043e\u0431\u044a\u044f\u0432\u043b\u0435\u043d\u0438\u0435 \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e", emo: "\u26a1", grad: ["#4ADE80", "#16A34A"] },
-    { title: "Geran Express \u0442\u0435\u043f\u0435\u0440\u044c \u0431\u044b\u0441\u0442\u0440\u0435\u0435", sub: "\u041f\u0438\u0448\u0438\u0442\u0435 \u043f\u0440\u043e\u0434\u0430\u0432\u0446\u0430\u043c \u043d\u0430\u043f\u0440\u044f\u043c\u0443\u044e", emo: "\ud83d\udcac", grad: ["#059669", "#34D399"] },
+    { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: ["#16A34A", "#4ADE80"] },
+    { key: "promo.2", emo: "\ud83d\udce6", grad: ["#22C58B", "#4FACFE"] },
+    { key: "promo.3", emo: "\u26a1", grad: ["#4ADE80", "#16A34A"] },
+    { key: "promo.4", emo: "\ud83d\udcac", grad: ["#059669", "#34D399"] },
   ];
 
   function initPromoBanner() {
@@ -1047,7 +1116,7 @@
 
     track.innerHTML = PROMO_SLIDES.map(
       (s) => `<div class="promo-slide" style="background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]})">
-        <div class="promo-slide-text"><div class="promo-slide-title">${esc(s.title)}</div><div class="promo-slide-sub">${esc(s.sub)}</div></div>
+        <div class="promo-slide-text"><div class="promo-slide-title">${esc(t(s.key + ".t"))}</div><div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div></div>
         <span class="promo-slide-emo">${s.emo}</span>
       </div>`
     ).join("");
@@ -1095,19 +1164,19 @@
   function openAvatarEditor() {
     const me = getUser("me");
     const html = `
-      ${screenHeader("Фото профиля")}
+      ${screenHeader(t("avatar.title"))}
       <div class="screen-body">
         <div class="avatar-preview-big" id="avatarPreview"
              style="${me.avatarPhoto ? `background-image:url(${me.avatarPhoto})` : ""}">${me.avatarPhoto ? "" : me.avatar}</div>
 
         <div class="form-group">
-          <button class="btn btn-primary btn-block" id="uploadAvatarBtn">📷 Загрузить фото</button>
-          ${me.avatarPhoto ? `<button class="btn btn-ghost btn-block" id="removeAvatarBtn" style="margin-top:9px;">Убрать фото</button>` : ""}
-          <div class="form-hint">Фото хранится только в вашем браузере.</div>
+          <button class="btn btn-primary btn-block" id="uploadAvatarBtn">${t("avatar.upload")}</button>
+          ${me.avatarPhoto ? `<button class="btn btn-ghost btn-block" id="removeAvatarBtn" style="margin-top:9px;">${t("avatar.remove")}</button>` : ""}
+          <div class="form-hint">${t("avatar.hint")}</div>
         </div>
 
         <div class="form-group">
-          <label>Или выберите значок</label>
+          <label>${t("avatar.orEmoji")}</label>
           <div class="avatar-emoji-grid" id="avatarEmojiGrid">
             ${AVATAR_EMOJI.map((e) => `<div class="avatar-emoji-opt ${!me.avatarPhoto && me.avatar === e ? "active" : ""}" data-emo="${e}">${e}</div>`).join("")}
           </div>
@@ -1129,7 +1198,7 @@
           fileInput.value = "";
           fileInput.onchange = null;
           popScreen();
-          showToast("Фото обновлено");
+          showToast(t("avatar.updated"));
         };
         reader.readAsDataURL(file);
       };
@@ -1140,7 +1209,7 @@
         persistMeProfile();
         renderProfileTab();
         popScreen();
-        showToast("Фото убрано");
+        showToast(t("avatar.removed"));
       });
 
       el.querySelectorAll("[data-emo]").forEach((opt) =>
@@ -1150,7 +1219,7 @@
           persistMeProfile();
           renderProfileTab();
           popScreen();
-          showToast("Значок обновлён");
+          showToast(t("avatar.emojiUpdated"));
         })
       );
     });
@@ -1166,14 +1235,14 @@
                  placeholder="${esc(placeholder || "")}" value="${esc(value || "")}" />
           ${hint ? `<div class="form-hint">${esc(hint)}</div>` : ""}
         </div>
-        <button class="btn btn-primary btn-block" id="editorSaveBtn">Сохранить</button>
+        <button class="btn btn-primary btn-block" id="editorSaveBtn">${t("editor.save")}</button>
       </div>`;
     pushScreen(html, (el) => {
       const input = el.querySelector("#editorInput");
       setTimeout(() => input.focus(), 350);
       const save = () => {
         const v = input.value.trim();
-        if (!v) { showToast("Поле не может быть пустым"); return; }
+        if (!v) { showToast(t("editor.empty")); return; }
         onSave(v);
         popScreen();
       };
@@ -1189,7 +1258,7 @@
     if (typeof L === "undefined") {
       mapEl.className = "pd-map-offline";
       mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span>
-        <span>Карта недоступна без интернета</span>
+        <span>${t("pd.mapOffline")}</span>
         <span>${esc(listing.city)} \u00b7 ${listing.lat.toFixed(4)}, ${listing.lng.toFixed(4)}</span>`;
       return;
     }
@@ -1223,7 +1292,7 @@
       setTimeout(() => map.invalidateSize(), 700);
     } catch (err) {
       mapEl.className = "pd-map-offline";
-      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span><span>Карту не удалось загрузить</span>`;
+      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span><span>${t("pd.mapFailed")}</span>`;
     }
   }
 
@@ -1266,8 +1335,8 @@
     let startDist = 0, startScale = 1, dragFrom = null, panFrom = null;
 
     img.addEventListener("pointerdown", (e) => {
-      img.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, e);
+      try { img.setPointerCapture(e.pointerId); } catch (err) {}
       if (pointers.size === 1 && zoomState.scale > 1) {
         dragFrom = { x: e.clientX, y: e.clientY };
         panFrom = { x: zoomState.x, y: zoomState.y };
@@ -1284,7 +1353,8 @@
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-        if (startDist > 0) setScale(startScale * (dist / startDist));
+        if (!startDist) { startDist = dist; startScale = zoomState.scale; }
+        else setScale(startScale * (dist / startDist));
       } else if (dragFrom) {
         zoomState.x = panFrom.x + (e.clientX - dragFrom.x);
         zoomState.y = panFrom.y + (e.clientY - dragFrom.y);
@@ -1301,15 +1371,20 @@
     document.getElementById("zoomImg").src = src;
     if (overlay._reset) overlay._reset();
     overlay.classList.add("open");
+    openLayer(() => overlay.classList.remove("open"));
   }
-  function closeImageZoom() { document.getElementById("zoomOverlay").classList.remove("open"); }
+  function closeImageZoom() {
+    const o = document.getElementById("zoomOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
 
   const SPLASH_STEPS = [
-    { at: 120,  pct: 18,  text: "Подключение…" },
-    { at: 620,  pct: 46,  text: "Загрузка каталога…" },
-    { at: 1150, pct: 72,  text: "Обновление объявлений…" },
-    { at: 1700, pct: 92,  text: "Почти готово…" },
-    { at: 2050, pct: 100, text: "Готово" },
+    { at: 120,  pct: 18,  key: "splash.connect" },
+    { at: 620,  pct: 46,  key: "splash.catalog" },
+    { at: 1150, pct: 72,  key: "splash.listings" },
+    { at: 1700, pct: 92,  key: "splash.almost" },
+    { at: 2050, pct: 100, key: "splash.done" },
   ];
 
   function runSplash(onDone) {
@@ -1320,7 +1395,7 @@
     SPLASH_STEPS.forEach((step) => {
       setTimeout(() => {
         bar.style.width = step.pct + "%";
-        status.textContent = step.text;
+        status.textContent = t(step.key);
       }, step.at);
     });
 
@@ -1363,7 +1438,7 @@
       const d = digitsOf();
       if (d.length !== 9) {
         row.classList.add("invalid");
-        err.textContent = "Введите 9 цифр номера";
+        err.textContent = t("auth.err");
         return;
       }
       btn.classList.add("loading");
@@ -1382,10 +1457,119 @@
           screen.classList.remove("show");
           screen.remove();
           onDone();
-          showToast("Добро пожаловать в Geran Express 👋");
+          showToast(t("auth.welcome"));
         }, 420);
       }, 700);
     });
+  }
+
+  function applyLanguage(lang) {
+    state.lang = lang;
+    saveJSON(LS.lang, lang);
+    setLanguage(lang);
+    applyStaticTranslations();
+    refreshAllText();
+  }
+
+  function refreshAllText() {
+    const langRow = document.getElementById("langValue");
+    if (langRow) {
+      const l = LANGUAGES.find((x) => x.id === state.lang) || LANGUAGES[0];
+      langRow.textContent = l.flag + " " + l.native;
+    }
+    if (typeof updateQuickFilterUI === "function") updateQuickFilterUI();
+    if (document.getElementById("promoTrack").children.length) initPromoBanner();
+    renderHomeTab();
+    renderFavoritesTab();
+    renderMyListingsTab();
+    renderProfileTab();
+  }
+
+  function openLogoutSheet() {
+    document.getElementById("logoutOverlay").classList.add("open");
+    openLayer(() => document.getElementById("logoutOverlay").classList.remove("open"));
+  }
+  function closeLogoutSheet() {
+    const o = document.getElementById("logoutOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  function doLogout() {
+    state.isAuthed = false;
+    state.meProfile = {};
+    saveJSON(LS.authed, false);
+    saveJSON(LS.meProfile, {});
+    closeLogoutSheet();
+    showToast(t("logout.done"));
+    setTimeout(() => location.reload(), 700);
+  }
+
+  function openLanguageSheet() {
+    const list = document.getElementById("langList");
+    list.innerHTML = LANGUAGES.map(
+      (l) => `<div class="option-item ${l.id === state.lang ? "active" : ""}" data-lang="${l.id}">
+        <span class="opt-emo">${l.flag}</span><span class="opt-name">${esc(l.native)}</span><span class="check">✓</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-lang]").forEach((item) =>
+      item.addEventListener("click", () => {
+        applyLanguage(item.dataset.lang);
+        closeLanguageSheet();
+        showToast(t("lang.changed"));
+      })
+    );
+    document.getElementById("langOverlay").classList.add("open");
+    openLayer(() => document.getElementById("langOverlay").classList.remove("open"));
+  }
+  function closeLanguageSheet() {
+    const o = document.getElementById("langOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  function initHeaderCollapse() {
+    const main = document.getElementById("appMain");
+    const header = document.getElementById("appHeader");
+    let last = 0;
+    let ticking = false;
+    let lockUntil = 0;
+
+    function setCollapsed(on) {
+      if (header.classList.contains("collapsed") === on) return;
+      header.classList.toggle("collapsed", on);
+      lockUntil = Date.now() + 420;
+    }
+
+    function update() {
+      ticking = false;
+      const y = main.scrollTop;
+      const scrollable = main.scrollHeight - main.clientHeight;
+
+      if (scrollable < 240) {
+        setCollapsed(false);
+        last = y;
+        return;
+      }
+
+      if (Date.now() < lockUntil) {
+        last = y;
+        return;
+      }
+
+      const delta = y - last;
+      if (y < 40) setCollapsed(false);
+      else if (delta > 5) setCollapsed(true);
+      else if (delta < -5) setCollapsed(false);
+      last = y;
+    }
+
+    main.addEventListener("scroll", () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
   }
 
   function init() {
@@ -1408,19 +1592,26 @@
     document.getElementById("openFavFromProfileBtn").addEventListener("click", () => switchTab("favorites"));
     document.getElementById("openChatsBtn").addEventListener("click", openChatList);
     document.getElementById("notifBtn").addEventListener("click", openNotificationsScreen);
+    document.getElementById("logoutBtn").addEventListener("click", openLogoutSheet);
+    document.getElementById("cancelLogoutBtn").addEventListener("click", closeLogoutSheet);
+    document.getElementById("confirmLogoutBtn").addEventListener("click", doLogout);
+    document.getElementById("logoutOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLogoutSheet(); });
+    document.getElementById("openLangBtn").addEventListener("click", openLanguageSheet);
+    document.getElementById("closeLangBtn").addEventListener("click", closeLanguageSheet);
+    document.getElementById("langOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLanguageSheet(); });
     document.getElementById("editAvatarBtn").addEventListener("click", openAvatarEditor);
     document.getElementById("editNameBtn").addEventListener("click", () =>
       openTextEditor({
-        title: "Имя", label: "Ваше имя", value: getUser("me").name, placeholder: "Как вас зовут?",
-        onSave: (v) => { state.meProfile.name = v; persistMeProfile(); renderProfileTab(); showToast("Имя обновлено"); },
+        title: t("name.title"), label: t("name.label"), value: getUser("me").name, placeholder: t("name.placeholder"),
+        onSave: (v) => { state.meProfile.name = v; persistMeProfile(); renderProfileTab(); showToast(t("name.updated")); },
       })
     );
     document.getElementById("openPhoneBtn").addEventListener("click", () =>
       openTextEditor({
-        title: "Телефон", label: "Номер телефона", value: getUser("me").phone, inputType: "tel",
+        title: t("phone.title"), label: t("phone.label"), value: getUser("me").phone, inputType: "tel",
         placeholder: "+992 90 000 00 00",
-        hint: "По этому номеру покупатели позвонят или напишут в WhatsApp по вашим объявлениям.",
-        onSave: (v) => { state.meProfile.phone = v; persistMeProfile(); renderProfileTab(); showToast("Телефон обновлён"); },
+        hint: t("phone.hint"),
+        onSave: (v) => { state.meProfile.phone = v; persistMeProfile(); renderProfileTab(); showToast(t("phone.updated")); },
       })
     );
     document.getElementById("openAddressBtn").addEventListener("click", () =>
@@ -1429,7 +1620,7 @@
         state.meProfile.city = loc;
         persistMeProfile();
         renderProfileTab();
-        showToast("Адрес обновлён");
+        showToast(t("address.updated"));
       })
     );
     document.getElementById("refreshDataBtn").addEventListener("click", () => {
@@ -1440,10 +1631,10 @@
       renderHomeTab();
       renderMyListingsTab();
       renderProfileTab();
-      showToast(`Каталог обновлён · ${state.listings.length} объявл.`);
+      showToast(`${t("catalog.refreshed")} · ${state.listings.length} ${t("home.count")}`);
     });
     document.getElementById("aboutBtn").addEventListener("click", () =>
-      showToast("Geran Express · демо-маркетплейс ✨")
+      showToast(t("app.about"))
     );
 
     const searchInput = document.getElementById("searchInput");
@@ -1477,11 +1668,16 @@
     initOnlineIndicator();
     initPromoBanner();
     initZoomViewer();
+    initHeaderCollapse();
+    history.replaceState({ base: true }, "");
+    applyLanguage(state.lang);
     switchTab("home");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     applyTheme(state.theme);
+    setLanguage(state.lang);
+    applyStaticTranslations();
     runSplash(() => {
       if (state.isAuthed) { init(); return; }
       showAuthScreen(init);

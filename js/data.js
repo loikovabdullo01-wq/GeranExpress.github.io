@@ -1,20 +1,20 @@
 
 const CATEGORIES = [
-  { id: "all", name: "Все", icon: "✨" },
-  { id: "services", name: "Услуги", icon: "🛠️" },
-  { id: "electronics", name: "Электроника", icon: "📱" },
-  { id: "fashion", name: "Одежда", icon: "👕" },
-  { id: "home", name: "Дом и сад", icon: "🛋️" },
-  { id: "transport", name: "Транспорт", icon: "🚗" },
-  { id: "realty", name: "Недвижимость", icon: "🏠" },
-  { id: "tools", name: "Инструменты", icon: "🔩" },
-  { id: "kids", name: "Детям", icon: "🧸" },
-  { id: "hobby", name: "Хобби", icon: "🎨" },
-  { id: "sport", name: "Спорт", icon: "🏀" },
-  { id: "beauty", name: "Красота", icon: "💄" },
-  { id: "books", name: "Книги", icon: "📚" },
-  { id: "animals", name: "Животные", icon: "🐾" },
-  { id: "other", name: "Другое", icon: "🏷️" },
+  { id: "all", get name() { return t("cat.all"); }, icon: "✨" },
+  { id: "services", get name() { return t("cat.services"); }, icon: "🛠️" },
+  { id: "electronics", get name() { return t("cat.electronics"); }, icon: "📱" },
+  { id: "fashion", get name() { return t("cat.fashion"); }, icon: "👕" },
+  { id: "home", get name() { return t("cat.home"); }, icon: "🛋️" },
+  { id: "transport", get name() { return t("cat.transport"); }, icon: "🚗" },
+  { id: "realty", get name() { return t("cat.realty"); }, icon: "🏠" },
+  { id: "tools", get name() { return t("cat.tools"); }, icon: "🔩" },
+  { id: "kids", get name() { return t("cat.kids"); }, icon: "🧸" },
+  { id: "hobby", get name() { return t("cat.hobby"); }, icon: "🎨" },
+  { id: "sport", get name() { return t("cat.sport"); }, icon: "🏀" },
+  { id: "beauty", get name() { return t("cat.beauty"); }, icon: "💄" },
+  { id: "books", get name() { return t("cat.books"); }, icon: "📚" },
+  { id: "animals", get name() { return t("cat.animals"); }, icon: "🐾" },
+  { id: "other", get name() { return t("cat.other"); }, icon: "🏷️" },
 ];
 
 const GRADIENTS = [
@@ -193,18 +193,26 @@ MOCK_LISTINGS.forEach((l) => {
 const MOCK_REVIEWS = buildReviews();
 
 function formatPrice(listing) {
-  if (typeof listing === "number") return listing.toLocaleString("ru-RU") + " с.";
+  if (typeof listing === "number") return listing.toLocaleString("ru-RU") + " " + t("currency");
   if (listing && listing.priceText) return listing.priceText;
-  return listing.price.toLocaleString("ru-RU") + " с.";
+  return listing.price.toLocaleString("ru-RU") + " " + t("currency");
 }
 
 function timeAgo(ts) {
   const diff = Date.now() - ts;
   const days = Math.floor(diff / 86400000);
-  if (days <= 0) return "сегодня";
-  if (days === 1) return "вчера";
-  if (days < 7) return days + " дн. назад";
+  if (days <= 0) return t("time.today");
+  if (days === 1) return t("time.yesterday");
+  if (days < 7) return days + " " + t("time.days");
   const weeks = Math.floor(days / 7);
-  if (weeks < 5) return weeks + " нед. назад";
-  return Math.floor(days / 30) + " мес. назад";
+  if (weeks < 5) return weeks + " " + t("time.weeks");
+  return Math.floor(days / 30) + " " + t("time.months");
+}
+
+function conditionLabel(cond) {
+  const c = String(cond || "");
+  if (c.startsWith("Новое") || c.startsWith("Нов")) return t("cond.new");
+  if (c.startsWith("Б/у, хорошее")) return t("cond.usedGood");
+  if (c.startsWith("Б/у") || c.startsWith("Б.у")) return t("cond.used");
+  return c;
 }

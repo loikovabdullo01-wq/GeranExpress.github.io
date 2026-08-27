@@ -21,9 +21,9 @@
     <div class="splash-logo-card"><img src="assets/logo-icon.png" alt="" /></div>
     <img class="splash-wordmark" src="assets/logo-wordmark-white.png" alt="Geran Express" />
     <div class="splash-progress"><div class="splash-progress-bar" id="splashBar"></div></div>
-    <div class="splash-status" id="splashStatus">Загрузка каталога…</div>
+    <div class="splash-status" id="splashStatus"></div>
   </div>
-  <div class="splash-foot">Маркетплейс объявлений вашего района</div>
+  <div class="splash-foot" data-i18n="app.tagline"></div>
 </div>
 
 <div class="auth-screen" id="authScreen">
@@ -31,10 +31,10 @@
     <img class="auth-logo" src="assets/logo-full-white.png" alt="Geran Express" />
   </div>
   <div class="auth-sheet">
-    <h2 class="auth-title">Вход по номеру</h2>
-    <p class="auth-sub">Введите номер телефона — он будет виден покупателям в ваших объявлениях.</p>
+    <h2 class="auth-title" data-i18n="auth.title"></h2>
+    <p class="auth-sub" data-i18n="auth.sub"></p>
 
-    <label class="auth-label">Номер телефона</label>
+    <label class="auth-label" data-i18n="auth.label"></label>
     <div class="auth-phone-row" id="authPhoneRow">
       <span class="auth-prefix">🇹🇯 +992</span>
       <input type="tel" id="authPhoneInput" inputmode="numeric" autocomplete="tel"
@@ -43,10 +43,10 @@
     <div class="auth-error" id="authError"></div>
 
     <button class="btn btn-primary btn-block auth-submit" id="authSubmitBtn" disabled>
-      <span class="auth-btn-label">Продолжить</span>
+      <span class="auth-btn-label" data-i18n="auth.continue"></span>
       <span class="auth-btn-spinner" aria-hidden="true"></span>
     </button>
-    <p class="auth-note">Продолжая, вы соглашаетесь с правилами Geran Express. Номер хранится только на вашем устройстве.</p>
+    <p class="auth-note" data-i18n="auth.note"></p>
   </div>
 </div>
 
@@ -59,14 +59,14 @@
         <img src="assets/logo-full-dark.png" alt="" class="brand-logo brand-logo-dark" aria-hidden="true" />
       </div>
       <div class="header-actions">
-        <div class="online-indicator" id="onlineIndicator" title="Сейчас на сайте">
+        <div class="online-indicator" id="onlineIndicator" data-i18n-title="header.online">
           <span class="online-dot"></span><span id="onlineCount">128</span>
         </div>
-        <button class="icon-btn" id="themeToggleBtn" aria-label="Переключить тему" title="Тёмная/светлая тема">
+        <button class="icon-btn" id="themeToggleBtn" data-i18n-title="header.theme">
           <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22.5" y2="12"/><line x1="4.5" y1="4.5" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.5" y2="19.5"/><line x1="4.5" y1="19.5" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.5" y2="4.5"/></g></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.8 6.8 0 0 0 20 14.5Z"/></svg>
         </button>
-        <button class="icon-btn" id="notifBtn" aria-label="Уведомления" title="Новости Geran Express">
+        <button class="icon-btn" id="notifBtn" data-i18n-title="header.notifications">
           <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3.5a5.5 5.5 0 0 0-5.5 5.5v3.2c0 .6-.2 1.2-.6 1.7L4.5 15.6a1 1 0 0 0 .8 1.6h13.4a1 1 0 0 0 .8-1.6l-1.4-1.7a2.7 2.7 0 0 1-.6-1.7V9A5.5 5.5 0 0 0 12 3.5Z"/><path d="M9.5 19.5a2.5 2.5 0 0 0 5 0"/></svg>
           <span class="dot-badge" id="notifBadge" hidden></span>
         </button>
@@ -76,10 +76,10 @@
     <div class="search-row" id="searchRow">
       <div class="search-box">
         <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.4" y2="16.4"/></svg>
-        <input type="text" id="searchInput" placeholder="Что вы ищете?" autocomplete="off" />
-        <button class="clear-btn" id="clearSearchBtn" hidden aria-label="Очистить">✕</button>
+        <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" autocomplete="off" />
+        <button class="clear-btn" id="clearSearchBtn" hidden data-i18n-aria="search.clear">✕</button>
       </div>
-      <button class="filter-btn" id="openFilterBtn" aria-label="Фильтры">
+      <button class="filter-btn" id="openFilterBtn" data-i18n-aria="filters.title">
         <svg viewBox="0 0 24 24" width="18" height="18"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.2" fill="var(--surface)"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.2" fill="var(--surface)"/></svg>
       </button>
     </div>
@@ -90,10 +90,9 @@
     </div>
 
     <div class="quick-filter-row" id="quickFilterRow">
-      <button class="qf-btn" id="qfLocation"><span class="qf-emo">📍</span><span id="qfLocationLabel">Локация</span></button>
-      <button class="qf-btn" id="qfSort"><span class="qf-emo">🕒</span><span id="qfSortLabel">Сначала новые</span></button>
-      <button class="qf-btn" id="qfPopular"><span class="qf-emo">🔥</span><span>Популярное</span></button>
-      <button class="qf-btn" id="qfCategory"><span class="qf-emo" id="qfCategoryEmo">📂</span><span id="qfCategoryLabel">Категории</span></button>
+      <button class="qf-btn" id="qfLocation"><span class="qf-emo">📍</span><span id="qfLocationLabel"></span><span class="qf-chev">▾</span></button>
+      <button class="qf-btn" id="qfSort"><span class="qf-emo" id="qfSortEmo">↕️</span><span id="qfSortLabel"></span><span class="qf-chev">▾</span></button>
+      <button class="qf-btn" id="qfCategory"><span class="qf-emo" id="qfCategoryEmo">📂</span><span id="qfCategoryLabel"></span><span class="qf-chev">▾</span></button>
     </div>
   </header>
 
@@ -101,62 +100,62 @@
 
     <section class="tab-view" id="tab-home" data-tab="home">
       <div class="section-title-row">
-        <h2 class="section-title" id="homeResultsTitle">Все объявления</h2>
+        <h2 class="section-title" id="homeResultsTitle"></h2>
         <span class="section-count" id="homeResultsCount"></span>
       </div>
       <div class="grid" id="homeGrid"></div>
       <div class="empty-state" id="homeEmpty" hidden>
         <div class="empty-emoji">🔍</div>
-        <p>Ничего не найдено</p>
-        <span>Попробуйте изменить запрос или фильтры</span>
-        <button class="btn btn-ghost" id="resetFiltersBtn">Сбросить фильтры</button>
+        <p data-i18n="home.emptyTitle"></p>
+        <span data-i18n="home.emptySub"></span>
+        <button class="btn btn-ghost" id="resetFiltersBtn" data-i18n="home.resetFilters"></button>
       </div>
     </section>
 
     <section class="tab-view" id="tab-favorites" data-tab="favorites">
       <div class="section-title-row">
-        <h2 class="section-title">Избранное</h2>
+        <h2 class="section-title" data-i18n="fav.title"></h2>
         <span class="section-count" id="favCount"></span>
       </div>
       <div class="grid" id="favGrid"></div>
       <div class="empty-state" id="favEmpty" hidden>
         <div class="empty-emoji">🤍</div>
-        <p>Пока пусто</p>
-        <span>Нажимайте на сердечко, чтобы сохранить объявление</span>
-        <button class="btn btn-primary" data-go="home">Смотреть объявления</button>
+        <p data-i18n="fav.emptyTitle"></p>
+        <span data-i18n="fav.emptySub"></span>
+        <button class="btn btn-primary" data-go="home" data-i18n="fav.browse"></button>
       </div>
     </section>
 
     <section class="tab-view" id="tab-listings" data-tab="listings">
       <div class="section-title-row">
-        <h2 class="section-title">Мои публикации</h2>
+        <h2 class="section-title" data-i18n="my.title"></h2>
         <span class="section-count" id="myCount"></span>
       </div>
       <div class="my-list" id="myListingsList"></div>
       <div class="empty-state" id="myEmpty" hidden>
         <div class="empty-emoji">📦</div>
-        <p>У вас пока нет объявлений</p>
-        <span>Разместите первое объявление за пару минут</span>
-        <button class="btn btn-primary" id="myEmptyAddBtn">+ Разместить объявление</button>
+        <p data-i18n="my.emptyTitle"></p>
+        <span data-i18n="my.emptySub"></span>
+        <button class="btn btn-primary" id="myEmptyAddBtn" data-i18n="my.addFirst"></button>
       </div>
     </section>
 
     <section class="tab-view" id="tab-profile" data-tab="profile">
       <div class="profile-card">
-        <button class="profile-avatar-btn" id="editAvatarBtn" aria-label="Изменить фото">
+        <button class="profile-avatar-btn" id="editAvatarBtn" data-i18n-aria="profile.editPhoto">
           <div class="profile-avatar" id="profileAvatar"></div>
           <span class="avatar-edit-badge">✎</span>
         </button>
-        <button class="profile-name-btn" id="editNameBtn" aria-label="Изменить имя">
+        <button class="profile-name-btn" id="editNameBtn" data-i18n-aria="profile.editName">
           <span class="profile-name" id="profileName"></span>
           <span class="name-edit-pencil">✎</span>
         </button>
         <div class="profile-meta" id="profileMemberSince"></div>
         <div class="profile-city" id="profileCity"></div>
         <div class="profile-stats">
-          <div class="stat"><b id="statListings">0</b><span>Объявления</span></div>
-          <div class="stat"><b id="statSold">0</b><span>Продано</span></div>
-          <div class="stat"><b id="statFavorites">0</b><span>Избранное</span></div>
+          <div class="stat"><b id="statListings">0</b><span data-i18n="profile.listings"></span></div>
+          <div class="stat"><b id="statSold">0</b><span data-i18n="profile.sold"></span></div>
+          <div class="stat"><b id="statFavorites">0</b><span data-i18n="profile.favorites"></span></div>
         </div>
       </div>
 
@@ -164,7 +163,7 @@
         <div class="settings-row">
           <div class="settings-row-left">
             <span class="settings-icon">🌗</span>
-            <span>Тёмная тема</span>
+            <span data-i18n="profile.darkTheme"></span>
           </div>
           <label class="switch">
             <input type="checkbox" id="profileThemeSwitch" />
@@ -172,58 +171,69 @@
           </label>
         </div>
         <button class="settings-row settings-row-btn" id="openAddressBtn">
-          <div class="settings-row-left"><span class="settings-icon">📍</span><span>Мой адрес</span></div>
+          <div class="settings-row-left"><span class="settings-icon">📍</span><span data-i18n="profile.address"></span></div>
           <span class="row-value" id="addressValue"></span>
         </button>
         <button class="settings-row settings-row-btn" id="openPhoneBtn">
-          <div class="settings-row-left"><span class="settings-icon">📞</span><span>Мой телефон</span></div>
+          <div class="settings-row-left"><span class="settings-icon">📞</span><span data-i18n="profile.phone"></span></div>
           <span class="row-value" id="phoneValue"></span>
         </button>
         <button class="settings-row settings-row-btn" id="openMyListingsBtn">
-          <div class="settings-row-left"><span class="settings-icon">📦</span><span>Мои публикации</span></div>
+          <div class="settings-row-left"><span class="settings-icon">📦</span><span data-i18n="profile.myListings"></span></div>
           <span class="chev">›</span>
         </button>
         <button class="settings-row settings-row-btn" id="openFavFromProfileBtn">
-          <div class="settings-row-left"><span class="settings-icon">🤍</span><span>Избранное</span></div>
+          <div class="settings-row-left"><span class="settings-icon">🤍</span><span data-i18n="profile.favorites"></span></div>
           <span class="chev">›</span>
         </button>
         <button class="settings-row settings-row-btn" id="openChatsBtn">
-          <div class="settings-row-left"><span class="settings-icon">💬</span><span>Сообщения</span></div>
+          <div class="settings-row-left"><span class="settings-icon">💬</span><span data-i18n="profile.messages"></span></div>
           <span class="chev">›</span>
         </button>
+        <button class="settings-row settings-row-btn" id="openLangBtn">
+          <div class="settings-row-left"><span class="settings-icon">🌐</span><span data-i18n="profile.language"></span></div>
+          <span class="row-value" id="langValue"></span>
+        </button>
         <button class="settings-row settings-row-btn" id="aboutBtn">
-          <div class="settings-row-left"><span class="settings-icon">✨</span><span>О приложении</span></div>
+          <div class="settings-row-left"><span class="settings-icon">✨</span><span data-i18n="profile.about"></span></div>
           <span class="chev">›</span>
         </button>
         <button class="settings-row settings-row-btn" id="refreshDataBtn">
-          <div class="settings-row-left"><span class="settings-icon">🔄</span><span>Обновить каталог</span></div>
+          <div class="settings-row-left"><span class="settings-icon">🔄</span><span data-i18n="profile.refresh"></span></div>
           <span class="chev">›</span>
         </button>
       </div>
-      <p class="profile-footnote">Geran Express — учебный демо-маркетплейс. Все данные хранятся локально в вашем браузере.</p>
+
+      <div class="settings-list">
+        <button class="settings-row settings-row-btn settings-row-danger" id="logoutBtn">
+          <div class="settings-row-left"><span class="settings-icon">🚪</span><span data-i18n="profile.logout"></span></div>
+          <span class="chev">›</span>
+        </button>
+      </div>
+      <p class="profile-footnote" data-i18n="app.footnote"></p>
     </section>
 
   </main>
 
   <nav class="tab-bar" id="tabBar">
-    <button class="tab-btn active" data-tab="home" aria-label="Главная">
+    <button class="tab-btn active" data-tab="home" data-i18n-aria="nav.home">
       <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"/></svg>
-      <span>Главная</span>
+      <span data-i18n="nav.home"></span>
     </button>
-    <button class="tab-btn" data-tab="favorites" aria-label="Избранное">
+    <button class="tab-btn" data-tab="favorites" data-i18n-aria="nav.favorites">
       <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
-      <span>Избранное</span>
+      <span data-i18n="profile.favorites"></span>
     </button>
-    <button class="tab-btn tab-btn-add" data-tab="add" aria-label="Добавить объявление">
+    <button class="tab-btn tab-btn-add" data-tab="add" data-i18n-aria="nav.add">
       <span class="add-fab">+</span>
     </button>
-    <button class="tab-btn" data-tab="listings" aria-label="Публикации">
+    <button class="tab-btn" data-tab="listings" data-i18n-aria="nav.listings">
       <svg viewBox="0 0 24 24" width="22" height="22"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg>
-      <span>Публикации</span>
+      <span data-i18n="nav.listings"></span>
     </button>
-    <button class="tab-btn" data-tab="profile" aria-label="Профиль">
+    <button class="tab-btn" data-tab="profile" data-i18n-aria="nav.profile">
       <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/></svg>
-      <span>Профиль</span>
+      <span data-i18n="nav.profile"></span>
     </button>
   </nav>
 
@@ -233,38 +243,38 @@
     <div class="sheet" id="filterSheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h3>Фильтры</h3>
+        <h3 data-i18n="filters.title"></h3>
         <button class="icon-btn" id="closeFilterBtn">✕</button>
       </div>
       <div class="sheet-body">
         <div class="filter-block">
-          <label>Цена, с.</label>
+          <label data-i18n="filter.price"></label>
           <div class="price-inputs">
-            <input type="number" id="priceMin" placeholder="От" inputmode="numeric" />
+            <input type="number" id="priceMin" data-i18n-placeholder="filter.from" inputmode="numeric" />
             <span>—</span>
-            <input type="number" id="priceMax" placeholder="До" inputmode="numeric" />
+            <input type="number" id="priceMax" data-i18n-placeholder="filter.to" inputmode="numeric" />
           </div>
         </div>
         <div class="filter-block">
-          <label>Состояние</label>
+          <label data-i18n="filter.condition"></label>
           <div class="pill-group" id="conditionPills">
-            <button class="pill" data-cond="Новое">Новое</button>
-            <button class="pill" data-cond="Б/у">Б/у</button>
+            <button class="pill" data-cond="Новое" data-i18n="cond.new"></button>
+            <button class="pill" data-cond="Б/у" data-i18n="cond.used"></button>
           </div>
         </div>
         <div class="filter-block">
-          <label>Сортировка</label>
+          <label data-i18n="filter.sort"></label>
           <div class="pill-group" id="sortPills">
-            <button class="pill active" data-sort="new">Сначала новые</button>
-            <button class="pill" data-sort="cheap">Сначала дешевле</button>
-            <button class="pill" data-sort="expensive">Сначала дороже</button>
-            <button class="pill" data-sort="popular">По популярности</button>
+            <button class="pill active" data-sort="new" data-i18n="sort.new"></button>
+            <button class="pill" data-sort="cheap" data-i18n="sort.cheap"></button>
+            <button class="pill" data-sort="expensive" data-i18n="sort.expensive"></button>
+            <button class="pill" data-sort="popular" data-i18n="sort.popular"></button>
           </div>
         </div>
       </div>
       <div class="sheet-footer">
-        <button class="btn btn-ghost" id="clearFilterBtn">Сбросить</button>
-        <button class="btn btn-primary" id="applyFilterBtn">Показать результаты</button>
+        <button class="btn btn-ghost" id="clearFilterBtn" data-i18n="filter.reset"></button>
+        <button class="btn btn-primary" id="applyFilterBtn" data-i18n="filter.apply"></button>
       </div>
     </div>
   </div>
@@ -273,7 +283,7 @@
     <div class="sheet" id="categorySheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h3>Категории</h3>
+        <h3 data-i18n="qf.categories"></h3>
         <button class="icon-btn" id="closeCategoryBtn">✕</button>
       </div>
       <div class="sheet-body">
@@ -282,11 +292,52 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="logoutOverlay">
+    <div class="sheet" id="logoutSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-body confirm-body">
+        <div class="confirm-emo">🚪</div>
+        <h3 data-i18n="logout.title"></h3>
+        <p data-i18n="logout.text"></p>
+      </div>
+      <div class="sheet-footer">
+        <button class="btn btn-ghost" id="cancelLogoutBtn" data-i18n="logout.cancel"></button>
+        <button class="btn btn-danger" id="confirmLogoutBtn" data-i18n="logout.confirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="langOverlay">
+    <div class="sheet" id="langSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 data-i18n="lang.title"></h3>
+        <button class="icon-btn" id="closeLangBtn">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="option-list" id="langList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="sortOverlay">
+    <div class="sheet" id="sortSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 data-i18n="qf.sort"></h3>
+        <button class="icon-btn" id="closeSortBtn">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="option-list" id="sortList"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="locationOverlay">
     <div class="sheet" id="locationSheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h3>Локация</h3>
+        <h3 data-i18n="qf.location"></h3>
         <button class="icon-btn" id="closeLocationBtn">✕</button>
       </div>
       <div class="sheet-body">
@@ -296,9 +347,9 @@
   </div>
 
   <div class="zoom-overlay" id="zoomOverlay">
-    <button class="zoom-close" id="zoomCloseBtn" aria-label="Закрыть">✕</button>
+    <button class="zoom-close" id="zoomCloseBtn" data-i18n-aria="pd.close">✕</button>
     <img id="zoomImg" src="" alt="" draggable="false" />
-    <div class="zoom-hint" id="zoomHint">Двойной тап или колесо — увеличить</div>
+    <div class="zoom-hint" id="zoomHint" data-i18n="pd.zoomHint"></div>
   </div>
 
   <input type="file" id="avatarPhotoInput" accept="image/*" hidden />
@@ -308,6 +359,7 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="js/i18n.js"></script>
 <script src="js/geran-listings.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>

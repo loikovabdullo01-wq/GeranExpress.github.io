@@ -204,7 +204,7 @@
     if (tab === "listings") renderMyListingsTab();
     if (tab === "profile") renderProfileTab();
     document.getElementById("appMain").scrollTop = 0;
-    document.getElementById("appHeader").classList.remove("collapsed");
+    resetHeaderCollapsed();
     requestAnimationFrame(syncHeaderHeight);
   }
 
@@ -1401,8 +1401,9 @@
     });
 
     setTimeout(() => {
-      splash.classList.add("hide");
-      setTimeout(() => { splash.remove(); onDone(); }, 560);
+      onDone();
+      requestAnimationFrame(() => splash.classList.add("hide"));
+      setTimeout(() => splash.remove(), 620);
     }, 2300);
   }
 
@@ -1535,43 +1536,43 @@
     const frame = document.getElementById("appFrame");
     if (!header || !frame) return;
     if (header.classList.contains("collapsed")) return;
-    frame.style.setProperty("--header-h", header.offsetHeight + "px");
+    const el = document.getElementById("headerCollapsible");
+    const extra = el && getComputedStyle(el).display !== "none" ? el.offsetHeight : 0;
+    frame.style.setProperty("--header-h", (header.offsetHeight + extra) + "px");
+  }
+
+  let headerLockUntil = 0;
+
+  function setHeaderCollapsed(on) {
+    const header = document.getElementById("appHeader");
+    if (!header || header.classList.contains("collapsed") === on) return;
+    header.classList.toggle("collapsed", on);
+    headerLockUntil = Date.now() + 460;
+  }
+
+  function resetHeaderCollapsed() {
+    const header = document.getElementById("appHeader");
+    if (!header) return;
+    header.classList.remove("collapsed");
+    headerLockUntil = 0;
   }
 
   function initHeaderCollapse() {
     const main = document.getElementById("appMain");
-    const header = document.getElementById("appHeader");
-    let last = 0;
     let ticking = false;
-    let lockUntil = 0;
 
-    function setCollapsed(on) {
-      if (header.classList.contains("collapsed") === on) return;
-      header.classList.toggle("collapsed", on);
-      lockUntil = Date.now() + 420;
+    function backAtFirstListing() {
+      const list = document.querySelector(".tab-view.active .grid, .tab-view.active .my-list");
+      const first = list && list.firstElementChild;
+      if (!first) return main.scrollTop < 60;
+      return first.getBoundingClientRect().top > -40;
     }
 
     function update() {
       ticking = false;
-      const y = main.scrollTop;
-      const scrollable = main.scrollHeight - main.clientHeight;
-
-      if (scrollable < 240) {
-        setCollapsed(false);
-        last = y;
-        return;
-      }
-
-      if (Date.now() < lockUntil) {
-        last = y;
-        return;
-      }
-
-      const delta = y - last;
-      if (y < 40) setCollapsed(false);
-      else if (delta > 5) setCollapsed(true);
-      else if (delta < -5) setCollapsed(false);
-      last = y;
+      if (main.scrollHeight - main.clientHeight < 240) { setHeaderCollapsed(false); return; }
+      if (Date.now() < headerLockUntil) return;
+      setHeaderCollapsed(!backAtFirstListing());
     }
 
     main.addEventListener("scroll", () => {
@@ -1580,6 +1581,12 @@
         requestAnimationFrame(update);
       }
     }, { passive: true });
+  }
+
+  function playEntrance() {
+    const frame = document.getElementById("appFrame");
+    frame.classList.add("entering");
+    setTimeout(() => frame.classList.remove("entering"), 1100);
   }
 
   function init() {
@@ -1683,6 +1690,7 @@
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);
+    requestAnimationFrame(playEntrance);
     switchTab("home");
   }
 

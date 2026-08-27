@@ -118,33 +118,38 @@ svg[fill]{ stroke:none; }
   position: absolute;
   top: 0; left: 0; right: 0;
   z-index: 5;
-  transition: background .35s var(--ease), padding-bottom .34s var(--ease), box-shadow .3s var(--ease);
+  transition: background .35s var(--ease);
 }
 
+/* Sits outside the header's own box and slides up behind the top row.
+   Only transform and opacity animate, so the browser never re-lays-out the
+   252-card feed mid-animation and the motion stays at full frame rate. */
 .header-collapsible{
-  overflow: hidden;
-  max-height: 420px;
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  padding: 2px 16px 12px;
+  background: var(--bg);
+  z-index: -1;
   opacity: 1;
+  transform: translateY(0);
+  will-change: transform, opacity;
   transition:
-    max-height .34s var(--ease),
-    opacity .22s var(--ease),
-    transform .34s var(--ease);
+    transform .44s cubic-bezier(.32, .72, 0, 1),
+    opacity .30s cubic-bezier(.4, 0, .3, 1);
 }
 .app-header.collapsed .header-collapsible{
-  max-height: 0;
+  transform: translateY(-101%);
   opacity: 0;
-  transform: translateY(-10px);
   pointer-events: none;
 }
-.app-header.collapsed{
-  padding-bottom: 8px;
-  box-shadow: 0 5px 16px rgba(16,44,26,.08);
-}
+.app-header.collapsed{ box-shadow: 0 5px 16px rgba(16,44,26,.08); }
+.app-header{ transition: background .35s var(--ease), box-shadow .34s var(--ease); }
 :root[data-theme="dark"] .app-header.collapsed{ box-shadow: 0 5px 16px rgba(0,0,0,.45); }
-.app-header.collapsed .header-row{ margin-bottom: 0; }
+
 @media (min-width: 560px){ .app-header{ padding-top: 46px; } }
 
-.header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 14px; }
+.header-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 0; }
 .brand{ display:flex; align-items:center; gap:9px; min-width:0; }
 .brand-mark{
   width: 32px; height: 32px; border-radius: 10px;
@@ -338,6 +343,8 @@ svg[fill]{ stroke:none; }
 .grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .card{
+  content-visibility: auto;
+  contain-intrinsic-size: auto 290px;
   background: var(--surface); border-radius: var(--radius-md);
   border: 1px solid var(--border);
   overflow:hidden; cursor:pointer;
@@ -1036,6 +1043,29 @@ svg[fill]{ stroke:none; }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
 .auth-note{ margin-top:18px; font-size:11.5px; line-height:1.55; color: var(--text-faint); text-align:center; }
+
+@keyframes appHeaderIn{
+  from{ opacity:0; transform: translateY(-22px); }
+  to{ opacity:1; transform:none; }
+}
+@keyframes appMainIn{
+  from{ opacity:0; transform: translateY(18px); }
+  to{ opacity:1; transform:none; }
+}
+@keyframes appBarIn{
+  from{ opacity:0; transform: translateY(26px); }
+  to{ opacity:1; transform:none; }
+}
+.app-frame.entering .app-header{ animation: appHeaderIn .6s var(--ease) both; }
+.app-frame.entering .app-main{ animation: appMainIn .62s var(--ease) .07s both; }
+.app-frame.entering .tab-bar{ animation: appBarIn .55s var(--ease-spring) .14s both; }
+.app-frame.entering .card{ animation: cardIn .5s var(--ease) both; }
+.app-frame.entering .card:nth-child(1){ animation-delay: .20s; }
+.app-frame.entering .card:nth-child(2){ animation-delay: .26s; }
+.app-frame.entering .card:nth-child(3){ animation-delay: .32s; }
+.app-frame.entering .card:nth-child(4){ animation-delay: .38s; }
+.app-frame.entering .card:nth-child(5){ animation-delay: .44s; }
+.app-frame.entering .card:nth-child(6){ animation-delay: .50s; }
 
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }

@@ -127,6 +127,13 @@
     });
   }
 
+  function avatarInner(user) {
+    return user.avatarImg
+      ? `<img class="avatar-img" src="${esc(user.avatarImg)}" alt="" />`
+      : (user.avatar || "\ud83d\ude42");
+  }
+  function avatarClass(user) { return user.avatarImg ? " has-img" : ""; }
+
   function telHref(phone) {
     return String(phone || "").replace(/[^\d+]/g, "");
   }
@@ -590,7 +597,7 @@
           </div>
         </div>` : ""}
         <div class="seller-card" id="sellerCardBtn">
-          <div class="seller-avatar">${seller.avatar}</div>
+          <div class="seller-avatar${avatarClass(seller)}">${avatarInner(seller)}</div>
           <div class="seller-info">
             <div class="seller-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
             <div class="seller-rating">${seller.rating ? `★ ${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}` : esc(seller.city || "")}</div>
@@ -642,7 +649,7 @@
       ${screenHeader(seller.name)}
       <div class="screen-body">
         <div class="seller-hero">
-          <div class="seller-hero-avatar">${seller.avatar}</div>
+          <div class="seller-hero-avatar${avatarClass(seller)}">${avatarInner(seller)}</div>
           <div class="seller-hero-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
           <div class="profile-meta" style="justify-content:center;margin-top:4px;">
             ${seller.rating ? `<span class="stars">${starString(seller.rating)}</span><span>${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}</span>` : `<span>${esc(seller.city || "")}</span>`}
@@ -729,7 +736,7 @@
           const last = chat.messages[chat.messages.length - 1];
           return `
           <div class="chat-list-item" data-chat="${id}">
-            <div class="chat-list-avatar">${seller.avatar}${chat.unread ? '<span class="chat-unread-dot"></span>' : ""}</div>
+            <div class="chat-list-avatar${avatarClass(seller)}">${avatarInner(seller)}${chat.unread ? '<span class="chat-unread-dot"></span>' : ""}</div>
             <div class="chat-list-info">
               <div class="chat-list-name">${esc(seller.name)}</div>
               <div class="chat-list-preview">${esc(last ? last.text : "")}</div>

@@ -175,7 +175,7 @@ svg[fill]{ stroke:none; }
 .news-text{ font-size:12.5px; color: var(--text-dim); margin-top:3px; line-height:1.45; }
 .news-time{ font-size:11px; color: var(--text-faint); margin-top:5px; }
 
-.brand-logo{ height:36px; width:auto; object-fit:contain; flex-shrink:0; }
+.brand-logo{ height:29px; width:auto; object-fit:contain; flex-shrink:0; }
 .brand-logo-dark{ display:none; }
 :root[data-theme="dark"] .brand-logo-light{ display:none; }
 :root[data-theme="dark"] .brand-logo-dark{ display:block; }
@@ -740,6 +740,9 @@ svg[fill]{ stroke:none; }
 }
 .seller-card:hover{ border-color: var(--accent); transform: translateY(-2px); }
 .seller-avatar{ width:46px; height:46px; border-radius:50%; background: var(--accent-grad); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; }
+.avatar-img{ width:100%; height:100%; object-fit:contain; padding:16%; border-radius:50%; background:#fff; }
+.seller-avatar.has-img, .seller-hero-avatar.has-img, .chat-list-avatar.has-img{ background:#fff; padding:0; overflow:hidden; border:1px solid var(--border); }
+
 .seller-info{ flex:1; min-width:0; }
 .seller-name{ font-weight:700; font-size:14px; display:flex; align-items:center; gap:5px; }
 .verified-badge{ color:#fff; background: var(--success); width:15px; height:15px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; }

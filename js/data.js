@@ -49,7 +49,7 @@ const USERS = [
   { id: "u4", name: "Мадина Рахимова", city: "Куляб", avatar: "👩‍🎨", phone: "+992 902 44 55 66", rating: 5.0, reviews: 9, sales: 14, memberSince: "2024", verified: true, about: "Хендмейд и винтаж." },
   { id: "u5", name: "Санжар Юлдашев", city: "Душанбе", avatar: "👨‍💻", phone: "+992 919 55 66 77", rating: 4.5, reviews: 27, sales: 33, memberSince: "2020", verified: true, about: "Быстрая доставка, честные фото." },
   { id: "u6", name: "Камила Ортикова", city: "Истаравшан", avatar: "🧑‍🎤", phone: "+992 927 66 77 88", rating: 4.9, reviews: 18, sales: 25, memberSince: "2022", verified: false, about: "" },
-  { id: "geran", name: "Geran Express", city: "Деҳаи Геран", avatar: "🟢", phone: "+992 971 220 800", rating: 4.9, reviews: 46, sales: 212, memberSince: "2024", verified: true, about: "Официальная витрина маркетплейса Geran Express — товары и услуги со всего района. Тел.: +992 971 220 800" },
+  { id: "geran", name: "Geran Express", city: "Деҳаи Геран", avatar: "🟢", avatarImg: "assets/logo-icon.png", phone: "+992 971 220 800", rating: 4.9, reviews: 46, sales: 212, memberSince: "2024", verified: true, about: "Официальная витрина маркетплейса Geran Express — товары и услуги со всего района. Тел.: +992 971 220 800" },
 ];
 
 const LISTING_SEEDS = [

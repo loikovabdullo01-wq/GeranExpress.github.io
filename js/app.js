@@ -1554,7 +1554,7 @@
     const header = document.getElementById("appHeader");
     if (!header || header.classList.contains("collapsed") === on) return;
     header.classList.toggle("collapsed", on);
-    headerLockUntil = Date.now() + 460;
+    headerLockUntil = Date.now() + 320;
   }
 
   function resetHeaderCollapsed() {
@@ -1562,11 +1562,15 @@
     if (!header) return;
     header.classList.remove("collapsed");
     headerLockUntil = 0;
+    const main = document.getElementById("appMain");
+    if (main) main.dispatchEvent(new Event("headerreset"));
   }
 
   function initHeaderCollapse() {
     const main = document.getElementById("appMain");
+    const header = document.getElementById("appHeader");
     let ticking = false;
+    let lastY = 0;
 
     function backAtFirstListing() {
       const list = document.querySelector(".tab-view.active .grid, .tab-view.active .my-list");
@@ -1577,9 +1581,20 @@
 
     function update() {
       ticking = false;
+      const y = main.scrollTop;
+      const delta = y - lastY;
+      lastY = y;
+
       if (main.scrollHeight - main.clientHeight < 240) { setHeaderCollapsed(false); return; }
       if (Date.now() < headerLockUntil) return;
-      setHeaderCollapsed(!backAtFirstListing());
+
+      if (y <= 4) {
+        setHeaderCollapsed(false);
+      } else if (header.classList.contains("collapsed")) {
+        if (delta < 0 && backAtFirstListing()) setHeaderCollapsed(false);
+      } else if (delta > 0 && y > 8) {
+        setHeaderCollapsed(true);
+      }
     }
 
     main.addEventListener("scroll", () => {
@@ -1588,6 +1603,8 @@
         requestAnimationFrame(update);
       }
     }, { passive: true });
+
+    main.addEventListener("headerreset", () => { lastY = main.scrollTop; });
   }
 
   function playEntrance() {

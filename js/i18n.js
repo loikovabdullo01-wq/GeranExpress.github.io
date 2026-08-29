@@ -67,6 +67,7 @@ const TRANSLATIONS = {
 
     "loc.majorCities": "Крупные города",
     "loc.districts": "Районы и сёла",
+    "loc.abroad": "Города за рубежом",
 
     "filter.price": "Цена, с.",
     "filter.from": "От",
@@ -179,6 +180,10 @@ const TRANSLATIONS = {
     "form.price": "Цена, с.",
     "form.location": "Локация",
     "form.pickLocation": "Выберите локацию",
+    "form.address": "Улица, дом",
+    "form.addressOptional": "необязательно",
+    "form.addressPlaceholder": "напр. ул. Айни, дом 12, кв. 5",
+    "form.addressHint": "Точный адрес видят только те, кто откроет объявление.",
     "form.phone": "Телефон для связи",
     "form.phoneHint": "По этому номеру покупатели позвонят и напишут в WhatsApp.",
     "form.condition": "Состояние",
@@ -288,6 +293,7 @@ const TRANSLATIONS = {
 
     "loc.majorCities": "Шаҳрҳои калон",
     "loc.districts": "Ноҳияҳо ва деҳаҳо",
+    "loc.abroad": "Шаҳрҳои хориҷӣ",
 
     "filter.price": "Нарх, с.",
     "filter.from": "Аз",
@@ -400,6 +406,10 @@ const TRANSLATIONS = {
     "form.price": "Нарх, с.",
     "form.location": "Ҷойгиршавӣ",
     "form.pickLocation": "Ҷойро интихоб кунед",
+    "form.address": "Кӯча, хона",
+    "form.addressOptional": "ихтиёрӣ",
+    "form.addressPlaceholder": "мас. кӯчаи Айнӣ, хонаи 12",
+    "form.addressHint": "Суроғаи дақиқро танҳо касоне мебинанд, ки эъломияро мекушоянд.",
     "form.phone": "Телефон барои алоқа",
     "form.phoneHint": "Ба ин рақам харидорон занг мезананд ва дар WhatsApp менависанд.",
     "form.condition": "Ҳолат",
@@ -509,6 +519,7 @@ const TRANSLATIONS = {
 
     "loc.majorCities": "Major cities",
     "loc.districts": "Districts and villages",
+    "loc.abroad": "Cities abroad",
 
     "filter.price": "Price, TJS",
     "filter.from": "From",
@@ -621,6 +632,10 @@ const TRANSLATIONS = {
     "form.price": "Price, TJS",
     "form.location": "Location",
     "form.pickLocation": "Choose a location",
+    "form.address": "Street, house",
+    "form.addressOptional": "optional",
+    "form.addressPlaceholder": "e.g. Ayni st., house 12, apt. 5",
+    "form.addressHint": "The exact address is visible only to people who open the listing.",
     "form.phone": "Contact phone",
     "form.phoneHint": "Buyers will call and message this number on WhatsApp.",
     "form.condition": "Condition",

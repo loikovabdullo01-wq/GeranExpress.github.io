@@ -139,7 +139,7 @@
   }
   function waHref(phone, listing) {
     const digits = String(phone || "").replace(/\D/g, "");
-    const text = encodeURIComponent(`Здравствуйте! Пишу по объявлению «${listing.title}» на Geran Express.`);
+    const text = encodeURIComponent(`Здравствуйте! Пишу по объявлению «${listingTitle(listing)}» на Geran Express.`);
     return `https://wa.me/${digits}?text=${text}`;
   }
 
@@ -157,7 +157,7 @@
       </div>
       <div class="card-body">
         <div class="card-price">${formatPrice(listing)}</div>
-        <div class="card-title">${esc(listing.title)}</div>
+        <div class="card-title">${esc(listingTitle(listing))}</div>
         <div class="card-meta">
           <span>${esc(listing.city)}</span>
           <span>${timeAgo(listing.createdAt)}</span>
@@ -303,7 +303,8 @@
   }
 
   function openLocationSheet(currentValue, onSelect) {
-    const majors = new Set(CITIES);
+    const foreign = (typeof FOREIGN_CITIES !== "undefined" ? FOREIGN_CITIES : []);
+    const majors = new Set(CITIES.concat(foreign));
     const counts = {};
     state.listings.forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
 
@@ -324,7 +325,8 @@
          <span class="check">✓</span>
        </div>` +
       (villages.length ? `<div class="location-group-label">${t("loc.districts")}</div>` + villages.map(row).join("") : "") +
-      `<div class="location-group-label">${t("loc.majorCities")}</div>` + cityList.map(row).join("");
+      `<div class="location-group-label">${t("loc.majorCities")}</div>` + cityList.map(row).join("") +
+      (foreign.length ? `<div class="location-group-label">${t("loc.abroad")}</div>` + foreign.map(row).join("") : "");
 
     document.getElementById("locationList").querySelectorAll("[data-loc]").forEach((item) => {
       item.addEventListener("click", () => {
@@ -340,6 +342,10 @@
     if (document.getElementById("locationOverlay").classList.contains("open")) closeTopLayer();
   }
 
+  function placeLine(l) {
+    return l && l.address ? l.city + ", " + l.address : (l ? l.city : "");
+  }
+
   function computeFilteredListings() {
     const f = state.filters;
     let list = state.listings.filter((l) => l.status !== "sold" || l.mine);
@@ -347,7 +353,7 @@
     if (f.location) list = list.filter((l) => l.city === f.location);
     if (f.query.trim()) {
       const q = f.query.trim().toLowerCase();
-      list = list.filter((l) => l.title.toLowerCase().includes(q));
+      list = list.filter((l) => (l.title + " " + listingTitle(l)).toLowerCase().includes(q));
     }
     if (f.priceMin != null) list = list.filter((l) => l.price >= f.priceMin);
     if (f.priceMax != null) list = list.filter((l) => l.price <= f.priceMax);
@@ -402,7 +408,7 @@
       <div class="my-item" data-id="${l.id}">
         <div class="my-thumb">${myThumbInner(l)}</div>
         <div class="my-info">
-          <div class="my-title">${esc(l.title)}</div>
+          <div class="my-title">${esc(listingTitle(l))}</div>
           <div class="my-price">${formatPrice(l)}</div>
           <span class="my-status ${l.status}">${l.status === "sold" ? t("my.sold") : t("my.active")}</span>
         </div>
@@ -571,9 +577,9 @@
             <span class="pd-condition">${esc(conditionLabel(listing.condition))}</span>
           </div>
         </div>
-        <div class="pd-title">${esc(listing.title)}</div>
+        <div class="pd-title">${esc(listingTitle(listing))}</div>
         <div class="pd-meta">
-          <span>📍 ${esc(listing.city)}</span>
+          <span>📍 ${esc(placeLine(listing))}</span>
           <span>· ${timeAgo(listing.createdAt)}</span>
           <span>· 👁 ${listing.views}</span>
         </div>
@@ -589,7 +595,7 @@
             <div class="pd-map-bar">
               <span class="mb-pin">\ud83d\udccd</span>
               <div class="mb-text">
-                <div class="mb-place">${esc(listing.city)}</div>
+                <div class="mb-place">${esc(placeLine(listing))}</div>
                 <div class="mb-coords">${listing.lat.toFixed(4)}, ${listing.lng.toFixed(4)}</div>
               </div>
               <a class="mb-open" href="https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=14/${listing.lat}/${listing.lng}" target="_blank" rel="noopener">${t("pd.open")}</a>
@@ -703,7 +709,7 @@
           {
             from: "them",
             text: listing
-              ? `Здравствуйте! Спасибо за интерес к объявлению «${listing.title}». Чем могу помочь?`
+              ? `Здравствуйте! Спасибо за интерес к объявлению «${listingTitle(listing)}». Чем могу помочь?`
               : `Здравствуйте! Пишите, если появятся вопросы 🙂`,
             time: Date.now(),
           },
@@ -828,7 +834,7 @@
     const draft = isEdit
       ? { ...existing, photos: existing.photos ? [...existing.photos] : [] }
       : { title: "", price: "", category: "electronics", condition: "Новое", description: "",
-          city: getUser("me").city, phone: getUser("me").phone || "", photos: [] };
+          city: getUser("me").city, address: "", phone: getUser("me").phone || "", photos: [] };
 
     const catOptions = CATEGORIES.filter((c) => c.id !== "all");
 
@@ -865,6 +871,12 @@
             <span class="fp-left"><span class="fp-emo">📍</span><span id="fCityLabel">${esc(draft.city || t("form.pickLocation"))}</span></span>
             <span class="chev">›</span>
           </button>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.address")} <span class="label-opt">${t("form.addressOptional")}</span></label>
+          <input class="form-input" id="fAddress" maxlength="80" placeholder="${t('form.addressPlaceholder')}" value="${esc(draft.address || "")}" />
+          <div class="form-hint">${t("form.addressHint")}</div>
         </div>
 
         <div class="form-group">
@@ -949,6 +961,7 @@
         const price = Number(el.querySelector("#fPrice").value);
         const city = draft.city || getUser("me").city;
         const phone = el.querySelector("#fPhone").value.trim();
+        const address = el.querySelector("#fAddress").value.trim();
         const description = el.querySelector("#fDesc").value.trim();
 
         if (!title) { showToast(t("form.needName")); el.querySelector("#fTitle").focus(); return; }
@@ -960,14 +973,14 @@
 
         if (isEdit) {
           const [eLat, eLng] = coordsForLocation(city);
-          Object.assign(existing, { title, price, city, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng });
+          Object.assign(existing, { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng });
           persistListings();
           showToast(t("form.saved"));
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
           const newListing = {
             id: uid("l"),
-            title, price, city, phone, description,
+            title, price, city, address, phone, description,
             category: draft.category,
             condition: draft.condition,
             photos: draft.photos,
@@ -1294,7 +1307,7 @@
       });
       L.marker([listing.lat, listing.lng], { icon, title: listing.city })
         .addTo(map)
-        .bindPopup(`<b>${esc(listing.title)}</b><br>${esc(listing.city)}`);
+        .bindPopup(`<b>${esc(listingTitle(listing))}</b><br>${esc(listing.city)}`);
 
       setTimeout(() => map.invalidateSize(), 260);
       setTimeout(() => map.invalidateSize(), 700);

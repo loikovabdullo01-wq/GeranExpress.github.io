@@ -685,11 +685,11 @@ svg[fill]{ stroke:none; }
   background: var(--accent-grad); color:#fff; font-size:26px; font-weight:400;
   display:flex; align-items:center; justify-content:center;
   box-shadow: 0 10px 22px rgba(22,163,74,.45);
-  transform: translateY(-14px);
+  transform: translateY(-7px);
   transition: transform .3s var(--ease-spring), box-shadow .3s;
 }
-.tab-btn-add:hover .add-fab{ transform: translateY(-16px) scale(1.06) rotate(90deg); }
-.tab-btn-add:active .add-fab{ transform: translateY(-10px) scale(.92) rotate(90deg); }
+.tab-btn-add:hover .add-fab{ transform: translateY(-9px) scale(1.06) rotate(90deg); }
+.tab-btn-add:active .add-fab{ transform: translateY(-4px) scale(.92) rotate(90deg); }
 
 .screen-stack{ position:absolute; inset:0; pointer-events:none; z-index:30; }
 .screen{
@@ -835,6 +835,7 @@ svg[fill]{ stroke:none; }
 .form-group{ margin-bottom:18px; }
 .form-group label{ display:block; font-size:13px; font-weight:700; margin-bottom:8px; color: var(--text); }
 .form-hint{ font-size:11.5px; color: var(--text-faint); margin-top:6px; }
+.label-opt{ font-size:11px; font-weight:600; color: var(--text-faint); background: var(--surface-2, rgba(127,127,127,.12)); padding:2px 7px; border-radius:8px; margin-left:6px; vertical-align:middle; }
 .form-input, .form-textarea, .form-select{
   width:100%; border:1px solid var(--border); background: var(--surface); border-radius:14px;
   padding:13px 15px; font-size:14.5px; color: var(--text); outline:none; font-family:inherit;

@@ -1453,15 +1453,38 @@
     return parts.join(" ");
   }
 
+  let authOnDone = null;
+  let authScreenBound = false;
+
+  function hideAuthScreen(screen) {
+    screen.style.transition = "";
+    screen.style.opacity = "";
+    screen.classList.remove("show");
+  }
+
   function showAuthScreen(onDone) {
+    authOnDone = onDone;
+
     const screen = document.getElementById("authScreen");
     const row = document.getElementById("authPhoneRow");
     const input = document.getElementById("authPhoneInput");
     const btn = document.getElementById("authSubmitBtn");
     const err = document.getElementById("authError");
+    const closeBtn = document.getElementById("authCloseBtn");
+
+    input.value = "";
+    btn.disabled = true;
+    btn.classList.remove("loading");
+    row.classList.remove("invalid", "focus");
+    err.textContent = "";
+    screen.style.transition = "";
+    screen.style.opacity = "";
 
     screen.classList.add("show");
     setTimeout(() => input.focus(), 450);
+
+    if (authScreenBound) return;
+    authScreenBound = true;
 
     const digitsOf = () => input.value.replace(/\D/g, "");
 
@@ -1475,6 +1498,11 @@
     input.addEventListener("focus", () => row.classList.add("focus"));
     input.addEventListener("blur", () => row.classList.remove("focus"));
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !btn.disabled) btn.click(); });
+
+    closeBtn.addEventListener("click", () => {
+      hideAuthScreen(screen);
+      authOnDone = null;
+    });
 
     btn.addEventListener("click", () => {
       const d = digitsOf();
@@ -1496,13 +1524,19 @@
         screen.style.transition = "opacity .4s var(--ease)";
         screen.style.opacity = "0";
         setTimeout(() => {
-          screen.classList.remove("show");
-          screen.remove();
-          onDone();
+          hideAuthScreen(screen);
+          const done = authOnDone;
+          authOnDone = null;
+          if (done) done();
           showToast(t("auth.welcome"));
         }, 420);
       }, 700);
     });
+  }
+
+  function requireAuth(onDone) {
+    if (state.isAuthed) { onDone(); return; }
+    showAuthScreen(onDone);
   }
 
   function applyLanguage(lang) {
@@ -1654,14 +1688,14 @@
 
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (btn.dataset.tab === "add") { openAddEditForm(null); return; }
+        if (btn.dataset.tab === "add") { requireAuth(() => openAddEditForm(null)); return; }
         switchTab(btn.dataset.tab);
       });
     });
 
     document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.go)));
 
-    document.getElementById("myEmptyAddBtn").addEventListener("click", () => openAddEditForm(null));
+    document.getElementById("myEmptyAddBtn").addEventListener("click", () => requireAuth(() => openAddEditForm(null)));
     document.getElementById("openMyListingsBtn").addEventListener("click", () => switchTab("listings"));
     document.getElementById("openFavFromProfileBtn").addEventListener("click", () => switchTab("favorites"));
     document.getElementById("openChatsBtn").addEventListener("click", openChatList);
@@ -1755,9 +1789,6 @@
     applyTheme(state.theme);
     setLanguage(state.lang);
     applyStaticTranslations();
-    runSplash(() => {
-      if (state.isAuthed) { init(); return; }
-      showAuthScreen(init);
-    });
+    runSplash(() => { init(); });
   });
 })();

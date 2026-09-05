@@ -36,6 +36,7 @@ const TRANSLATIONS = {
     "auth.continue": "Продолжить",
     "auth.note": "Продолжая, вы соглашаетесь с правилами Geran Express. Номер хранится только на вашем устройстве.",
     "auth.err": "Введите 9 цифр номера",
+    "auth.close": "Закрыть",
     "auth.welcome": "Добро пожаловать в Geran Express 👋",
 
     "nav.home": "Главная",
@@ -262,6 +263,7 @@ const TRANSLATIONS = {
     "auth.continue": "Идома",
     "auth.note": "Бо идома додан шумо бо қоидаҳои Geran Express розӣ мешавед. Рақам танҳо дар дастгоҳи шумо нигоҳ дошта мешавад.",
     "auth.err": "9 рақамро ворид кунед",
+    "auth.close": "Пӯшидан",
     "auth.welcome": "Хуш омадед ба Geran Express 👋",
 
     "nav.home": "Асосӣ",
@@ -488,6 +490,7 @@ const TRANSLATIONS = {
     "auth.continue": "Continue",
     "auth.note": "By continuing you agree to the Geran Express terms. The number is stored on your device only.",
     "auth.err": "Enter all 9 digits",
+    "auth.close": "Close",
     "auth.welcome": "Welcome to Geran Express 👋",
 
     "nav.home": "Home",

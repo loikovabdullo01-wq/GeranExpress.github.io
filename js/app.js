@@ -342,6 +342,21 @@
     if (document.getElementById("locationOverlay").classList.contains("open")) closeTopLayer();
   }
 
+  const SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+
+  function shuffleForSession(list) {
+    const arr = list.slice();
+    let s = SESSION_ORDER_SEED || 1;
+    for (let i = arr.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      const j = s % (i + 1);
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
   function placeLine(l) {
     return l && l.address ? l.city + ", " + l.address : (l ? l.city : "");
   }
@@ -359,7 +374,12 @@
     if (f.priceMax != null) list = list.filter((l) => l.price <= f.priceMax);
     if (f.condition) list = list.filter((l) => l.condition.startsWith(f.condition === "Новое" ? "Новое" : "Б/у"));
     switch (f.sort) {
-      case "all": break;
+      case "all": {
+        const mine = list.filter((l) => l.mine);
+        const rest = shuffleForSession(list.filter((l) => !l.mine));
+        list = mine.concat(rest);
+        break;
+      }
       case "new": list = list.slice().sort((a, b) => b.createdAt - a.createdAt); break;
       case "old": list = list.slice().sort((a, b) => a.createdAt - b.createdAt); break;
       case "cheap": list = list.slice().sort((a, b) => a.price - b.price); break;

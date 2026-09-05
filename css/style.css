@@ -95,6 +95,35 @@ svg[fill]{ stroke:none; }
   isolation: isolate;
 }
 
+.app-body{
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.app-body.pull-anim{ transition: transform .28s var(--ease-spring); }
+
+.pull-refresh{
+  position: absolute; top: 0; left: 0; right: 0; height: 64px; z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateY(-64px);
+  pointer-events: none;
+  opacity: 0;
+}
+.pull-refresh.pull-anim{ transition: transform .28s var(--ease-spring), opacity .2s var(--ease); }
+.pull-refresh-spinner{
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+}
+.pull-refresh-spinner svg{ transition: transform .15s var(--ease); }
+.pull-refresh.ready .pull-refresh-spinner{ color: var(--accent); }
+.pull-refresh.spinning .pull-refresh-spinner svg{ animation: pullRefreshSpin .7s linear infinite; }
+@keyframes pullRefreshSpin{ to{ transform: rotate(360deg); } }
+
 @media (min-width: 560px){
   body{ display:flex; align-items:center; justify-content:center; }
   .app-frame{

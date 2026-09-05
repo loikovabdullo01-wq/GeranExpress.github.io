@@ -404,7 +404,7 @@
     if (document.getElementById("locationOverlay").classList.contains("open")) closeTopLayer();
   }
 
-  const SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+  let SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
 
   function shuffleForSession(list) {
     const arr = list.slice();
@@ -1943,6 +1943,88 @@
     main.addEventListener("headerreset", () => { lastY = main.scrollTop; });
   }
 
+  function initPullToRefresh() {
+    const main = document.getElementById("appMain");
+    const body = document.getElementById("appBody");
+    const indicator = document.getElementById("pullRefresh");
+
+    const INDICATOR_H = 64;
+    const MAX_PULL = 92;
+    const TRIGGER = 62;
+    const DAMPING = 0.45;
+
+    let startY = 0;
+    let lastPull = 0;
+    let dragging = false;
+    let refreshing = false;
+
+    function applyPull(px, animated) {
+      lastPull = px;
+      body.classList.toggle("pull-anim", animated);
+      indicator.classList.toggle("pull-anim", animated);
+      body.style.transform = px > 0 ? `translateY(${px}px)` : "";
+      indicator.style.transform = `translateY(${px - INDICATOR_H}px)`;
+      indicator.style.opacity = Math.min(1, px / TRIGGER);
+      indicator.classList.toggle("ready", px >= TRIGGER);
+    }
+
+    function canStart() {
+      return !refreshing && state.currentTab === "home" && main.scrollTop <= 0;
+    }
+
+    function start(y) {
+      if (!canStart()) return false;
+      startY = y;
+      dragging = true;
+      return true;
+    }
+
+    function move(y) {
+      if (!dragging) return false;
+      if (main.scrollTop > 0) { dragging = false; applyPull(0, true); return false; }
+      const raw = y - startY;
+      if (raw <= 0) { applyPull(0, false); return false; }
+      applyPull(Math.min(MAX_PULL, raw * DAMPING), false);
+      return true;
+    }
+
+    function finish() {
+      if (!dragging) return;
+      dragging = false;
+      if (lastPull >= TRIGGER) doRefresh();
+      else applyPull(0, true);
+    }
+
+    function doRefresh() {
+      refreshing = true;
+      applyPull(TRIGGER, true);
+      indicator.classList.add("spinning");
+      setTimeout(() => {
+        SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+        renderHomeTab();
+        indicator.classList.remove("spinning", "ready");
+        applyPull(0, true);
+        refreshing = false;
+        showToast(t("refresh.done"));
+      }, 650);
+    }
+
+    main.addEventListener("touchstart", (e) => { start(e.touches[0].clientY); }, { passive: true });
+    main.addEventListener("touchmove", (e) => {
+      if (move(e.touches[0].clientY)) e.preventDefault();
+    }, { passive: false });
+    main.addEventListener("touchend", finish, { passive: true });
+    main.addEventListener("touchcancel", finish, { passive: true });
+
+    let mouseActive = false;
+    main.addEventListener("mousedown", (e) => {
+      mouseActive = start(e.clientY);
+      if (mouseActive) e.preventDefault();
+    });
+    window.addEventListener("mousemove", (e) => { if (mouseActive) move(e.clientY); });
+    window.addEventListener("mouseup", () => { if (mouseActive) { mouseActive = false; finish(); } });
+  }
+
   function playEntrance() {
     const frame = document.getElementById("appFrame");
     frame.classList.add("entering");
@@ -2046,6 +2128,7 @@
     initPromoBanner();
     initZoomViewer();
     initHeaderCollapse();
+    initPullToRefresh();
     syncHeaderHeight();
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
     history.replaceState({ base: true }, "");

@@ -54,6 +54,7 @@ const TRANSLATIONS = {
     "auth.sendErr": "Не удалось отправить код. Попробуйте позже",
     "auth.tooManyErr": "Слишком много попыток. Попробуйте позже",
     "auth.invalidPhoneErr": "Некорректный номер телефона",
+    "refresh.done": "Лента обновлена",
     "auth.welcome": "Добро пожаловать в Geran Express 👋",
 
     "nav.home": "Главная",
@@ -298,6 +299,7 @@ const TRANSLATIONS = {
     "auth.sendErr": "Рамз фиристода нашуд. Баъдтар кӯшиш кунед",
     "auth.tooManyErr": "Кӯшишҳои зиёд. Баъдтар кӯшиш кунед",
     "auth.invalidPhoneErr": "Рақами телефон нодуруст аст",
+    "refresh.done": "Рӯйхат навсозӣ шуд",
     "auth.welcome": "Хуш омадед ба Geran Express 👋",
 
     "nav.home": "Асосӣ",
@@ -542,6 +544,7 @@ const TRANSLATIONS = {
     "auth.sendErr": "Could not send the code. Try again later",
     "auth.tooManyErr": "Too many attempts. Try again later",
     "auth.invalidPhoneErr": "Invalid phone number",
+    "refresh.done": "Feed refreshed",
     "auth.welcome": "Welcome to Geran Express 👋",
 
     "nav.home": "Home",

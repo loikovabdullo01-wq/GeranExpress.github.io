@@ -37,9 +37,11 @@
 
     <label class="auth-label" data-i18n="auth.label"></label>
     <div class="auth-phone-row" id="authPhoneRow">
-      <span class="auth-prefix">🇹🇯 +992</span>
+      <button type="button" class="auth-prefix" id="authCountryBtn">
+        <span id="authCountryFlag">🇹🇯</span><span id="authCountryCode">+992</span><span class="chev">▾</span>
+      </button>
       <input type="tel" id="authPhoneInput" inputmode="numeric" autocomplete="tel"
-             placeholder="90 000 00 00" maxlength="13" />
+             placeholder="90 000 00 00" maxlength="14" />
     </div>
     <div class="auth-error" id="authError"></div>
 
@@ -48,6 +50,19 @@
       <span class="auth-btn-spinner" aria-hidden="true"></span>
     </button>
     <p class="auth-note" data-i18n="auth.note"></p>
+  </div>
+
+  <div class="sheet-overlay" id="authCountryOverlay">
+    <div class="sheet" id="authCountrySheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 data-i18n="auth.country"></h3>
+        <button class="icon-btn" id="closeAuthCountryBtn">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="option-list" id="authCountryList"></div>
+      </div>
+    </div>
   </div>
 </div>
 

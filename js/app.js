@@ -1447,10 +1447,69 @@
     }, 2300);
   }
 
-  function formatLocalPhone(digits) {
-    const d = digits.slice(0, 9);
-    const parts = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean);
-    return parts.join(" ");
+  const AUTH_COUNTRIES = [
+    { id: "tj", flag: "\ud83c\uddf9\ud83c\uddef", code: "+992", digits: 9,  groups: [2, 3, 2, 2], nameKey: "country.tj", placeholder: "90 000 00 00" },
+    { id: "ru", flag: "\ud83c\uddf7\ud83c\uddfa", code: "+7",   digits: 10, groups: [3, 3, 2, 2], nameKey: "country.ru", placeholder: "912 345 67 89" },
+    { id: "uz", flag: "\ud83c\uddfa\ud83c\uddff", code: "+998", digits: 9,  groups: [2, 3, 2, 2], nameKey: "country.uz", placeholder: "90 123 45 67" },
+    { id: "kz", flag: "\ud83c\uddf0\ud83c\uddff", code: "+7",   digits: 10, groups: [3, 3, 2, 2], nameKey: "country.kz", placeholder: "701 234 56 78" },
+    { id: "kg", flag: "\ud83c\uddf0\ud83c\uddec", code: "+996", digits: 9,  groups: [3, 3, 3],    nameKey: "country.kg", placeholder: "700 123 456" },
+  ];
+  let authCountry = AUTH_COUNTRIES[0];
+
+  function formatPhoneByCountry(digits, country) {
+    const d = digits.slice(0, country.digits);
+    const parts = [];
+    let i = 0;
+    for (const size of country.groups) {
+      parts.push(d.slice(i, i + size));
+      i += size;
+    }
+    return parts.filter(Boolean).join(" ");
+  }
+
+  function applyAuthCountryToUI() {
+    const flagEl = document.getElementById("authCountryFlag");
+    const codeEl = document.getElementById("authCountryCode");
+    const input = document.getElementById("authPhoneInput");
+    if (!flagEl || !input) return;
+    flagEl.textContent = authCountry.flag;
+    codeEl.textContent = authCountry.code;
+    input.placeholder = authCountry.placeholder;
+    input.maxLength = authCountry.digits + authCountry.groups.length - 1;
+  }
+
+  function openAuthCountrySheet() {
+    const list = document.getElementById("authCountryList");
+    list.innerHTML = AUTH_COUNTRIES.map(
+      (c) => `<div class="option-item ${c.id === authCountry.id ? "active" : ""}" data-country="${c.id}">
+        <span class="opt-emo">${c.flag}</span><span class="opt-name">${esc(t(c.nameKey))} ${c.code}</span><span class="check">\u2713</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-country]").forEach((item) =>
+      item.addEventListener("click", () => {
+        const country = AUTH_COUNTRIES.find((c) => c.id === item.dataset.country);
+        if (!country) return;
+        authCountry = country;
+        applyAuthCountryToUI();
+        const input = document.getElementById("authPhoneInput");
+        const btn = document.getElementById("authSubmitBtn");
+        const row = document.getElementById("authPhoneRow");
+        const err = document.getElementById("authError");
+        input.value = "";
+        btn.disabled = true;
+        row.classList.remove("invalid");
+        err.textContent = "";
+        closeAuthCountrySheet();
+        setTimeout(() => input.focus(), 300);
+      })
+    );
+    document.getElementById("authCountryOverlay").classList.add("open");
+    openLayer(() => document.getElementById("authCountryOverlay").classList.remove("open"));
+  }
+  function closeAuthCountrySheet() {
+    const o = document.getElementById("authCountryOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
   }
 
   let authOnDone = null;
@@ -1471,7 +1530,9 @@
     const btn = document.getElementById("authSubmitBtn");
     const err = document.getElementById("authError");
     const closeBtn = document.getElementById("authCloseBtn");
+    const countryBtn = document.getElementById("authCountryBtn");
 
+    applyAuthCountryToUI();
     input.value = "";
     btn.disabled = true;
     btn.classList.remove("loading");
@@ -1486,18 +1547,24 @@
     if (authScreenBound) return;
     authScreenBound = true;
 
-    const digitsOf = () => input.value.replace(/\D/g, "");
+    const digitsOf = () => input.value.replace(/\D/g, "").slice(0, authCountry.digits);
 
     input.addEventListener("input", () => {
       const d = digitsOf();
-      input.value = formatLocalPhone(d);
-      btn.disabled = d.length !== 9;
+      input.value = formatPhoneByCountry(d, authCountry);
+      btn.disabled = d.length !== authCountry.digits;
       row.classList.remove("invalid");
       err.textContent = "";
     });
     input.addEventListener("focus", () => row.classList.add("focus"));
     input.addEventListener("blur", () => row.classList.remove("focus"));
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !btn.disabled) btn.click(); });
+
+    countryBtn.addEventListener("click", openAuthCountrySheet);
+    document.getElementById("closeAuthCountryBtn").addEventListener("click", closeAuthCountrySheet);
+    document.getElementById("authCountryOverlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeAuthCountrySheet();
+    });
 
     closeBtn.addEventListener("click", () => {
       hideAuthScreen(screen);
@@ -1506,16 +1573,16 @@
 
     btn.addEventListener("click", () => {
       const d = digitsOf();
-      if (d.length !== 9) {
+      if (d.length !== authCountry.digits) {
         row.classList.add("invalid");
-        err.textContent = t("auth.err");
+        err.textContent = t("auth.err").replace("{n}", authCountry.digits);
         return;
       }
       btn.classList.add("loading");
       btn.disabled = true;
 
       setTimeout(() => {
-        const phone = "+992 " + formatLocalPhone(d);
+        const phone = authCountry.code + " " + formatPhoneByCountry(d, authCountry);
         state.meProfile.phone = phone;
         persistMeProfile();
         state.isAuthed = true;

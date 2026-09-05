@@ -23,7 +23,7 @@
     apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
     authDomain: "geran-express.firebaseapp.com",
     projectId: "geran-express",
-    storageBucket: "geran-express.firebasestorage.app",
+  storageBucket: "geran-express.appspot.com",
     messagingSenderId: "100329986906",
     appId: "1:100329986906:web:4998c36eecc975b46bf163",
     measurementId: "G-WP2S70R07C"

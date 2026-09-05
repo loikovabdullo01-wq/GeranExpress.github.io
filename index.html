@@ -32,24 +32,50 @@
     <img class="auth-logo" src="assets/logo-full-white.png" alt="Geran Express" />
   </div>
   <div class="auth-sheet">
-    <h2 class="auth-title" data-i18n="auth.title"></h2>
-    <p class="auth-sub" data-i18n="auth.sub"></p>
+    <div id="authPhoneStep">
+      <h2 class="auth-title" data-i18n="auth.title"></h2>
+      <p class="auth-sub" data-i18n="auth.sub"></p>
 
-    <label class="auth-label" data-i18n="auth.label"></label>
-    <div class="auth-phone-row" id="authPhoneRow">
-      <button type="button" class="auth-prefix" id="authCountryBtn">
-        <span id="authCountryFlag">🇹🇯</span><span id="authCountryCode">+992</span><span class="chev">▾</span>
+      <label class="auth-label" data-i18n="auth.label"></label>
+      <div class="auth-phone-row" id="authPhoneRow">
+        <button type="button" class="auth-prefix" id="authCountryBtn">
+          <span id="authCountryFlag">🇹🇯</span><span id="authCountryCode">+992</span><span class="chev">▾</span>
+        </button>
+        <input type="tel" id="authPhoneInput" inputmode="numeric" autocomplete="tel"
+               placeholder="90 000 00 00" maxlength="14" />
+      </div>
+      <div class="auth-error" id="authError"></div>
+
+      <button class="btn btn-primary btn-block auth-submit" id="authSubmitBtn" disabled>
+        <span class="auth-btn-label" data-i18n="auth.continue"></span>
+        <span class="auth-btn-spinner" aria-hidden="true"></span>
       </button>
-      <input type="tel" id="authPhoneInput" inputmode="numeric" autocomplete="tel"
-             placeholder="90 000 00 00" maxlength="14" />
+      <p class="auth-note" data-i18n="auth.note"></p>
     </div>
-    <div class="auth-error" id="authError"></div>
 
-    <button class="btn btn-primary btn-block auth-submit" id="authSubmitBtn" disabled>
-      <span class="auth-btn-label" data-i18n="auth.continue"></span>
-      <span class="auth-btn-spinner" aria-hidden="true"></span>
-    </button>
-    <p class="auth-note" data-i18n="auth.note"></p>
+    <div id="authCodeStep" hidden>
+      <h2 class="auth-title" data-i18n="auth.codeTitle"></h2>
+      <p class="auth-sub" id="authCodeSentTo"></p>
+
+      <label class="auth-label" data-i18n="auth.codeLabel"></label>
+      <div class="auth-phone-row auth-code-row" id="authCodeRow">
+        <input type="tel" id="authCodeInput" inputmode="numeric" autocomplete="one-time-code"
+               placeholder="0 0 0 0 0 0" maxlength="6" />
+      </div>
+      <div class="auth-error" id="authCodeError"></div>
+
+      <button class="btn btn-primary btn-block auth-submit" id="authVerifyBtn" disabled>
+        <span class="auth-btn-label" data-i18n="auth.verify"></span>
+        <span class="auth-btn-spinner" aria-hidden="true"></span>
+      </button>
+
+      <div class="auth-code-actions">
+        <button type="button" class="auth-link-btn" id="authChangeNumberBtn" data-i18n="auth.changeNumber"></button>
+        <button type="button" class="auth-link-btn" id="authResendBtn" disabled data-i18n="auth.resend"></button>
+      </div>
+    </div>
+
+    <div id="recaptchaContainer"></div>
   </div>
 
   <div class="sheet-overlay" id="authCountryOverlay">
@@ -380,6 +406,11 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-storage-compat.js"></script>
+<script src="js/firebase-config.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/geran-listings.js"></script>
 <script src="js/listing-ru.js"></script>

@@ -1068,6 +1068,15 @@ svg[fill]{ stroke:none; }
 
 .auth-note{ margin-top:18px; font-size:11.5px; line-height:1.55; color: var(--text-faint); text-align:center; }
 
+.auth-code-row input{ text-align:center; letter-spacing:9px; font-size:22px; font-weight:800; }
+.auth-code-actions{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; }
+.auth-link-btn{
+  background:none; border:none; padding:6px 2px; margin:0;
+  font-size:12.5px; font-weight:700; color: var(--accent); cursor:pointer; font-family:inherit;
+}
+.auth-link-btn:disabled{ color: var(--text-faint); cursor:default; }
+#recaptchaContainer{ position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }
+
 @keyframes appHeaderIn{
   from{ opacity:0; transform: translateY(-22px); }
   to{ opacity:1; transform:none; }

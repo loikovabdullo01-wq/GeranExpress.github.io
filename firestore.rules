@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Starter security rules for the "listings" collection.
+// Deploy with: firebase deploy --only firestore:rules
+// (after `firebase login` and `firebase use <your-project-id>` in this folder).
+//
+// Model: anyone (even logged-out visitors) can read listings so the
+// feed stays public. Only a signed-in user can create a listing, and
+// only the listing's own owner (ownerId == their auth uid) can edit
+// or delete it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}

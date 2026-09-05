@@ -1576,11 +1576,133 @@
 
   let authOnDone = null;
   let authScreenBound = false;
+  let recaptchaVerifier = null;
+  let authConfirmationResult = null;
+  let authPendingPhone = null;
+  let authResendTimer = null;
 
   function hideAuthScreen(screen) {
     screen.style.transition = "";
     screen.style.opacity = "";
     screen.classList.remove("show");
+  }
+
+  function resetAuthCodeStep() {
+    clearInterval(authResendTimer);
+    authResendTimer = null;
+    authConfirmationResult = null;
+    authPendingPhone = null;
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    const codeErr = document.getElementById("authCodeError");
+    const resendBtn = document.getElementById("authResendBtn");
+    if (codeInput) codeInput.value = "";
+    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.classList.remove("loading"); }
+    if (codeErr) codeErr.textContent = "";
+    if (resendBtn) { resendBtn.disabled = true; resendBtn.textContent = t("auth.resend"); }
+    document.getElementById("authCodeStep").hidden = true;
+    document.getElementById("authPhoneStep").hidden = false;
+  }
+
+  function startResendCooldown() {
+    const resendBtn = document.getElementById("authResendBtn");
+    clearInterval(authResendTimer);
+    let secondsLeft = 30;
+    resendBtn.disabled = true;
+    resendBtn.textContent = t("auth.resendIn").replace("{s}", secondsLeft);
+    authResendTimer = setInterval(() => {
+      secondsLeft -= 1;
+      if (secondsLeft <= 0) {
+        clearInterval(authResendTimer);
+        resendBtn.disabled = false;
+        resendBtn.textContent = t("auth.resend");
+        return;
+      }
+      resendBtn.textContent = t("auth.resendIn").replace("{s}", secondsLeft);
+    }, 1000);
+  }
+
+  function ensureRecaptcha() {
+    if (recaptchaVerifier) {
+      try { recaptchaVerifier.clear(); } catch (e) { /* already gone */ }
+      recaptchaVerifier = null;
+    }
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
+    return recaptchaVerifier;
+  }
+
+  function mapFirebaseAuthError(e) {
+    const code = e && e.code;
+    if (code === "auth/invalid-phone-number") return t("auth.invalidPhoneErr");
+    if (code === "auth/too-many-requests" || code === "auth/quota-exceeded") return t("auth.tooManyErr");
+    if (code === "auth/invalid-verification-code" || code === "auth/code-expired") return t("auth.codeErr");
+    return t("auth.sendErr");
+  }
+
+  function finishAuthSuccess(screen, phone, uid) {
+    state.meProfile.phone = phone;
+    if (uid) state.meProfile.uid = uid;
+    persistMeProfile();
+    state.isAuthed = true;
+    saveJSON(LS.authed, true);
+    clearInterval(authResendTimer);
+
+    screen.style.transition = "opacity .4s var(--ease)";
+    screen.style.opacity = "0";
+    setTimeout(() => {
+      hideAuthScreen(screen);
+      const done = authOnDone;
+      authOnDone = null;
+      if (done) done();
+      showToast(t("auth.welcome"));
+    }, 420);
+  }
+
+  function sendAuthCode(fullPhone, ui) {
+    const { row, err, btn } = ui;
+    btn.classList.add("loading");
+    btn.disabled = true;
+    const verifier = ensureRecaptcha();
+    fbAuth.signInWithPhoneNumber(fullPhone, verifier)
+      .then((confirmation) => {
+        authConfirmationResult = confirmation;
+        authPendingPhone = fullPhone;
+        document.getElementById("authPhoneStep").hidden = true;
+        document.getElementById("authCodeStep").hidden = false;
+        document.getElementById("authCodeSentTo").textContent = t("auth.codeSentTo") + " " + fullPhone;
+        const codeInput = document.getElementById("authCodeInput");
+        document.getElementById("authVerifyBtn").disabled = true;
+        codeInput.value = "";
+        document.getElementById("authCodeError").textContent = "";
+        btn.classList.remove("loading");
+        startResendCooldown();
+        setTimeout(() => codeInput.focus(), 300);
+      })
+      .catch((e) => {
+        btn.classList.remove("loading");
+        btn.disabled = false;
+        row.classList.add("invalid");
+        err.textContent = mapFirebaseAuthError(e);
+      });
+  }
+
+  function verifyAuthCode(screen) {
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    const codeErr = document.getElementById("authCodeError");
+    const code = codeInput.value;
+    if (!authConfirmationResult || code.length !== 6) return;
+    verifyBtn.classList.add("loading");
+    verifyBtn.disabled = true;
+    authConfirmationResult.confirm(code)
+      .then((result) => {
+        finishAuthSuccess(screen, authPendingPhone, result.user.uid);
+      })
+      .catch((e) => {
+        verifyBtn.classList.remove("loading");
+        verifyBtn.disabled = codeInput.value.length !== 6;
+        codeErr.textContent = mapFirebaseAuthError(e);
+      });
   }
 
   function showAuthScreen(onDone) {
@@ -1602,6 +1724,7 @@
     err.textContent = "";
     screen.style.transition = "";
     screen.style.opacity = "";
+    resetAuthCodeStep();
 
     screen.classList.add("show");
     setTimeout(() => input.focus(), 450);
@@ -1631,6 +1754,30 @@
     closeBtn.addEventListener("click", () => {
       hideAuthScreen(screen);
       authOnDone = null;
+      resetAuthCodeStep();
+    });
+
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    codeInput.addEventListener("input", () => {
+      codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 6);
+      verifyBtn.disabled = codeInput.value.length !== 6;
+      document.getElementById("authCodeError").textContent = "";
+    });
+    codeInput.addEventListener("keydown", (e) => { if (e.key === "Enter" && !verifyBtn.disabled) verifyBtn.click(); });
+    verifyBtn.addEventListener("click", () => verifyAuthCode(screen));
+
+    document.getElementById("authChangeNumberBtn").addEventListener("click", () => {
+      resetAuthCodeStep();
+      setTimeout(() => input.focus(), 100);
+    });
+    document.getElementById("authResendBtn").addEventListener("click", () => {
+      if (!authPendingPhone) return;
+      sendAuthCode(authPendingPhone, {
+        row: document.getElementById("authCodeRow"),
+        err: document.getElementById("authCodeError"),
+        btn: document.getElementById("authResendBtn"),
+      });
     });
 
     btn.addEventListener("click", () => {
@@ -1640,26 +1787,19 @@
         err.textContent = t("auth.err").replace("{n}", authCountry.digits);
         return;
       }
-      btn.classList.add("loading");
-      btn.disabled = true;
 
-      setTimeout(() => {
-        const phone = authCountry.code + " " + formatPhoneByCountry(d, authCountry);
-        state.meProfile.phone = phone;
-        persistMeProfile();
-        state.isAuthed = true;
-        saveJSON(LS.authed, true);
+      const displayPhone = authCountry.code + " " + formatPhoneByCountry(d, authCountry);
 
-        screen.style.transition = "opacity .4s var(--ease)";
-        screen.style.opacity = "0";
+      if (FIREBASE_READY) {
+        const fullPhone = authCountry.code.replace(/\s/g, "") + d;
+        sendAuthCode(fullPhone, { row, err, btn });
+      } else {
+        btn.classList.add("loading");
+        btn.disabled = true;
         setTimeout(() => {
-          hideAuthScreen(screen);
-          const done = authOnDone;
-          authOnDone = null;
-          if (done) done();
-          showToast(t("auth.welcome"));
-        }, 420);
-      }, 700);
+          finishAuthSuccess(screen, displayPhone, null);
+        }, 700);
+      }
     });
   }
 

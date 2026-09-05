@@ -19,14 +19,15 @@
 // numbers you add yourself in the console; real SMS to real users
 // needs the pay-as-you-go "Blaze" plan.)
 
-const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+    authDomain: "geran-express.firebaseapp.com",
+    projectId: "geran-express",
+    storageBucket: "geran-express.firebasestorage.app",
+    messagingSenderId: "100329986906",
+    appId: "1:100329986906:web:4998c36eecc975b46bf163",
+    measurementId: "G-WP2S70R07C"
+  };
 
 let fbApp = null;
 let fbAuth = null;

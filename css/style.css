@@ -903,6 +903,9 @@ svg[fill]{ stroke:none; }
 .sheet-handle{ width:38px; height:4px; background: var(--border); border-radius:99px; margin: 4px auto 14px; }
 .sheet-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .sheet-header h3{ margin:0; font-size:17px; font-weight:800; }
+.sheet-header-left{ display:flex; align-items:center; gap:8px; min-width:0; }
+.sheet-header-left h3{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#locationBackBtn{ font-size:20px; }
 .filter-block{ margin-bottom:20px; }
 .filter-block label{ display:block; font-size:12.5px; font-weight:700; color: var(--text-dim); margin-bottom:9px; text-transform:uppercase; letter-spacing:.3px; }
 .price-inputs{ display:flex; align-items:center; gap:10px; color: var(--text-faint); }

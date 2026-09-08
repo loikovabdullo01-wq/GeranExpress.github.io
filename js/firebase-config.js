@@ -19,7 +19,7 @@
 // numbers you add yourself in the console; real SMS to real users
 // needs the pay-as-you-go "Blaze" plan.)
 
-  const firebaseConfig = {
+  const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
     authDomain: "geran-express.firebaseapp.com",
     projectId: "geran-express",

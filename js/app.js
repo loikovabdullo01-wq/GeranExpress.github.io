@@ -2,6 +2,8 @@
 (function () {
   "use strict";
 
+  // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
+
   const LS = {
     theme: "bh_theme",
     favorites: "bh_favorites",
@@ -1761,33 +1763,13 @@
   }
 
   function sendAuthCode(fullPhone, ui) {
-    const { row, err, btn } = ui;
-    btn.classList.add("loading");
-    btn.disabled = true;
-    const verifier = ensureRecaptcha();
-    console.log("[Geran] About to call signInWithPhoneNumber, verifier:", verifier);
-    fbAuth.signInWithPhoneNumber(fullPhone, verifier)
-      .then((confirmation) => {
-        authConfirmationResult = confirmation;
-        authPendingPhone = fullPhone;
-        document.getElementById("authPhoneStep").hidden = true;
-        document.getElementById("authCodeStep").hidden = false;
-        document.getElementById("authCodeSentTo").textContent = t("auth.codeSentTo") + " " + fullPhone;
-        const codeInput = document.getElementById("authCodeInput");
-        document.getElementById("authVerifyBtn").disabled = true;
-        codeInput.value = "";
-        document.getElementById("authCodeError").textContent = "";
-        btn.classList.remove("loading");
-        startResendCooldown();
-        setTimeout(() => codeInput.focus(), 300);
-      })
-      .catch((error) => {
-        console.error("[Geran] signInWithPhoneNumber failed:", error && error.code, error && error.message, error);
-        btn.classList.remove("loading");
-        btn.disabled = false;
-        row.classList.add("invalid");
-        err.textContent = mapFirebaseAuthError(error);
-      });
+    // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
+    // Skips signInWithPhoneNumber entirely; fbAuth.currentUser stays null, so
+    // Firestore writes requiring request.auth.uid (publish/edit/delete listing)
+    // will fail with permission-denied until this bypass is removed.
+    const { screen, displayPhone } = ui;
+    console.log("[Geran] SMS bypass active for", fullPhone);
+    finishAuthSuccess(screen, displayPhone || fullPhone, "demo-" + fullPhone.replace(/\D/g, ""));
   }
 
   function verifyAuthCode(screen) {
@@ -1897,7 +1879,7 @@
 
       if (FIREBASE_READY) {
         const fullPhone = authCountry.code.replace(/\s/g, "") + d;
-        sendAuthCode(fullPhone, { row, err, btn });
+        sendAuthCode(fullPhone, { row, err, btn, screen, displayPhone });
       } else {
         btn.classList.add("loading");
         btn.disabled = true;

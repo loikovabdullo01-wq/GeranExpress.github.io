@@ -5,9 +5,7 @@
   const LS = {
     theme: "bh_theme",
     favorites: "bh_favorites",
-    listings: "bh_listings",
     chats: "bh_chats",
-    dataVersion: "bh_data_version",
     notifSeen: "bh_notif_seen",
     meProfile: "bh_me_profile",
     authed: "bh_authed",
@@ -39,36 +37,11 @@
     return d.innerHTML;
   }
 
-  // true only when this session actually got real catalog data (used to decide whether to persist)
-  let catalogLoadedOk = true;
-
-  function loadCatalog() {
-    const cached = loadJSON(LS.listings, null);
-    const cachedVersion = loadJSON(LS.dataVersion, null);
-    const rawSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
-    console.log("[Geran] loadCatalog: start — cachedCount=" + (cached ? cached.length : 0) + ", cachedVersion=" + cachedVersion + ", expectedVersion=" + (typeof DATA_VERSION !== "undefined" ? DATA_VERSION : "?") + ", freshCount=" + rawSource.length);
-
-    if (!rawSource.length) {
-      // js/geran-listings.js or js/data.js failed/hasn't loaded yet — never persist this as "the catalog"
-      console.error("[Geran] MOCK_LISTINGS is empty — catalog script likely failed to load. typeof GERAN_CATALOG_LISTINGS=" + typeof (typeof GERAN_CATALOG_LISTINGS !== "undefined" ? GERAN_CATALOG_LISTINGS : undefined) + ". Falling back to cached data without overwriting it.");
-      catalogLoadedOk = false;
-      return cached || [];
-    }
-
-    const fresh = JSON.parse(JSON.stringify(rawSource));
-    if (!cached || cachedVersion !== DATA_VERSION) {
-      const mine = (cached || []).filter((l) => l.mine);
-      console.log("[Geran] loadCatalog: merging " + mine.length + " local listings with " + fresh.length + " catalog listings");
-      return [...mine, ...fresh];
-    }
-    console.log("[Geran] loadCatalog: using cached listings (" + cached.length + ")");
-    return cached;
-  }
-
   const state = {
     theme: loadJSON(LS.theme, null) || "light",
     favorites: new Set(loadJSON(LS.favorites, [])),
-    listings: loadCatalog(),
+    // listings are never cached locally — always the static demo catalog plus whatever Firestore sends via onSnapshot
+    listings: typeof MOCK_LISTINGS !== "undefined" ? JSON.parse(JSON.stringify(MOCK_LISTINGS)) : [],
     chats: loadJSON(LS.chats, {}),
     meProfile: loadJSON(LS.meProfile, {}),
     isAuthed: loadJSON(LS.authed, false),
@@ -76,23 +49,19 @@
     currentTab: "home",
     filters: { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
-  if (catalogLoadedOk) {
-    saveJSON(LS.listings, state.listings);
-    saveJSON(LS.dataVersion, DATA_VERSION);
-  } else {
-    console.warn("[Geran] Skipping persistence of listings/dataVersion this session because catalog data failed to load.");
-  }
 
   function persistFavorites() { saveJSON(LS.favorites, Array.from(state.favorites)); }
-  function persistListings() { saveJSON(LS.listings, state.listings); }
   function persistChats() { saveJSON(LS.chats, state.chats); }
   function persistMeProfile() { saveJSON(LS.meProfile, state.meProfile); }
+
+  function currentUserId() { return fbAuth && fbAuth.currentUser ? fbAuth.currentUser.uid : null; }
 
   let remoteListings = [];
   let unsubscribeListings = null;
 
   function normalizeRemoteListing(doc) {
-    const myUid = state.meProfile.uid;
+    const myUid = currentUserId();
+    const isMine = !!(myUid && doc.userId === myUid);
     return {
       id: doc.id,
       title: doc.title || "",
@@ -106,11 +75,11 @@
       photos: doc.photos || [],
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
-      sellerId: doc.ownerId || "geran",
-      ownerId: doc.ownerId || null,
-      mine: !!(myUid && doc.ownerId === myUid),
+      sellerId: isMine ? "me" : (doc.userId || "geran"),
+      userId: doc.userId || null,
+      mine: isMine,
       status: doc.status || "active",
-      createdAt: doc.createdAt || Date.now(),
+      createdAt: (doc.createdAt && doc.createdAt.toMillis) ? doc.createdAt.toMillis() : (doc.createdAt || Date.now()),
       views: doc.views || 0,
       lat: doc.lat, lng: doc.lng,
     };
@@ -121,7 +90,6 @@
     const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
     const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
     state.listings = [...remoteListings, ...staticFallback];
-    persistListings();
     console.log("[Geran] Firestore sync: " + remoteListings.length + " remote + " + staticFallback.length + " static = " + state.listings.length + " total listings");
     renderHomeTab();
     renderMyListingsTab();
@@ -556,9 +524,26 @@
     return `<div style="width:100%;height:100%;border-radius:14px;background:linear-gradient(135deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;">${listing.icon || "📦"}</div>`;
   }
 
-  function renderMyListingsTab() {
-    const mine = state.listings.filter((l) => l.mine).sort((a, b) => b.createdAt - a.createdAt);
+  async function renderMyListingsTab() {
     const box = document.getElementById("myListingsList");
+    const uidNow = currentUserId();
+    let mine;
+
+    if (FIREBASE_READY && fbDb && uidNow) {
+      try {
+        const snap = await fbDb.collection(LISTINGS_COLLECTION).where("userId", "==", uidNow).get();
+        mine = snap.docs.map((d) => normalizeRemoteListing({ id: d.id, ...d.data() }));
+        console.log("[Geran] My listings fetched from Firestore: " + mine.length);
+      } catch (e) {
+        console.error("[Geran] Failed to fetch my listings from Firestore:", e);
+        showToast(t("form.syncFailed"));
+        mine = state.listings.filter((l) => l.mine);
+      }
+    } else {
+      mine = state.listings.filter((l) => l.mine);
+    }
+    mine = mine.slice().sort((a, b) => b.createdAt - a.createdAt);
+
     box.innerHTML = mine
       .map(
         (l) => `
@@ -586,28 +571,30 @@
     document.getElementById("myEmpty").hidden = mine.length !== 0;
     document.getElementById("myCount").textContent = mine.length ? mine.length : "";
 
-    box.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); openAddEditForm(getListing(b.dataset.edit)); }));
+    box.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); openAddEditForm(mine.find((l) => l.id === b.dataset.edit) || getListing(b.dataset.edit)); }));
     box.querySelectorAll("[data-toggle-sold]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", async (e) => {
         e.stopPropagation();
-        const l = getListing(b.dataset.toggleSold);
+        const l = mine.find((x) => x.id === b.dataset.toggleSold) || getListing(b.dataset.toggleSold);
         l.status = l.status === "sold" ? "active" : "sold";
-        persistListings();
-        if (FIREBASE_READY) updateListingInFirestore(l.id, { status: l.status }).catch(() => showToast(t("form.syncFailed")));
+        if (FIREBASE_READY) {
+          try { await updateListingInFirestore(l.id, { status: l.status }); } catch (e2) { showToast(t("form.syncFailed")); }
+        }
         renderMyListingsTab();
+        renderHomeTab();
         showToast(l.status === "sold" ? t("status.sold") : t("status.active"));
       })
     );
     box.querySelectorAll("[data-delete]").forEach((b) =>
-      b.addEventListener("click", (e) => {
+      b.addEventListener("click", async (e) => {
         e.stopPropagation();
         const id = b.dataset.delete;
         state.listings = state.listings.filter((l) => l.id !== id);
         state.favorites.delete(id);
-        persistListings();
         persistFavorites();
-        if (FIREBASE_READY) deleteListingFromFirestore(id);
+        if (FIREBASE_READY) await deleteListingFromFirestore(id);
         renderMyListingsTab();
+        renderHomeTab();
         showToast(t("form.deleted"));
       })
     );
@@ -709,7 +696,6 @@
     const listing = getListing(id);
     if (!listing) return;
     listing.views = (listing.views || 0) + 1;
-    persistListings();
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
@@ -1125,7 +1111,7 @@
         el.querySelectorAll("#condToggle button").forEach((b) => b.classList.toggle("active", b === btn));
       });
 
-      el.querySelector("#submitListingBtn").addEventListener("click", () => {
+      el.querySelector("#submitListingBtn").addEventListener("click", async () => {
         const title = el.querySelector("#fTitle").value.trim();
         const price = Number(el.querySelector("#fPrice").value);
         const city = draft.city || getUser("me").city;
@@ -1138,37 +1124,58 @@
         if (!description) { showToast(t("form.needDesc")); el.querySelector("#fDesc").focus(); return; }
         if (!phone || phone.replace(/\D/g, "").length < 9) { showToast(t("form.needPhone")); el.querySelector("#fPhone").focus(); return; }
 
+        const uidNow = currentUserId();
+        if (FIREBASE_READY && !uidNow) {
+          console.error("[Geran] Ошибка: Пользователь не авторизован!");
+          showToast(t("form.needAuth"));
+          return;
+        }
+
         const cat = CATEGORIES.find((c) => c.id === draft.category) || CATEGORIES[1];
+        const submitBtn = el.querySelector("#submitListingBtn");
+        submitBtn.disabled = true;
 
         if (isEdit) {
           const [eLat, eLng] = coordsForLocation(city);
-          Object.assign(existing, { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng });
-          persistListings();
-          if (FIREBASE_READY) updateListingInFirestore(existing.id, existing).catch(() => showToast(t("form.syncFailed")));
-          showToast(t("form.saved"));
+          const patch = { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
+          Object.assign(existing, patch);
+          try {
+            if (FIREBASE_READY) await updateListingInFirestore(existing.id, patch);
+            showToast(t("form.saved"));
+          } catch (e) {
+            showToast(t("form.syncFailed"));
+          }
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
-          const newListing = {
-            id: uid("l"),
+          const listingData = {
             title, price, city, address, phone, description,
             category: draft.category,
             condition: draft.condition,
             photos: draft.photos,
             icon: cat.icon,
             gradient,
-            sellerId: "me",
-            ownerId: state.meProfile.uid || null,
-            mine: true,
+            userId: uidNow,
             status: "active",
-            createdAt: Date.now(),
             views: 0,
             lat: coordsForLocation(city)[0],
             lng: coordsForLocation(city)[1],
           };
-          state.listings.unshift(newListing);
-          persistListings();
-          if (FIREBASE_READY) saveListingToFirestore(newListing).catch(() => showToast(t("form.syncFailed")));
-          showToast(t("form.published"));
+          try {
+            let newId;
+            if (FIREBASE_READY) {
+              const docRef = await addListingToFirestore(listingData);
+              newId = docRef.id;
+            } else {
+              newId = uid("l"); // local-only demo mode (no Firebase configured)
+            }
+            state.listings.unshift({ ...listingData, id: newId, sellerId: "me", mine: true, createdAt: Date.now() });
+            showToast(t("form.published"));
+          } catch (e) {
+            console.error("[Geran] Failed to publish listing to Firestore:", e);
+            showToast(t("form.syncFailed"));
+            submitBtn.disabled = false;
+            return;
+          }
         }
         renderHomeTab();
         renderMyListingsTab();
@@ -1177,12 +1184,11 @@
       });
 
       const delBtn = el.querySelector("#deleteListingBtn");
-      if (delBtn) delBtn.addEventListener("click", () => {
+      if (delBtn) delBtn.addEventListener("click", async () => {
         state.listings = state.listings.filter((l) => l.id !== existing.id);
         state.favorites.delete(existing.id);
-        persistListings();
         persistFavorites();
-        if (FIREBASE_READY) deleteListingFromFirestore(existing.id);
+        if (FIREBASE_READY) await deleteListingFromFirestore(existing.id);
         renderHomeTab();
         renderMyListingsTab();
         showToast(t("form.deleted"));
@@ -2179,13 +2185,7 @@
         showToast(t("catalog.refreshed"));
         return;
       }
-      const mine = state.listings.filter((l) => l.mine);
-      state.listings = [...mine, ...JSON.parse(JSON.stringify(MOCK_LISTINGS))];
-      persistListings();
-      saveJSON(LS.dataVersion, DATA_VERSION);
-      renderHomeTab();
-      renderMyListingsTab();
-      renderProfileTab();
+      rebuildListingsFromRemote();
       showToast(`${t("catalog.refreshed")} · ${state.listings.length} ${t("home.count")}`);
     });
     document.getElementById("aboutBtn").addEventListener("click", () =>

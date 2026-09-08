@@ -101,13 +101,17 @@ function subscribeToListings(onChange, onError) {
   );
 }
 
-// Creates/overwrites a listing doc by id (rules require data.ownerId === auth.uid to create).
-function saveListingToFirestore(listing) {
-  if (!FIREBASE_READY || !fbDb) return Promise.resolve();
-  const { mine, ...data } = listing;
-  return fbDb.collection(LISTINGS_COLLECTION).doc(listing.id).set(data, { merge: true })
-    .then(() => console.info("[Firestore] Listing saved:", listing.id))
-    .catch((e) => { console.error("[Firestore] Failed to save listing " + listing.id + ":", e); throw e; });
+// Creates a new listing doc with an auto-generated id and a server-side timestamp
+// (rules require data.userId === auth.uid to create). Returns the new doc reference.
+function addListingToFirestore(listingData) {
+  if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
+  return fbDb.collection(LISTINGS_COLLECTION).add({
+    ...listingData,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }).then((docRef) => {
+    console.info("[Firestore] Listing created:", docRef.id);
+    return docRef;
+  }).catch((e) => { console.error("[Firestore] Failed to create listing:", e); throw e; });
 }
 
 // Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).

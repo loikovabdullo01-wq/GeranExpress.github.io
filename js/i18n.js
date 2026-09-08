@@ -217,6 +217,7 @@ const TRANSLATIONS = {
     "form.needPhone": "Укажите телефон для связи",
     "form.published": "Объявление опубликовано 🎉",
     "form.syncFailed": "Сохранено локально, но не удалось синхронизировать с сервером",
+    "form.needAuth": "Войдите в аккаунт, чтобы опубликовать объявление",
     "form.saved": "Изменения сохранены",
     "form.deleted": "Объявление удалено",
 
@@ -463,6 +464,7 @@ const TRANSLATIONS = {
     "form.needPhone": "Телефонро нависед",
     "form.published": "Эълон нашр шуд 🎉",
     "form.syncFailed": "Дар маҳал захира шуд, вале ба сервер синхрон нашуд",
+    "form.needAuth": "Барои нашри эълон ба аккаунт ворид шавед",
     "form.saved": "Тағйирот нигоҳ дошта шуд",
     "form.deleted": "Эълон нест карда шуд",
 
@@ -709,6 +711,7 @@ const TRANSLATIONS = {
     "form.needPhone": "Enter a contact phone",
     "form.published": "Listing published 🎉",
     "form.syncFailed": "Saved locally, but failed to sync with the server",
+    "form.needAuth": "Sign in to publish a listing",
     "form.saved": "Changes saved",
     "form.deleted": "Listing deleted",
 

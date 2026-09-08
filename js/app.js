@@ -1765,6 +1765,7 @@
     btn.classList.add("loading");
     btn.disabled = true;
     const verifier = ensureRecaptcha();
+    console.log("[Geran] About to call signInWithPhoneNumber, verifier:", verifier);
     fbAuth.signInWithPhoneNumber(fullPhone, verifier)
       .then((confirmation) => {
         authConfirmationResult = confirmation;
@@ -1780,12 +1781,12 @@
         startResendCooldown();
         setTimeout(() => codeInput.focus(), 300);
       })
-      .catch((e) => {
-        console.error("[Geran] signInWithPhoneNumber failed — real Firebase error code/message:", e && e.code, e);
+      .catch((error) => {
+        console.error("[Geran] signInWithPhoneNumber failed:", error && error.code, error && error.message, error);
         btn.classList.remove("loading");
         btn.disabled = false;
         row.classList.add("invalid");
-        err.textContent = mapFirebaseAuthError(e);
+        err.textContent = mapFirebaseAuthError(error);
       });
   }
 

@@ -1724,7 +1724,12 @@
       try { recaptchaVerifier.clear(); } catch (e) { /* already gone */ }
       recaptchaVerifier = null;
     }
-    recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
+    // classic reCAPTCHA v2 invisible; the SDK's own Enterprise probe (recaptchaConfig 400) is expected and falls back to this automatically
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", {
+      size: "invisible",
+      callback: () => {},
+      "expired-callback": () => { console.warn("[Geran] reCAPTCHA expired, will re-create on next attempt."); },
+    });
     return recaptchaVerifier;
   }
 
@@ -1776,6 +1781,7 @@
         setTimeout(() => codeInput.focus(), 300);
       })
       .catch((e) => {
+        console.error("[Geran] signInWithPhoneNumber failed — real Firebase error code/message:", e && e.code, e);
         btn.classList.remove("loading");
         btn.disabled = false;
         row.classList.add("invalid");
@@ -1796,6 +1802,7 @@
         finishAuthSuccess(screen, authPendingPhone, result.user.uid);
       })
       .catch((e) => {
+        console.error("[Geran] confirmationResult.confirm failed — real Firebase error code/message:", e && e.code, e);
         verifyBtn.classList.remove("loading");
         verifyBtn.disabled = codeInput.value.length !== 6;
         codeErr.textContent = mapFirebaseAuthError(e);

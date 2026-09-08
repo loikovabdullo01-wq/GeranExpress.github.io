@@ -1764,12 +1764,20 @@
 
   function sendAuthCode(fullPhone, ui) {
     // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
-    // Skips signInWithPhoneNumber entirely; fbAuth.currentUser stays null, so
-    // Firestore writes requiring request.auth.uid (publish/edit/delete listing)
-    // will fail with permission-denied until this bypass is removed.
-    const { screen, displayPhone } = ui;
+    // Uses a real Firebase Anonymous Auth session (not signInWithPhoneNumber) so
+    // fbAuth.currentUser is genuinely set and Firestore rules (request.auth.uid == userId)
+    // still pass. Requires Authentication → Sign-in method → Anonymous enabled in console.
+    const { screen, displayPhone, btn } = ui;
     console.log("[Geran] SMS bypass active for", fullPhone);
-    finishAuthSuccess(screen, displayPhone || fullPhone, "demo-" + fullPhone.replace(/\D/g, ""));
+    fbAuth.signInAnonymously()
+      .then((cred) => {
+        finishAuthSuccess(screen, displayPhone || fullPhone, cred.user.uid);
+      })
+      .catch((e) => {
+        console.error("[Geran] Anonymous auth bypass failed — enable Authentication → Sign-in method → Anonymous in Firebase Console:", e && e.code, e);
+        if (btn) { btn.classList.remove("loading"); btn.disabled = false; }
+        showToast(t("form.syncFailed"));
+      });
   }
 
   function verifyAuthCode(screen) {

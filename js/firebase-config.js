@@ -20,14 +20,43 @@
 // needs the pay-as-you-go "Blaze" plan.)
 
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+    apiKey: "AIzaSyDcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
     authDomain: "geran-express.firebaseapp.com",
     projectId: "geran-express",
-  storageBucket: "geran-express.appspot.com",
+    storageBucket: "geran-express.firebasestorage.app",
     messagingSenderId: "100329986906",
     appId: "1:100329986906:web:4998c36eecc975b46bf163",
     measurementId: "G-WP2S70R07C"
   };
+
+// ImgBB is used instead of Firebase Storage for listing photos (free, no billing plan needed).
+// Get a key at https://api.imgbb.com/ and paste it below to enable uploads;
+// until then, photos are kept as local base64 data (old behavior).
+const IMGBB_API_KEY = "044c84fb33e068293052ead694715174";
+
+// Uploads a File/Blob to ImgBB and resolves with its direct hosted URL, or null if not configured.
+async function uploadToImgBB(file) {
+  if (!IMGBB_API_KEY) {
+    console.warn("[ImgBB] IMGBB_API_KEY not set in js/firebase-config.js — falling back to local base64 photo storage.");
+    return null;
+  }
+  const formData = new FormData();
+  formData.append("image", file);
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: "POST",
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok || !json || !json.success || !json.data || !json.data.url) {
+      throw new Error((json && json.error && json.error.message) || "ImgBB upload failed");
+    }
+    return json.data.url;
+  } catch (e) {
+    console.error("[ImgBB] Upload failed:", e);
+    return null;
+  }
+}
 
 let fbApp = null;
 let fbAuth = null;
@@ -56,3 +85,40 @@ let FIREBASE_READY = false;
     console.error("[Firebase] init failed — running in local-only demo mode.", e);
   }
 })();
+
+const LISTINGS_COLLECTION = "listings";
+
+// Live-syncs the "listings" collection; calls onChange(docsArray) on every update.
+// Returns an unsubscribe function, or null if Firestore isn't available.
+function subscribeToListings(onChange, onError) {
+  if (!FIREBASE_READY || !fbDb) return null;
+  return fbDb.collection(LISTINGS_COLLECTION).orderBy("createdAt", "desc").onSnapshot(
+    (snap) => onChange(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))),
+    (err) => {
+      console.error("[Firestore] listings subscription failed:", err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+// Creates/overwrites a listing doc by id (rules require data.ownerId === auth.uid to create).
+function saveListingToFirestore(listing) {
+  if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  const { mine, ...data } = listing;
+  return fbDb.collection(LISTINGS_COLLECTION).doc(listing.id).set(data, { merge: true })
+    .then(() => console.info("[Firestore] Listing saved:", listing.id))
+    .catch((e) => { console.error("[Firestore] Failed to save listing " + listing.id + ":", e); throw e; });
+}
+
+// Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).
+function updateListingInFirestore(id, patch) {
+  if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(patch, { merge: true })
+    .catch((e) => { console.error("[Firestore] Failed to update listing " + id + ":", e); throw e; });
+}
+
+function deleteListingFromFirestore(id) {
+  if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
+    .catch((e) => { console.error("[Firestore] Failed to delete listing " + id + ":", e); });
+}

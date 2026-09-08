@@ -19,6 +19,7 @@
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : fallback;
     } catch (e) {
+      console.error("[Geran] loadJSON failed for key '" + key + "':", e);
       return fallback;
     }
   }
@@ -26,6 +27,7 @@
     try {
       localStorage.setItem(key, JSON.stringify(val));
     } catch (e) {
+      console.error("[Geran] saveJSON failed for key '" + key + "':", e);
     }
   }
   function uid(prefix) {
@@ -37,14 +39,29 @@
     return d.innerHTML;
   }
 
+  // true only when this session actually got real catalog data (used to decide whether to persist)
+  let catalogLoadedOk = true;
+
   function loadCatalog() {
     const cached = loadJSON(LS.listings, null);
     const cachedVersion = loadJSON(LS.dataVersion, null);
-    const fresh = JSON.parse(JSON.stringify(MOCK_LISTINGS));
+    const rawSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
+    console.log("[Geran] loadCatalog: start — cachedCount=" + (cached ? cached.length : 0) + ", cachedVersion=" + cachedVersion + ", expectedVersion=" + (typeof DATA_VERSION !== "undefined" ? DATA_VERSION : "?") + ", freshCount=" + rawSource.length);
+
+    if (!rawSource.length) {
+      // js/geran-listings.js or js/data.js failed/hasn't loaded yet — never persist this as "the catalog"
+      console.error("[Geran] MOCK_LISTINGS is empty — catalog script likely failed to load. typeof GERAN_CATALOG_LISTINGS=" + typeof (typeof GERAN_CATALOG_LISTINGS !== "undefined" ? GERAN_CATALOG_LISTINGS : undefined) + ". Falling back to cached data without overwriting it.");
+      catalogLoadedOk = false;
+      return cached || [];
+    }
+
+    const fresh = JSON.parse(JSON.stringify(rawSource));
     if (!cached || cachedVersion !== DATA_VERSION) {
       const mine = (cached || []).filter((l) => l.mine);
+      console.log("[Geran] loadCatalog: merging " + mine.length + " local listings with " + fresh.length + " catalog listings");
       return [...mine, ...fresh];
     }
+    console.log("[Geran] loadCatalog: using cached listings (" + cached.length + ")");
     return cached;
   }
 
@@ -59,13 +76,70 @@
     currentTab: "home",
     filters: { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
-  saveJSON(LS.listings, state.listings);
-  saveJSON(LS.dataVersion, DATA_VERSION);
+  if (catalogLoadedOk) {
+    saveJSON(LS.listings, state.listings);
+    saveJSON(LS.dataVersion, DATA_VERSION);
+  } else {
+    console.warn("[Geran] Skipping persistence of listings/dataVersion this session because catalog data failed to load.");
+  }
 
   function persistFavorites() { saveJSON(LS.favorites, Array.from(state.favorites)); }
   function persistListings() { saveJSON(LS.listings, state.listings); }
   function persistChats() { saveJSON(LS.chats, state.chats); }
   function persistMeProfile() { saveJSON(LS.meProfile, state.meProfile); }
+
+  let remoteListings = [];
+  let unsubscribeListings = null;
+
+  function normalizeRemoteListing(doc) {
+    const myUid = state.meProfile.uid;
+    return {
+      id: doc.id,
+      title: doc.title || "",
+      price: doc.price || 0,
+      category: doc.category || "other",
+      condition: doc.condition || "Б/у",
+      description: doc.description || "",
+      city: doc.city || "",
+      address: doc.address || "",
+      phone: doc.phone || "",
+      photos: doc.photos || [],
+      icon: doc.icon || "🏷️",
+      gradient: doc.gradient || GRADIENTS[0],
+      sellerId: doc.ownerId || "geran",
+      ownerId: doc.ownerId || null,
+      mine: !!(myUid && doc.ownerId === myUid),
+      status: doc.status || "active",
+      createdAt: doc.createdAt || Date.now(),
+      views: doc.views || 0,
+      lat: doc.lat, lng: doc.lng,
+    };
+  }
+
+  function rebuildListingsFromRemote() {
+    const remoteIds = new Set(remoteListings.map((l) => l.id));
+    const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
+    const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
+    state.listings = [...remoteListings, ...staticFallback];
+    persistListings();
+    console.log("[Geran] Firestore sync: " + remoteListings.length + " remote + " + staticFallback.length + " static = " + state.listings.length + " total listings");
+    renderHomeTab();
+    renderMyListingsTab();
+    renderFavoritesTab();
+    renderProfileTab();
+  }
+
+  function startListingsSync() {
+    if (unsubscribeListings || typeof subscribeToListings !== "function") return;
+    unsubscribeListings = subscribeToListings(
+      (docs) => {
+        remoteListings = docs.map(normalizeRemoteListing);
+        rebuildListingsFromRemote();
+      },
+      () => showToast(t("form.syncFailed") || "Sync error")
+    );
+    if (unsubscribeListings) console.info("[Geran] Listening for real-time listing updates from Firestore.");
+  }
 
   function getUser(id) {
     const u = USERS.find((x) => x.id === id) || USERS[0];
@@ -454,6 +528,7 @@
 
   function renderHomeTab() {
     const list = computeFilteredListings();
+    console.log("[Geran] renderHomeTab: totalListings=" + state.listings.length + ", afterFilters=" + list.length + ", filters=" + JSON.stringify(state.filters));
     const grid = document.getElementById("homeGrid");
     renderGrid(grid, list);
     document.getElementById("homeEmpty").hidden = list.length !== 0;
@@ -518,6 +593,7 @@
         const l = getListing(b.dataset.toggleSold);
         l.status = l.status === "sold" ? "active" : "sold";
         persistListings();
+        if (FIREBASE_READY) updateListingInFirestore(l.id, { status: l.status }).catch(() => showToast(t("form.syncFailed")));
         renderMyListingsTab();
         showToast(l.status === "sold" ? t("status.sold") : t("status.active"));
       })
@@ -530,6 +606,7 @@
         state.favorites.delete(id);
         persistListings();
         persistFavorites();
+        if (FIREBASE_READY) deleteListingFromFirestore(id);
         renderMyListingsTab();
         showToast(t("form.deleted"));
       })
@@ -1010,7 +1087,17 @@
         const files = Array.from(photoInput.files).slice(0, 6 - draft.photos.length);
         files.forEach((file) => {
           const reader = new FileReader();
-          reader.onload = () => { draft.photos.push(reader.result); renderPhotoGrid(); };
+          reader.onload = () => {
+            const localIndex = draft.photos.push(reader.result) - 1;
+            renderPhotoGrid();
+            // upload in the background, then swap the base64 preview for the hosted ImgBB URL
+            uploadToImgBB(file).then((url) => {
+              if (url && draft.photos[localIndex] === reader.result) {
+                draft.photos[localIndex] = url;
+                renderPhotoGrid();
+              }
+            });
+          };
           reader.readAsDataURL(file);
         });
         photoInput.value = "";
@@ -1057,6 +1144,7 @@
           const [eLat, eLng] = coordsForLocation(city);
           Object.assign(existing, { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng });
           persistListings();
+          if (FIREBASE_READY) updateListingInFirestore(existing.id, existing).catch(() => showToast(t("form.syncFailed")));
           showToast(t("form.saved"));
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
@@ -1069,6 +1157,7 @@
             icon: cat.icon,
             gradient,
             sellerId: "me",
+            ownerId: state.meProfile.uid || null,
             mine: true,
             status: "active",
             createdAt: Date.now(),
@@ -1078,6 +1167,7 @@
           };
           state.listings.unshift(newListing);
           persistListings();
+          if (FIREBASE_READY) saveListingToFirestore(newListing).catch(() => showToast(t("form.syncFailed")));
           showToast(t("form.published"));
         }
         renderHomeTab();
@@ -1092,6 +1182,7 @@
         state.favorites.delete(existing.id);
         persistListings();
         persistFavorites();
+        if (FIREBASE_READY) deleteListingFromFirestore(existing.id);
         renderHomeTab();
         renderMyListingsTab();
         showToast(t("form.deleted"));
@@ -2083,6 +2174,11 @@
       })
     );
     document.getElementById("refreshDataBtn").addEventListener("click", () => {
+      if (typeof MOCK_LISTINGS === "undefined" || !MOCK_LISTINGS.length) {
+        console.error("[Geran] Manual refresh aborted: MOCK_LISTINGS is empty (catalog script not loaded).");
+        showToast(t("catalog.refreshed"));
+        return;
+      }
       const mine = state.listings.filter((l) => l.mine);
       state.listings = [...mine, ...JSON.parse(JSON.stringify(MOCK_LISTINGS))];
       persistListings();
@@ -2130,6 +2226,7 @@
     initHeaderCollapse();
     initPullToRefresh();
     syncHeaderHeight();
+    startListingsSync();
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);

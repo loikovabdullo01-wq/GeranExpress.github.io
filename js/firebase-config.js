@@ -20,7 +20,7 @@
 // needs the pay-as-you-go "Blaze" plan.)
 
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+    apiKey: "AIzaSyDcg071rmxf7ixeHxa29rSrkWxb03G4w4U",
     authDomain: "geran-express.firebaseapp.com",
     projectId: "geran-express",
     storageBucket: "geran-express.firebasestorage.app",

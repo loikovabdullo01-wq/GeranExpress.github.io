@@ -417,6 +417,17 @@ svg[fill]{ stroke:none; }
 }
 .card-photo-main img.loaded{ opacity:1; }
 .card:hover .card-photo-main img.loaded{ transform: scale(1.07); }
+.card-photo-dots{
+  position:absolute; left:50%; bottom:10px; transform:translateX(-50%);
+  display:flex; align-items:center; gap:6px; z-index:2;
+  padding:4px 8px; border-radius:999px; background: rgba(8,11,12,.36);
+  backdrop-filter: blur(4px);
+}
+.card-photo-dot{
+  width:7px; height:7px; border-radius:50%; background: rgba(255,255,255,.6);
+  display:block; box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+}
+.card-photo-dot.active{ background: #fff; width:9px; height:9px; }
 .photo-skeleton{
   position:absolute; inset:0; z-index:0;
   background: linear-gradient(100deg, var(--surface-2) 30%, var(--border) 50%, var(--surface-2) 70%);
@@ -521,6 +532,18 @@ svg[fill]{ stroke:none; }
 }
 .pd-gallery:hover img{ transform: scale(1.03); }
 .pd-gallery-slide span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:46px; }
+.pd-gallery-dots{
+  position:absolute; left:50%; bottom:12px; transform:translateX(-50%);
+  display:flex; align-items:center; justify-content:center; gap:7px; z-index:3;
+  padding:5px 10px; border-radius:999px; background: rgba(8,11,12,.35);
+  backdrop-filter: blur(6px);
+}
+.pd-gallery-dot{
+  width:8px; height:8px; padding:0; border:none; border-radius:50%;
+  background: rgba(255,255,255,.55); box-shadow: 0 0 0 1px rgba(255,255,255,.2);
+  cursor:pointer; transition: all .2s ease;
+}
+.pd-gallery-dot.active{ width:10px; height:10px; background:#fff; }
 
 .card-photo span{ position:relative; z-index:1; filter: drop-shadow(0 6px 10px rgba(0,0,0,.15)); transition: transform .35s var(--ease); }
 .card:hover .card-photo span{ transform: scale(1.12) rotate(-4deg); }

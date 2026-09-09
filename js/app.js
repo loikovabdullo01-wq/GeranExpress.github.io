@@ -39,6 +39,23 @@
     return d.innerHTML;
   }
 
+  function normalizePhotos(value) {
+    if (!value) return [];
+    const list = Array.isArray(value) ? value : [value];
+    const cleaned = list
+      .flatMap((item) => Array.isArray(item) ? item : [item])
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object" && typeof item.url === "string") return item.url.trim();
+        return "";
+      })
+      .filter((src) => typeof src === "string" && src.length > 0)
+      .filter((src, index, arr) => arr.indexOf(src) === index)
+      .slice(0, MAX_LISTING_PHOTOS);
+
+    return cleaned;
+  }
+
   const MAX_LISTING_PHOTOS = 10;
 
   const state = {
@@ -76,7 +93,7 @@
       city: doc.city || "",
       address: doc.address || "",
       phone: doc.phone || "",
-      photos: doc.photos || [],
+      photos: normalizePhotos(doc.photos),
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
       sellerId: isMine ? "me" : (doc.userId || "geran"),
@@ -143,13 +160,17 @@
   }
 
   function cardPhotoInner(listing) {
-    const photos = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
+    const photos = normalizePhotos(listing.photos);
     const mainPhoto = photos[0] || "";
     if (mainPhoto) {
+      const dots = photos.length > 1
+        ? `<div class="card-photo-dots">${photos.map((_, index) => `<span class="card-photo-dot ${index === 0 ? "active" : ""}"></span>`).join("")}</div>`
+        : "";
       return `
         <div class="card-photo-main">
           <div class="photo-skeleton"></div>
           <img src="${esc(mainPhoto)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
+          ${dots}
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
@@ -708,7 +729,7 @@
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const photos = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
+    const photos = normalizePhotos(listing.photos);
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
@@ -717,7 +738,8 @@
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
             <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
-        `).join("")}</div></div>`
+        `).join("")}</div></div>
+        <div class="pd-gallery-dots">${photos.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
       : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
 
     const html = `
@@ -802,6 +824,7 @@
       const galleryViewport = el.querySelector(".pd-gallery-viewport");
       const galleryTrack = el.querySelector(".pd-gallery-track");
       const gallerySlides = el.querySelectorAll(".pd-gallery-slide");
+      const galleryDots = el.querySelectorAll(".pd-gallery-dot");
       if (galleryViewport && galleryTrack && gallerySlides.length > 1) {
         let index = 0;
         let startX = 0;
@@ -809,7 +832,16 @@
 
         const updateSlider = () => {
           galleryTrack.style.transform = `translateX(-${index * 100}%)`;
+          gallerySlides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === index));
+          galleryDots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
         };
+
+        galleryDots.forEach((dot) => {
+          dot.addEventListener("click", () => {
+            index = Number(dot.dataset.galleryIndex || 0);
+            updateSlider();
+          });
+        });
 
         galleryViewport.addEventListener("touchstart", (event) => {
           startX = event.touches[0].clientX;

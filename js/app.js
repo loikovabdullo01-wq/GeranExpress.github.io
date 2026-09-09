@@ -56,6 +56,12 @@
     return cleaned;
   }
 
+  function listingPhotos(listing) {
+    if (!listing) return [];
+    const photos = normalizePhotos(listing.photos);
+    return photos.length ? photos : normalizePhotos(listing.images);
+  }
+
   const MAX_LISTING_PHOTOS = 10;
 
   const state = {
@@ -93,7 +99,7 @@
       city: doc.city || "",
       address: doc.address || "",
       phone: doc.phone || "",
-      photos: normalizePhotos(doc.photos),
+      photos: listingPhotos(doc),
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
       sellerId: isMine ? "me" : (doc.userId || "geran"),
@@ -160,20 +166,55 @@
   }
 
   function cardPhotoInner(listing) {
-    const photos = normalizePhotos(listing.photos);
-    const mainPhoto = photos[0] || "";
-    if (mainPhoto) {
+    const photos = listingPhotos(listing);
+    if (photos.length) {
       const dots = photos.length > 1
-        ? `<div class="card-photo-dots">${photos.map((_, index) => `<span class="card-photo-dot ${index === 0 ? "active" : ""}"></span>`).join("")}</div>`
+        ? `<div class="card-photo-dots">${photos.map((_, index) => `<button type="button" class="card-photo-dot ${index === 0 ? "active" : ""}" data-card-photo-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
         : "";
       return `
-        <div class="card-photo-main">
-          <div class="photo-skeleton"></div>
-          <img src="${esc(mainPhoto)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
+        <div class="card-photo-main" data-card-gallery="${esc(listing.id)}">
+          <div class="card-photo-track">
+            ${photos.map((src, index) => `<div class="card-photo-slide"><div class="photo-skeleton"></div><img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" /></div>`).join("")}
+          </div>
           ${dots}
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
+  }
+
+  function initCardGalleries(root) {
+    root.querySelectorAll("[data-card-gallery]").forEach((gallery) => {
+      const track = gallery.querySelector(".card-photo-track");
+      const slides = gallery.querySelectorAll(".card-photo-slide");
+      const dots = gallery.querySelectorAll("[data-card-photo-index]");
+      if (!track || slides.length < 2) return;
+
+      let index = 0;
+      let startX = 0;
+      let deltaX = 0;
+      const update = () => {
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
+      };
+
+      dots.forEach((dot) => dot.addEventListener("click", (event) => {
+        event.stopPropagation();
+        index = Number(dot.dataset.cardPhotoIndex || 0);
+        update();
+      }));
+      gallery.addEventListener("touchstart", (event) => {
+        startX = event.touches[0].clientX;
+        deltaX = 0;
+      }, { passive: true });
+      gallery.addEventListener("touchmove", (event) => {
+        deltaX = event.touches[0].clientX - startX;
+      }, { passive: true });
+      gallery.addEventListener("touchend", (event) => {
+        if (deltaX < -40) index = Math.min(index + 1, slides.length - 1);
+        if (deltaX > 40) index = Math.max(index - 1, 0);
+        update();
+      }, { passive: true });
+    });
   }
 
   function hydratePhotos(root) {
@@ -241,6 +282,7 @@
   function renderGrid(container, listings) {
     container.innerHTML = listings.map(cardHTML).join("");
     hydratePhotos(container);
+    initCardGalleries(container);
   }
 
   function attachGridHandlers(container) {
@@ -578,7 +620,8 @@
   }
 
   function myThumbInner(listing) {
-    if (listing.photos && listing.photos.length) return `<img src="${listing.photos[0]}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
+    const photos = listingPhotos(listing);
+    if (photos.length) return `<img src="${esc(photos[0])}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
     const [c1, c2] = listing.gradient || ["#7C6CF6", "#B98CF0"];
     return `<div style="width:100%;height:100%;border-radius:14px;background:linear-gradient(135deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;">${listing.icon || "📦"}</div>`;
   }
@@ -758,7 +801,7 @@
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const photos = normalizePhotos(listing.photos);
+    const photos = listingPhotos(listing);
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 

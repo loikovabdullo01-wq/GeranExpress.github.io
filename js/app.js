@@ -39,6 +39,8 @@
     return d.innerHTML;
   }
 
+  const MAX_LISTING_PHOTOS = 10;
+
   const state = {
     theme: loadJSON(LS.theme, null) || "light",
     favorites: new Set(loadJSON(LS.favorites, [])),
@@ -1057,7 +1059,7 @@
         const slots = draft.photos.map(
           (src, i) => `<div class="photo-slot" data-existing="${i}"><img src="${src}" alt="" /><button class="photo-remove" data-remove="${i}">✕</button></div>`
         );
-        if (draft.photos.length < 6) slots.push(`<div class="photo-slot" id="addPhotoSlot">+</div>`);
+        if (draft.photos.length < MAX_LISTING_PHOTOS) slots.push(`<div class="photo-slot" id="addPhotoSlot">+</div>`);
         photoGrid.innerHTML = slots.join("");
         const addSlot = photoGrid.querySelector("#addPhotoSlot");
         if (addSlot) addSlot.addEventListener("click", () => photoInput.click());
@@ -1075,7 +1077,14 @@
       const pendingUploads = new Set();
 
       photoInput.addEventListener("change", () => {
-        const files = Array.from(photoInput.files).slice(0, 6 - draft.photos.length);
+        const remainingSlots = MAX_LISTING_PHOTOS - draft.photos.length;
+        if (remainingSlots <= 0) {
+          showToast(`До ${MAX_LISTING_PHOTOS} фото в одном объявлении.`);
+          photoInput.value = "";
+          return;
+        }
+
+        const files = Array.from(photoInput.files).slice(0, remainingSlots);
         files.forEach((file) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -1337,6 +1346,13 @@
     pushScreen(html);
   }
 
+  const PROMO_BANNER_IMAGES = [
+    "./assets/promo-1.jpg",
+    "./assets/promo-2.jpg",
+    "./assets/promo-3.jpg",
+    "./assets/promo-4.jpg",
+  ];
+
   const PROMO_SLIDES = [
     { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: ["#16A34A", "#4ADE80"] },
     { key: "promo.2", emo: "\ud83d\udce6", grad: ["#22C58B", "#4FACFE"] },
@@ -1349,12 +1365,16 @@
     const dotsWrap = document.getElementById("promoDots");
     if (!track) return;
 
-    track.innerHTML = PROMO_SLIDES.map(
-      (s) => `<div class="promo-slide" style="background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]})">
+    track.innerHTML = PROMO_SLIDES.map((s, i) => {
+      const image = PROMO_BANNER_IMAGES[i] || "";
+      const backgroundStyle = image
+        ? `background-image: linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}), url('${esc(image)}'); background-size: cover; background-position: center; background-repeat: no-repeat;`
+        : `background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});`;
+      return `<div class="promo-slide" style="${backgroundStyle}">
         <div class="promo-slide-text"><div class="promo-slide-title">${esc(t(s.key + ".t"))}</div><div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div></div>
         <span class="promo-slide-emo">${s.emo}</span>
-      </div>`
-    ).join("");
+      </div>`;
+    }).join("");
     dotsWrap.innerHTML = PROMO_SLIDES.map((_, i) => `<span class="promo-dot ${i === 0 ? "active" : ""}"></span>`).join("");
     const dots = dotsWrap.querySelectorAll(".promo-dot");
 
@@ -2097,7 +2117,7 @@
     }
 
     function canStart() {
-      return !refreshing && state.currentTab === "home" && main.scrollTop <= 0;
+      return !refreshing && state.currentTab === "home" && main.scrollTop === 0;
     }
 
     function start(y) {
@@ -2109,7 +2129,11 @@
 
     function move(y) {
       if (!dragging) return false;
-      if (main.scrollTop > 0) { dragging = false; applyPull(0, true); return false; }
+      if (main.scrollTop !== 0 || y < startY) {
+        dragging = false;
+        applyPull(0, true);
+        return false;
+      }
       const raw = y - startY;
       if (raw <= 0) { applyPull(0, false); return false; }
       applyPull(Math.min(MAX_PULL, raw * DAMPING), false);
@@ -2174,6 +2198,7 @@
 
     document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.go)));
 
+    document.getElementById("brandHomeBtn").addEventListener("click", () => window.location.reload());
     document.getElementById("myEmptyAddBtn").addEventListener("click", () => requireAuth(() => openAddEditForm(null)));
     document.getElementById("openMyListingsBtn").addEventListener("click", () => switchTab("listings"));
     document.getElementById("openFavFromProfileBtn").addEventListener("click", () => switchTab("favorites"));
@@ -2222,6 +2247,68 @@
     document.getElementById("aboutBtn").addEventListener("click", () =>
       showToast(t("app.about"))
     );
+    document.getElementById("beSponsorBtn").addEventListener("click", () => {
+      const html = `
+        ${screenHeader(t("sponsor.title"))}
+        <div class="screen-body">
+          <div class="sponsor-card">
+            <h3>${t("sponsor.title")}</h3>
+            <p class="sponsor-intro">${t("sponsor.intro")}</p>
+            <div class="sponsor-meta">
+              <div><span>${t("sponsor.bank")}</span><b>${t("sponsor.bankName")}</b></div>
+              <div><span>${t("sponsor.account")}</span><b>971 220 800</b></div>
+            </div>
+            <div class="sponsor-form">
+              <input id="sponsorAmount" type="number" min="1" step="1" placeholder="${t("sponsor.amountPlaceholder")}" />
+              <textarea id="sponsorMessage" maxlength="250" placeholder="${t("sponsor.messagePlaceholder")}"></textarea>
+              <div class="sponsor-actions">
+                <button type="button" class="btn btn-primary btn-block" id="sponsorSubmitBtn">${t("sponsor.confirm")}</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      pushScreen(html, async (el) => {
+        const amountInput = el.querySelector("#sponsorAmount");
+        const messageInput = el.querySelector("#sponsorMessage");
+        const submitBtn = el.querySelector("#sponsorSubmitBtn");
+
+        submitBtn.addEventListener("click", async () => {
+          const amount = Number(amountInput.value);
+          if (!amount || amount <= 0) {
+            showToast(t("sponsor.needAmount"));
+            amountInput.focus();
+            return;
+          }
+
+          submitBtn.disabled = true;
+          const payload = {
+            userId: currentUserId(),
+            amount,
+            bank: "Эсхата",
+            account: "971 220 800",
+            message: messageInput.value.trim(),
+            receiptUrl: "",
+          };
+
+          try {
+            if (FIREBASE_READY && typeof saveSponsorDonation === "function") {
+              await saveSponsorDonation(payload);
+            }
+            const waText = encodeURIComponent(`Здравствуйте! Я хочу поддержать Geran Express на сумму ${amount} сомони. ${payload.message ? "Комментарий: " + payload.message : ""}`);
+            const tgText = encodeURIComponent(`Поддержка Geran Express: ${amount} сомони. ${payload.message || ""}`);
+            window.open(`https://wa.me/79385491876?text=${waText}`, "_blank");
+            window.open(`https://t.me/79385491876?text=${tgText}`, "_blank");
+            showToast(t("sponsor.thanks"));
+            popScreen();
+          } catch (e) {
+            console.error("[Geran] Sponsor save failed:", e);
+            showToast(t("sponsor.sendFailed"));
+            submitBtn.disabled = false;
+          }
+        });
+      });
+    });
 
     const searchInput = document.getElementById("searchInput");
     const clearBtn = document.getElementById("clearSearchBtn");

@@ -87,6 +87,7 @@ let FIREBASE_READY = false;
 })();
 
 const LISTINGS_COLLECTION = "listings";
+const DONATIONS_COLLECTION = "donations";
 
 // Live-syncs the "listings" collection; calls onChange(docsArray) on every update.
 // Returns an unsubscribe function, or null if Firestore isn't available.
@@ -105,9 +106,12 @@ function subscribeToListings(onChange, onError) {
 // (rules require data.userId === auth.uid to create). Returns the new doc reference.
 function addListingToFirestore(listingData) {
   if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
+  const now = firebase.firestore.FieldValue.serverTimestamp();
   return fbDb.collection(LISTINGS_COLLECTION).add({
     ...listingData,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    date: now,
+    createdAt: now,
+    updatedAt: now,
   }).then((docRef) => {
     console.info("[Firestore] Listing created:", docRef.id);
     return docRef;
@@ -117,14 +121,37 @@ function addListingToFirestore(listingData) {
 // Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).
 function updateListingInFirestore(id, patch) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
-  return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(patch, { merge: true })
-    .catch((e) => { console.error("[Firestore] Failed to update listing " + id + ":", e); throw e; });
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(
+    { ...patch, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+    { merge: true }
+  ).catch((e) => { console.error("[Firestore] Failed to update listing " + id + ":", e); throw e; });
 }
 
 function deleteListingFromFirestore(id) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
     .catch((e) => { console.error("[Firestore] Failed to delete listing " + id + ":", e); });
+}
+
+function saveSponsorDonation(payload) {
+  if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
+  const normalized = {
+    userId: payload.userId || null,
+    amount: Number(payload.amount) || 0,
+    bank: payload.bank || "Эсхата",
+    account: payload.account || "971 220 800",
+    message: String(payload.message || ""),
+    receiptUrl: payload.receiptUrl || "",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  return fbDb.collection(DONATIONS_COLLECTION).add(normalized).then((docRef) => {
+    console.info("[Firestore] Sponsor donation saved:", docRef.id);
+    return docRef;
+  }).catch((e) => {
+    console.error("[Firestore] Failed to save sponsor donation:", e);
+    throw e;
+  });
 }
 
 // --- Online presence ---------------------------------------------------

@@ -8,6 +8,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/png" href="./iconnn.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,8 +22,8 @@
 <div class="splash" id="splash">
   <div class="splash-glow" aria-hidden="true"></div>
   <div class="splash-inner">
-    <div class="splash-logo-card"><img src="assets/logo-icon.png" alt="" /></div>
-    <img class="splash-wordmark" src="assets/logo-wordmark-white.png" alt="Geran Express" />
+    <div class="splash-logo-card"><img src="./assets/logo-icon.png" alt="" /></div>
+    <img class="splash-wordmark" src="./assets/logo-wordmark-white.png" alt="Geran Express" />
     <div class="splash-progress"><div class="splash-progress-bar" id="splashBar"></div></div>
     <div class="splash-status" id="splashStatus"></div>
   </div>
@@ -32,7 +33,7 @@
 <div class="auth-screen" id="authScreen">
   <button type="button" class="auth-close" id="authCloseBtn" data-i18n-aria="auth.close">✕</button>
   <div class="auth-hero">
-    <img class="auth-logo" src="assets/logo-full-white.png" alt="Geran Express" />
+    <img class="auth-logo" src="./assets/logo-full-white.png" alt="Geran Express" />
   </div>
   <div class="auth-sheet">
     <div id="authPhoneStep">
@@ -106,10 +107,10 @@
   <div class="app-body" id="appBody">
   <header class="app-header" id="appHeader">
     <div class="header-row">
-      <div class="brand">
-        <img src="assets/logo-full.png" alt="Geran Express" class="brand-logo brand-logo-light" />
-        <img src="assets/logo-full-dark.png" alt="" class="brand-logo brand-logo-dark" aria-hidden="true" />
-      </div>
+      <button type="button" class="brand brand-button" id="brandHomeBtn" aria-label="Geran Express home">
+        <img src="./assets/logo-full.png" alt="Geran Express" class="brand-logo brand-logo-light" />
+        <img src="./assets/logo-full-dark.png" alt="" class="brand-logo brand-logo-dark" aria-hidden="true" />
+      </button>
       <div class="header-actions">
         <div class="online-indicator" id="onlineIndicator" data-i18n-title="header.online">
           <span class="online-dot"></span><span id="onlineCount">128</span>
@@ -256,6 +257,17 @@
           <div class="settings-row-left"><span class="settings-icon">🔄</span><span data-i18n="profile.refresh"></span></div>
           <span class="chev">›</span>
         </button>
+      </div>
+
+      <div class="settings-list">
+        <button class="settings-row settings-row-btn" id="beSponsorBtn">
+          <div class="settings-row-left"><span class="settings-icon">💛</span><span data-i18n="profile.sponsor"></span></div>
+          <span class="chev">›</span>
+        </button>
+        <a class="settings-row settings-row-btn" id="downloadAppBtn" href="apk/geran-express.apk" download>
+          <div class="settings-row-left"><span class="settings-icon">📲</span><span data-i18n="profile.downloadApp"></span></div>
+          <span class="chev">›</span>
+        </a>
       </div>
 
       <div class="settings-list">

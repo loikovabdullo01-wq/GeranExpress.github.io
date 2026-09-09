@@ -18,6 +18,14 @@ service cloud.firestore {
                     && resource.data.userId == request.auth.uid;
     }
 
+    match /donations/{donationId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['userId', 'amount', 'bank', 'account', 'message', 'receiptUrl', 'createdAt', 'updatedAt'])
+                    && request.resource.data.amount is number
+                    && request.resource.data.amount > 0;
+      allow update, delete: if false;
+    }
+
     // Online presence: one doc per browser tab/session, refreshed by a heartbeat.
     // No auth required (anonymous visitors are counted too); writes are limited
     // to just the lastSeen timestamp so this can't be abused to store other data.

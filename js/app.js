@@ -116,8 +116,8 @@
     const remoteIds = new Set(remoteListings.map((l) => l.id));
     const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
     const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
-    state.listings = [...remoteListings, ...staticFallback];
-    console.log("[Geran] Firestore sync: " + remoteListings.length + " remote + " + staticFallback.length + " static = " + state.listings.length + " total listings");
+    state.listings = remoteListings.length ? remoteListings : staticFallback;
+    console.log("[Geran] Firestore sync: " + remoteListings.length + " remote, " + staticFallback.length + " static fallback, " + state.listings.length + " shown");
     renderHomeTab();
     renderMyListingsTab();
     renderFavoritesTab();
@@ -168,48 +168,12 @@
     const images = listingImages(listing);
     if (images.length) {
       return `
-        <div class="card-photo-main" data-card-gallery="${esc(listing.id)}">
-          <div class="card-photo-track">
-            ${images.map((src, index) => `<div class="card-photo-slide"><div class="photo-skeleton"></div><img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" /></div>`).join("")}
-          </div>
+        <div class="card-photo-main">
+          <div class="photo-skeleton"></div>
+          <img src="${esc(images[0])}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
-  }
-
-  function initCardGalleries(root) {
-    root.querySelectorAll("[data-card-gallery]").forEach((gallery) => {
-      const track = gallery.querySelector(".card-photo-track");
-      const slides = gallery.querySelectorAll(".card-photo-slide");
-      const dots = gallery.querySelectorAll("[data-card-photo-index]");
-      if (!track || slides.length < 2) return;
-
-      let index = 0;
-      let startX = 0;
-      let deltaX = 0;
-      const update = () => {
-        track.style.transform = `translateX(-${index * 100}%)`;
-        dots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
-      };
-
-      dots.forEach((dot) => dot.addEventListener("click", (event) => {
-        event.stopPropagation();
-        index = Number(dot.dataset.cardPhotoIndex || 0);
-        update();
-      }));
-      gallery.addEventListener("touchstart", (event) => {
-        startX = event.touches[0].clientX;
-        deltaX = 0;
-      }, { passive: true });
-      gallery.addEventListener("touchmove", (event) => {
-        deltaX = event.touches[0].clientX - startX;
-      }, { passive: true });
-      gallery.addEventListener("touchend", (event) => {
-        if (deltaX < -40) index = Math.min(index + 1, slides.length - 1);
-        if (deltaX > 40) index = Math.max(index - 1, 0);
-        update();
-      }, { passive: true });
-    });
   }
 
   function hydratePhotos(root) {
@@ -789,15 +753,23 @@
     </div>`;
   }
 
-  function openProductDetail(id) {
+  function loadGalleryImage(src) {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve(src);
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
+  }
+
+  async function openProductDetail(id) {
     const listing = getListing(id);
     if (!listing) return;
     listing.views = (listing.views || 0) + 1;
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const images = normalizePhotos(listing.images);
-    const galleryImages = images.length ? images : listingImages(listing);
+    const galleryImages = (await Promise.all(listingImages(listing).map(loadGalleryImage))).filter(Boolean);
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 

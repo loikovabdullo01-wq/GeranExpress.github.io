@@ -56,10 +56,10 @@
     return cleaned;
   }
 
-  function listingPhotos(listing) {
+  function listingImages(listing) {
     if (!listing) return [];
-    const photos = normalizePhotos(listing.photos);
-    return photos.length ? photos : normalizePhotos(listing.images);
+    const images = normalizePhotos(listing.images);
+    return images.length ? images : normalizePhotos(listing.photos);
   }
 
   const MAX_LISTING_PHOTOS = 10;
@@ -99,7 +99,7 @@
       city: doc.city || "",
       address: doc.address || "",
       phone: doc.phone || "",
-      photos: listingPhotos(doc),
+      images: listingImages(doc),
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
       sellerId: isMine ? "me" : (doc.userId || "geran"),
@@ -166,15 +166,15 @@
   }
 
   function cardPhotoInner(listing) {
-    const photos = listingPhotos(listing);
-    if (photos.length) {
-      const dots = photos.length > 1
-        ? `<div class="card-photo-dots">${photos.map((_, index) => `<button type="button" class="card-photo-dot ${index === 0 ? "active" : ""}" data-card-photo-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
+    const images = listingImages(listing);
+    if (images.length) {
+      const dots = images.length > 1
+        ? `<div class="card-photo-dots">${images.map((_, index) => `<button type="button" class="card-photo-dot ${index === 0 ? "active" : ""}" data-card-photo-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
         : "";
       return `
         <div class="card-photo-main" data-card-gallery="${esc(listing.id)}">
           <div class="card-photo-track">
-            ${photos.map((src, index) => `<div class="card-photo-slide"><div class="photo-skeleton"></div><img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" /></div>`).join("")}
+            ${images.map((src, index) => `<div class="card-photo-slide"><div class="photo-skeleton"></div><img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" /></div>`).join("")}
           </div>
           ${dots}
         </div>`;
@@ -620,8 +620,8 @@
   }
 
   function myThumbInner(listing) {
-    const photos = listingPhotos(listing);
-    if (photos.length) return `<img src="${esc(photos[0])}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
+    const images = listingImages(listing);
+    if (images.length) return `<img src="${esc(images[0])}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
     const [c1, c2] = listing.gradient || ["#7C6CF6", "#B98CF0"];
     return `<div style="width:100%;height:100%;border-radius:14px;background:linear-gradient(135deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;">${listing.icon || "📦"}</div>`;
   }
@@ -801,23 +801,23 @@
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const photos = listingPhotos(listing);
+    const images = listingImages(listing);
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
-    const galleryMarkup = photos.length
-      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${photos.map((src, index) => `
+    const galleryMarkup = images.length
+      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${images.map((src, index) => `
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
             <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
         `).join("")}</div></div>
-        <div class="pd-gallery-dots">${photos.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
+        <div class="pd-gallery-dots">${images.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
       : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
 
     const html = `
       ${screenHeader(t("pd.title"))}
       <div class="screen-body">
-        <div class="pd-gallery" id="pdGallery" style="${photos.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
+        <div class="pd-gallery" id="pdGallery" style="${images.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
           ${galleryMarkup}
           <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" style="position:absolute;top:12px;right:12px;width:38px;height:38px;">
             <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
@@ -1126,7 +1126,7 @@
   function openAddEditForm(existing) {
     const isEdit = !!existing;
     const draft = isEdit
-      ? { ...existing, photos: existing.photos ? [...existing.photos] : [] }
+      ? { ...existing, photos: listingImages(existing) }
       : { title: "", price: "", category: "electronics", condition: "Новое", description: "",
           city: getUser("me").city, address: "", phone: getUser("me").phone || "", photos: [] };
 
@@ -1320,7 +1320,7 @@
 
         if (isEdit) {
           const [eLat, eLng] = coordsForLocation(city);
-          const patch = { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
+          const patch = { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, images: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
           Object.assign(existing, patch);
           try {
             if (FIREBASE_READY) {
@@ -1340,7 +1340,7 @@
             title, price, city, address, phone, description,
             category: draft.category,
             condition: draft.condition,
-            photos: draft.photos,
+            images: draft.photos,
             icon: cat.icon,
             gradient,
             userId: uidNow,

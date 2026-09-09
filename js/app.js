@@ -374,18 +374,6 @@
     if (document.getElementById("categoryOverlay").classList.contains("open")) closeTopLayer();
   }
 
-  const LOCATION_COUNTRIES = [
-    { id: "tj", flag: "\ud83c\uddf9\ud83c\uddef", nameKey: "country.tj" },
-    { id: "ru", flag: "\ud83c\uddf7\ud83c\uddfa", nameKey: "country.ru" },
-  ];
-
-  function countryOfCity(name) {
-    if (!name) return "tj";
-    const clean = normalizeCity(name);
-    const foreign = (typeof FOREIGN_CITIES !== "undefined" ? FOREIGN_CITIES : []);
-    return foreign.includes(clean) ? "ru" : "tj";
-  }
-
   function cityRowHtml(name, currentValue, counts) {
     return `
       <div class="location-item ${currentValue === name ? "active" : ""}" data-loc="${esc(name)}">
@@ -395,68 +383,109 @@
       </div>`;
   }
 
+  function countryOfCity(name) {
+    return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
+  }
+
   function renderLocationCountryStep(currentValue, onSelect) {
     const counts = {};
-    state.listings.forEach((l) => { if (l.city) counts[countryOfCity(l.city)] = (counts[countryOfCity(l.city)] || 0) + 1; });
+    state.listings.forEach((listing) => {
+      if (listing.city) {
+        const countryId = countryOfCity(listing.city);
+        counts[countryId] = (counts[countryId] || 0) + 1;
+      }
+    });
 
     document.getElementById("locationBackBtn").hidden = true;
     document.getElementById("locationSheetTitle").textContent = t("qf.location");
 
-    const activeCountry = currentValue ? countryOfCity(currentValue) : null;
-
     const list = document.getElementById("locationList");
-    list.innerHTML =
-      `<div class="location-item ${!currentValue ? "active" : ""}" data-country="">
-         <span class="loc-name">${t("qf.allLocations")}</span>
-         <span class="loc-count">${state.listings.length}</span>
-         <span class="check">\u2713</span>
-       </div>` +
-      LOCATION_COUNTRIES.map(
-        (c) => `<div class="location-item ${c.id === activeCountry ? "active" : ""}" data-country="${c.id}">
-          <span class="loc-name">${c.flag} ${esc(t(c.nameKey))}</span>
-          <span class="loc-count">${counts[c.id] || 0}</span>
-          <span class="chev">\u203a</span>
-        </div>`
-      ).join("");
+    list.innerHTML = LOCATION_COUNTRY_TREE.map((country) => `
+      <div class="location-item" data-country="${country.id}">
+        <span class="loc-name">${country.flag} ${esc(country.name)}</span>
+        <span class="loc-count">${counts[country.id] || 0}</span>
+        <span class="chev">&gt;</span>
+      </div>`).join("");
 
     list.querySelectorAll("[data-country]").forEach((item) => {
       item.addEventListener("click", () => {
-        const cid = item.dataset.country;
-        if (!cid) {
-          onSelect(null);
-          closeLocationSheet();
-          return;
-        }
-        renderLocationCityStep(cid, currentValue, onSelect);
+        if (item.dataset.country === "tj") renderTajikistanLocationStep(currentValue, onSelect);
+        else renderRussiaLocationStep(currentValue, onSelect);
       });
     });
   }
 
-  function renderLocationCityStep(countryId, currentValue, onSelect) {
-    const country = LOCATION_COUNTRIES.find((c) => c.id === countryId) || LOCATION_COUNTRIES[0];
+  function renderTajikistanLocationStep(currentValue, onSelect) {
+    const counts = {};
+    state.listings.forEach((listing) => {
+      if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
+    });
+
+    const backBtn = document.getElementById("locationBackBtn");
+    backBtn.hidden = false;
+    backBtn.onclick = () => renderLocationCountryStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = TAJIKISTAN_LOCATION_TREE.name;
+
+    const tajikistan = LOCATION_COUNTRY_TREE.find((country) => country.id === "tj");
+    const majorCities = tajikistan.sections[0];
+    const districtSection = tajikistan.sections[1];
+    const district = districtSection.locations[0];
+    const list = document.getElementById("locationList");
+    list.innerHTML =
+      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${state.listings.length}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      `<div class="location-group-label">${majorCities.label}</div>` +
+      majorCities.locations.map((name) => cityRowHtml(name, currentValue, counts)).join("") +
+      `<div class="location-group-label">${districtSection.label}</div>` +
+      `<div class="location-item" data-district="${esc(district.name)}">
+        <span class="loc-name">${esc(district.name)}</span>
+        <span class="chev">&gt;</span>
+      </div>`;
+
+    list.querySelectorAll("[data-loc]").forEach((item) => {
+      item.addEventListener("click", () => {
+        onSelect(item.dataset.loc || null);
+        closeLocationSheet();
+      });
+    });
+    list.querySelector("[data-district]").addEventListener("click", () => renderChaykhunVillageStep(currentValue, onSelect));
+  }
+
+  function renderRussiaLocationStep(currentValue, onSelect) {
+    const counts = {};
+    state.listings.forEach((listing) => {
+      if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
+    });
+
+    const backBtn = document.getElementById("locationBackBtn");
+    backBtn.hidden = false;
+    backBtn.onclick = () => renderLocationCountryStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = "Россия";
+
+    const list = document.getElementById("locationList");
+    list.innerHTML = FOREIGN_CITIES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
+    list.querySelectorAll("[data-loc]").forEach((item) => {
+      item.addEventListener("click", () => {
+        onSelect(item.dataset.loc || null);
+        closeLocationSheet();
+      });
+    });
+  }
+
+  function renderChaykhunVillageStep(currentValue, onSelect) {
     const counts = {};
     state.listings.forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
 
     const backBtn = document.getElementById("locationBackBtn");
     backBtn.hidden = false;
-    backBtn.onclick = () => renderLocationCountryStep(currentValue, onSelect);
-    document.getElementById("locationSheetTitle").textContent = country.flag + " " + t(country.nameKey);
+    backBtn.onclick = () => renderTajikistanLocationStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = CHAYKHUN_DISTRICT_NAME;
 
     const list = document.getElementById("locationList");
-
-    if (countryId === "ru") {
-      const cityList = FOREIGN_CITIES.slice().sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
-      list.innerHTML = cityList.map((name) => cityRowHtml(name, currentValue, counts)).join("");
-    } else {
-      const majors = new Set(CITIES.concat(FOREIGN_CITIES));
-      const villages = Object.keys(counts)
-        .filter((c) => !majors.has(c) && countryOfCity(c) === "tj")
-        .sort((a, b) => counts[b] - counts[a]);
-      const cityList = CITIES.slice().sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
-      list.innerHTML =
-        (villages.length ? `<div class="location-group-label">${t("loc.districts")}</div>` + villages.map((name) => cityRowHtml(name, currentValue, counts)).join("") : "") +
-        `<div class="location-group-label">${t("loc.majorCities")}</div>` + cityList.map((name) => cityRowHtml(name, currentValue, counts)).join("");
-    }
+    list.innerHTML = CHAYKHUN_VILLAGES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
 
     list.querySelectorAll("[data-loc]").forEach((item) => {
       item.addEventListener("click", () => {

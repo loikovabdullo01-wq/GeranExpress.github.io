@@ -144,15 +144,12 @@
 
   function cardPhotoInner(listing) {
     const photos = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
-    if (photos.length) {
+    const mainPhoto = photos[0] || "";
+    if (mainPhoto) {
       return `
-        <div class="card-photo-gallery">
-          ${photos.map((src, index) => `
-            <div class="card-photo-tile ${index === 0 ? "primary" : ""}">
-              <div class="photo-skeleton"></div>
-              <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
-            </div>
-          `).join("")}
+        <div class="card-photo-main">
+          <div class="photo-skeleton"></div>
+          <img src="${esc(mainPhoto)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
@@ -716,12 +713,12 @@
     const contactPhone = listing.phone || seller.phone || "";
 
     const galleryMarkup = photos.length
-      ? photos.map((src, index) => `
+      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${photos.map((src, index) => `
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
             <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
-        `).join("")
-      : `<div class="pd-gallery-slide"><span>${listing.icon}</span></div>`;
+        `).join("")}</div></div>`
+      : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
 
     const html = `
       ${screenHeader(t("pd.title"))}
@@ -801,6 +798,37 @@
       if (editBtn) editBtn.addEventListener("click", () => openAddEditForm(listing));
       hydratePhotos(el);
       if (hasCoords) renderProductMap(el, listing);
+
+      const galleryViewport = el.querySelector(".pd-gallery-viewport");
+      const galleryTrack = el.querySelector(".pd-gallery-track");
+      const gallerySlides = el.querySelectorAll(".pd-gallery-slide");
+      if (galleryViewport && galleryTrack && gallerySlides.length > 1) {
+        let index = 0;
+        let startX = 0;
+        let deltaX = 0;
+
+        const updateSlider = () => {
+          galleryTrack.style.transform = `translateX(-${index * 100}%)`;
+        };
+
+        galleryViewport.addEventListener("touchstart", (event) => {
+          startX = event.touches[0].clientX;
+          deltaX = 0;
+        }, { passive: true });
+
+        galleryViewport.addEventListener("touchmove", (event) => {
+          deltaX = event.touches[0].clientX - startX;
+        }, { passive: true });
+
+        galleryViewport.addEventListener("touchend", () => {
+          if (deltaX < -40) index = Math.min(index + 1, gallerySlides.length - 1);
+          if (deltaX > 40) index = Math.max(index - 1, 0);
+          updateSlider();
+        }, { passive: true });
+
+        updateSlider();
+      }
+
       el.querySelectorAll(".pd-gallery-slide img").forEach((img) => {
         img.addEventListener("click", () => openImageZoom(img.src));
       });

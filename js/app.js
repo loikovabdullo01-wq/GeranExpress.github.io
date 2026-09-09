@@ -89,6 +89,7 @@
   function normalizeRemoteListing(doc) {
     const myUid = currentUserId();
     const isMine = !!(myUid && doc.userId === myUid);
+    const [fallbackLat, fallbackLng] = coordsForLocation(doc.city || "");
     return {
       id: doc.id,
       title: doc.title || "",
@@ -108,7 +109,8 @@
       status: doc.status || "active",
       createdAt: (doc.createdAt && doc.createdAt.toMillis) ? doc.createdAt.toMillis() : (doc.createdAt || Date.now()),
       views: doc.views || 0,
-      lat: doc.lat, lng: doc.lng,
+      lat: typeof doc.lat === "number" ? doc.lat : fallbackLat,
+      lng: typeof doc.lng === "number" ? doc.lng : fallbackLng,
     };
   }
 

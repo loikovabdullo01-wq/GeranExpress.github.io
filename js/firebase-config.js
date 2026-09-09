@@ -126,3 +126,85 @@ function deleteListingFromFirestore(id) {
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
     .catch((e) => { console.error("[Firestore] Failed to delete listing " + id + ":", e); });
 }
+
+// --- Online presence ---------------------------------------------------
+// Each browser tab gets its own presence doc (id kept in sessionStorage) that
+// is refreshed with a heartbeat while the tab is open. A session only counts
+// as "online" if its last heartbeat is recent (PRESENCE_STALE_MS), so crashed
+// tabs / closed laptops naturally drop out of the count without needing a
+// reliable "close" event.
+const PRESENCE_COLLECTION = "presence";
+const PRESENCE_HEARTBEAT_MS = 25000;
+const PRESENCE_STALE_MS = 70000;
+
+function getPresenceSessionId() {
+  let id = sessionStorage.getItem("bh_presence_id");
+  if (!id) {
+    id = "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    sessionStorage.setItem("bh_presence_id", id);
+  }
+  return id;
+}
+
+function markPresenceOnline() {
+  if (!FIREBASE_READY || !fbDb) return;
+  fbDb.collection(PRESENCE_COLLECTION).doc(getPresenceSessionId())
+    .set({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+    .catch((e) => console.error("[Presence] Failed to mark online:", e));
+}
+
+function markPresenceOffline() {
+  if (!FIREBASE_READY || !fbDb) return;
+  fbDb.collection(PRESENCE_COLLECTION).doc(getPresenceSessionId()).delete().catch(() => {});
+}
+
+// Subscribes to the presence collection and reports a live online count via onCount(n).
+// Returns a cleanup function that stops the heartbeat and marks this session offline.
+function initPresenceTracking(onCount) {
+  if (!FIREBASE_READY || !fbDb) return null;
+
+  markPresenceOnline();
+  const heartbeatTimer = setInterval(markPresenceOnline, PRESENCE_HEARTBEAT_MS);
+
+  let lastSeenById = new Map();
+  function recomputeCount() {
+    const cutoff = Date.now() - PRESENCE_STALE_MS;
+    let online = 0;
+    lastSeenById.forEach((ms) => { if (ms > cutoff) online++; });
+    onCount(Math.max(online, 1)); // this tab is always online
+  }
+
+  const unsubscribe = fbDb.collection(PRESENCE_COLLECTION).onSnapshot(
+    (snap) => {
+      lastSeenById = new Map();
+      snap.forEach((doc) => {
+        const data = doc.data();
+        const ms = data.lastSeen && data.lastSeen.toMillis ? data.lastSeen.toMillis() : 0;
+        lastSeenById.set(doc.id, ms);
+      });
+      recomputeCount();
+    },
+    (err) => console.error("[Presence] Subscription failed:", err)
+  );
+
+  // re-evaluate staleness even between snapshots, so the count decays in real time
+  const tickTimer = setInterval(recomputeCount, 5000);
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === "hidden") markPresenceOffline();
+    else markPresenceOnline();
+  };
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  window.addEventListener("beforeunload", markPresenceOffline);
+  window.addEventListener("pagehide", markPresenceOffline);
+
+  return function stopPresenceTracking() {
+    clearInterval(heartbeatTimer);
+    clearInterval(tickTimer);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("beforeunload", markPresenceOffline);
+    window.removeEventListener("pagehide", markPresenceOffline);
+    unsubscribe();
+    markPresenceOffline();
+  };
+}

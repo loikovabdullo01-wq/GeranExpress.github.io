@@ -1071,6 +1071,9 @@
       }
       renderPhotoGrid();
 
+      // in-flight ImgBB uploads; publish must wait for these so we never write base64 into Firestore
+      const pendingUploads = new Set();
+
       photoInput.addEventListener("change", () => {
         const files = Array.from(photoInput.files).slice(0, 6 - draft.photos.length);
         files.forEach((file) => {
@@ -1079,12 +1082,18 @@
             const localIndex = draft.photos.push(reader.result) - 1;
             renderPhotoGrid();
             // upload in the background, then swap the base64 preview for the hosted ImgBB URL
-            uploadToImgBB(file).then((url) => {
-              if (url && draft.photos[localIndex] === reader.result) {
-                draft.photos[localIndex] = url;
-                renderPhotoGrid();
-              }
-            });
+            const uploadTask = uploadToImgBB(file)
+              .then((url) => {
+                if (url && draft.photos[localIndex] === reader.result) {
+                  draft.photos[localIndex] = url;
+                  renderPhotoGrid();
+                  console.info("[Geran] ImgBB upload ok for photo #" + localIndex + ":", url);
+                } else if (!url) {
+                  console.error("[Geran] ImgBB upload failed for photo #" + localIndex + "; it will be dropped on publish.");
+                }
+              })
+              .finally(() => pendingUploads.delete(uploadTask));
+            pendingUploads.add(uploadTask);
           };
           reader.readAsDataURL(file);
         });
@@ -1126,15 +1135,33 @@
         if (!description) { showToast(t("form.needDesc")); el.querySelector("#fDesc").focus(); return; }
         if (!phone || phone.replace(/\D/g, "").length < 9) { showToast(t("form.needPhone")); el.querySelector("#fPhone").focus(); return; }
 
+        const submitBtn = el.querySelector("#submitListingBtn");
+
+        // wait for any still-uploading photos so we never write base64 previews into Firestore
+        if (pendingUploads.size) {
+          submitBtn.disabled = true;
+          showToast(t("form.uploadingPhotos"));
+          console.info("[Geran] Publish waiting on " + pendingUploads.size + " pending photo upload(s)...");
+          await Promise.all(Array.from(pendingUploads)).catch(() => {});
+        }
+
+        // drop photos that never finished uploading — base64 in Firestore can blow the 1MiB doc limit and silently fail the write
+        const uploadedPhotos = draft.photos.filter((p) => typeof p === "string" && !p.startsWith("data:"));
+        if (uploadedPhotos.length !== draft.photos.length) {
+          console.warn("[Geran] " + (draft.photos.length - uploadedPhotos.length) + " photo(s) failed to upload to ImgBB and were dropped before publishing.");
+          showToast(t("form.someSyncFailed"));
+        }
+        draft.photos = uploadedPhotos;
+
         const uidNow = currentUserId();
         if (FIREBASE_READY && !uidNow) {
           console.error("[Geran] Ошибка: Пользователь не авторизован!");
           showToast(t("form.needAuth"));
+          submitBtn.disabled = false;
           return;
         }
 
         const cat = CATEGORIES.find((c) => c.id === draft.category) || CATEGORIES[1];
-        const submitBtn = el.querySelector("#submitListingBtn");
         submitBtn.disabled = true;
 
         if (isEdit) {
@@ -1142,10 +1169,16 @@
           const patch = { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, photos: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
           Object.assign(existing, patch);
           try {
-            if (FIREBASE_READY) await updateListingInFirestore(existing.id, patch);
+            if (FIREBASE_READY) {
+              await updateListingInFirestore(existing.id, patch);
+              console.info("[Geran] Listing updated in Firestore:", existing.id);
+            }
             showToast(t("form.saved"));
           } catch (e) {
+            console.error("[Geran] Failed to update listing in Firestore:", existing.id, e);
             showToast(t("form.syncFailed"));
+            submitBtn.disabled = false;
+            return;
           }
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
@@ -1165,8 +1198,10 @@
           try {
             let newId;
             if (FIREBASE_READY) {
+              console.info("[Geran] Publishing listing to Firestore:", listingData);
               const docRef = await addListingToFirestore(listingData);
               newId = docRef.id;
+              console.info("[Geran] Listing published to Firestore with id:", newId);
             } else {
               newId = uid("l"); // local-only demo mode (no Firebase configured)
             }
@@ -1270,13 +1305,11 @@
   function initOnlineIndicator() {
     const el = document.getElementById("onlineCount");
     if (!el) return;
-    let n = 96 + Math.floor(Math.random() * 90);
-    el.textContent = n;
-    setInterval(() => {
-      n += Math.floor(Math.random() * 7) - 3;
-      n = Math.max(42, Math.min(260, n));
-      el.textContent = n;
-    }, 3500);
+    if (typeof initPresenceTracking !== "function" || !FIREBASE_READY) {
+      el.textContent = 1; // local-only demo mode: no shared presence backend, just this session
+      return;
+    }
+    initPresenceTracking((count) => { el.textContent = count; });
   }
 
   function updateNotifBadge() {

@@ -17,5 +17,15 @@ service cloud.firestore {
       allow update, delete: if request.auth != null
                     && resource.data.userId == request.auth.uid;
     }
+
+    // Online presence: one doc per browser tab/session, refreshed by a heartbeat.
+    // No auth required (anonymous visitors are counted too); writes are limited
+    // to just the lastSeen timestamp so this can't be abused to store other data.
+    match /presence/{sessionId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasOnly(['lastSeen'])
+                    && request.resource.data.lastSeen is timestamp;
+      allow delete: if true;
+    }
   }
 }

@@ -2297,8 +2297,8 @@
             }
             const waText = encodeURIComponent(`Здравствуйте! Я хочу поддержать Geran Express на сумму ${amount} сомони. ${payload.message ? "Комментарий: " + payload.message : ""}`);
             const tgText = encodeURIComponent(`Поддержка Geran Express: ${amount} сомони. ${payload.message || ""}`);
-            window.open(`https://wa.me/79385491876?text=${waText}`, "_blank");
-            window.open(`https://t.me/79385491876?text=${tgText}`, "_blank");
+            window.open(`https://wa.me/79385401876?text=${waText}`, "_blank");
+            window.open(`https://t.me/79385401876?text=${tgText}`, "_blank");
             showToast(t("sponsor.thanks"));
             popScreen();
           } catch (e) {

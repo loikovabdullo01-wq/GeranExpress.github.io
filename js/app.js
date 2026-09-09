@@ -161,22 +161,17 @@
   }
 
   function gradientFallback(listing, cls) {
-    const [c1, c2] = listing.gradient || ["#16A34A", "#4ADE80"];
-    return `<div class="${cls}" style="background:linear-gradient(135deg, ${c1}, ${c2});"><span>${listing.icon || "\ud83d\udce6"}</span></div>`;
+    return `<div class="${cls}" role="img" aria-label="Нет фото">Нет фото</div>`;
   }
 
   function cardPhotoInner(listing) {
     const images = listingImages(listing);
     if (images.length) {
-      const dots = images.length > 1
-        ? `<div class="card-photo-dots">${images.map((_, index) => `<button type="button" class="card-photo-dot ${index === 0 ? "active" : ""}" data-card-photo-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
-        : "";
       return `
         <div class="card-photo-main" data-card-gallery="${esc(listing.id)}">
           <div class="card-photo-track">
             ${images.map((src, index) => `<div class="card-photo-slide"><div class="photo-skeleton"></div><img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" /></div>`).join("")}
           </div>
-          ${dots}
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
@@ -568,7 +563,7 @@
 
   function computeFilteredListings() {
     const f = state.filters;
-    let list = state.listings.filter((l) => l.status !== "sold" || l.mine);
+    let list = state.listings.filter((l) => (l.status !== "sold" || l.mine) && listingImages(l).length > 0);
     if (f.category !== "all") list = list.filter((l) => l.category === f.category);
     if (f.location) list = list.filter((l) => l.city === f.location);
     if (f.query.trim()) {
@@ -801,23 +796,24 @@
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const images = listingImages(listing);
+    const images = normalizePhotos(listing.images);
+    const galleryImages = images.length ? images : listingImages(listing);
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
-    const galleryMarkup = images.length
-      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${images.map((src, index) => `
+    const galleryMarkup = galleryImages.length
+      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${galleryImages.map((src, index) => `
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
-            <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
+            <img src="${esc(src)}" alt="" decoding="async" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
         `).join("")}</div></div>
-        <div class="pd-gallery-dots">${images.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
+        <div class="pd-gallery-dots">${galleryImages.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
       : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
 
     const html = `
       ${screenHeader(t("pd.title"))}
       <div class="screen-body">
-        <div class="pd-gallery" id="pdGallery" style="${images.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
+        <div class="pd-gallery" id="pdGallery" style="${galleryImages.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
           ${galleryMarkup}
           <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" style="position:absolute;top:12px;right:12px;width:38px;height:38px;">
             <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>

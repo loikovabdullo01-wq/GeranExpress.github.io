@@ -93,7 +93,7 @@ const DONATIONS_COLLECTION = "donations";
 // Returns an unsubscribe function, or null if Firestore isn't available.
 function subscribeToListings(onChange, onError) {
   if (!FIREBASE_READY || !fbDb) return null;
-  return fbDb.collection(LISTINGS_COLLECTION).orderBy("createdAt", "desc").onSnapshot(
+  return fbDb.collection(LISTINGS_COLLECTION).onSnapshot(
     (snap) => onChange(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))),
     (err) => {
       console.error("[Firestore] listings subscription failed:", err);

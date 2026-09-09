@@ -15,8 +15,10 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
-      "https://i.ibb.co/sdmQ4CBZ/e374f1732917.jpg"
+    "images": [
+      "https://i.ibb.co/sdmQ4CBZ/e374f1732917.jpg",
+      "https://i.ibb.co/bgNqVLgZ/1353e7aa25b1.jpg",
+      "https://i.ibb.co/C5kFZ8cg/ae73181c393b.jpg"
     ],
     "createdAt": 1787097600000,
     "views": 80,
@@ -38,7 +40,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bgNqVLgZ/1353e7aa25b1.jpg"
     ],
     "createdAt": 1784332800000,
@@ -61,7 +63,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/C5kFZ8cg/ae73181c393b.jpg"
     ],
     "createdAt": 1783900800000,
@@ -84,7 +86,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Ps9R9Tx3/04ce6b8866be.jpg"
     ],
     "createdAt": 1785369600000,
@@ -107,7 +109,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/mrxw2fVV/aee5ddf4d0a5.png"
     ],
     "createdAt": 1784678400000,
@@ -130,7 +132,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/QFkMdVyG/b9751d875a7c.png"
     ],
     "createdAt": 1785628800000,
@@ -153,7 +155,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/FLgz0GpG/23f2b9806398.jpg"
     ],
     "createdAt": 1783987200000,
@@ -176,7 +178,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/n8PRcnmW/e86528660d7a.jpg"
     ],
     "createdAt": 1784851200000,
@@ -199,7 +201,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/BHVL3b8f/8505fce3bed6.webp"
     ],
     "createdAt": 1787529600000,
@@ -222,7 +224,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/6JqNmj5p/2eca741bbb79.jpg"
     ],
     "createdAt": 1785196800000,
@@ -245,7 +247,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JwH52063/ad122a7a9535.jpg"
     ],
     "createdAt": 1787356800000,
@@ -268,7 +270,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/8ngxmf1f/292b2fb6de2b.jpg"
     ],
     "createdAt": 1784073600000,
@@ -291,7 +293,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/GvsgKr1p/320f5d860741.jpg"
     ],
     "createdAt": 1786406400000,
@@ -314,7 +316,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/mrZV1wYZ/612587ab3875.png"
     ],
     "createdAt": 1785369600000,
@@ -337,7 +339,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Z6xd9Lz0/739815db8c4a.jpg"
     ],
     "createdAt": 1786060800000,
@@ -360,7 +362,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/C3kQz02p/5e1e6af2a881.png"
     ],
     "createdAt": 1785369600000,
@@ -383,7 +385,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/99gRfb4P/92f6060d151a.jpg"
     ],
     "createdAt": 1787270400000,
@@ -406,7 +408,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/hRTfsdC3/9ed706badb58.png"
     ],
     "createdAt": 1784592000000,
@@ -429,7 +431,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KcXgy0vV/1f4f69a5d66a.jpg"
     ],
     "createdAt": 1785715200000,
@@ -452,7 +454,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/tMNK7yzc/c8adc5911940.jpg"
     ],
     "createdAt": 1783814400000,
@@ -475,7 +477,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/PsRdcXcB/4d9f324b9189.png"
     ],
     "createdAt": 1786492800000,
@@ -498,7 +500,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/jZypgyRq/aa2d4cdcac6f.jpg"
     ],
     "createdAt": 1787616000000,
@@ -521,7 +523,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/B5n5qZZN/d6d728c980e4.jpg"
     ],
     "createdAt": 1785283200000,
@@ -544,7 +546,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/TxPnV622/ddcf2f47e238.png"
     ],
     "createdAt": 1785369600000,
@@ -567,7 +569,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/1GN78nVS/a24324765452.jpg"
     ],
     "createdAt": 1785196800000,
@@ -590,7 +592,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/203mvyLy/6b326e0f1436.png"
     ],
     "createdAt": 1784073600000,
@@ -613,7 +615,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/nqkf6V2t/f39d24db4dab.jpg"
     ],
     "createdAt": 1787011200000,
@@ -636,7 +638,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/CpPYphLb/f898ecf4e395.jpg"
     ],
     "createdAt": 1785024000000,
@@ -659,7 +661,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/x8fkbJ8B/320e93472cd5.jpg"
     ],
     "createdAt": 1785110400000,
@@ -682,7 +684,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/2mrFvXm/cb91538148a0.jpg"
     ],
     "createdAt": 1785024000000,
@@ -705,7 +707,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/G381hTjL/57bea5592325.png"
     ],
     "createdAt": 1785369600000,
@@ -728,7 +730,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/D68G2qm/7f90d51bc84c.png"
     ],
     "createdAt": 1784160000000,
@@ -751,7 +753,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DP17PRpH/b5c619bc24ca.png"
     ],
     "createdAt": 1783814400000,
@@ -774,7 +776,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/zVGTYDTv/b6e25ce30cb8.jpg"
     ],
     "createdAt": 1787184000000,
@@ -797,7 +799,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/hJ6n4KXW/83d9b37f249e.jpg"
     ],
     "createdAt": 1785196800000,
@@ -820,7 +822,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5XCB51p1/4e0df00ca9b9.jpg"
     ],
     "createdAt": 1786924800000,
@@ -843,7 +845,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/2733j53V/1622cfd8a272.jpg"
     ],
     "createdAt": 1786579200000,
@@ -866,7 +868,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/SD7s5B94/e4c3beb2b025.jpg"
     ],
     "createdAt": 1785283200000,
@@ -889,7 +891,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bRbH5GcD/1786d438f26f.jpg"
     ],
     "createdAt": 1787184000000,
@@ -912,7 +914,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/tTgDqsDF/7c594f89e20c.png"
     ],
     "createdAt": 1787443200000,
@@ -935,7 +937,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/mCsbxhJQ/009ab78280ed.jpg"
     ],
     "createdAt": 1785628800000,
@@ -958,7 +960,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Z6DfZg4c/32d682dc1ecb.jpg"
     ],
     "createdAt": 1784160000000,
@@ -981,7 +983,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JFmR3jhj/27ea34bf20de.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1004,7 +1006,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/j9ZLGk5K/ebdc94acc821.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1027,7 +1029,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/1Jb9ryfN/c92f1ac866f2.png"
     ],
     "createdAt": 1783728000000,
@@ -1050,7 +1052,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/QF1qvqbN/054a561b01ba.jpg"
     ],
     "createdAt": 1784073600000,
@@ -1073,7 +1075,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/xq0zwC9G/055e8bacfaaa.jpg"
     ],
     "createdAt": 1785628800000,
@@ -1096,7 +1098,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/vvjJL30X/7b2b03865daf.jpg"
     ],
     "createdAt": 1784419200000,
@@ -1119,7 +1121,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/99RJg6PK/7708d4056a07.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1142,7 +1144,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/67fk7PRz/8d16d969a0bc.jpg"
     ],
     "createdAt": 1786406400000,
@@ -1165,7 +1167,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Xx2sxn2d/17981dd10d37.jpg"
     ],
     "createdAt": 1787097600000,
@@ -1188,7 +1190,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/cKYbZ6VF/502a902759da.jpg"
     ],
     "createdAt": 1784160000000,
@@ -1211,7 +1213,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/pjb43BM1/d2c8e4ce840d.jpg"
     ],
     "createdAt": 1784937600000,
@@ -1234,7 +1236,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KzDVkj2Q/aca098805e9f.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1257,7 +1259,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DBp3wP0/8fda16a88724.jpg"
     ],
     "createdAt": 1783900800000,
@@ -1280,7 +1282,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/SDxSM6xv/14d6b42a0dce.png"
     ],
     "createdAt": 1785715200000,
@@ -1303,7 +1305,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/3YLvvq0y/2e85eb1255ca.jpg"
     ],
     "createdAt": 1786060800000,
@@ -1326,7 +1328,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VcdtGHmd/a17fa15786fb.jpg"
     ],
     "createdAt": 1785456000000,
@@ -1349,7 +1351,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/m59PH562/bba9a9e82253.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1372,7 +1374,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bMHkjz7Q/456617ffd72f.png"
     ],
     "createdAt": 1784332800000,
@@ -1395,7 +1397,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/N2z5L5vv/c15cb36ec463.jpg"
     ],
     "createdAt": 1784160000000,
@@ -1418,7 +1420,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/C3hKjgtH/ea3589faf4d1.jpg"
     ],
     "createdAt": 1786406400000,
@@ -1441,7 +1443,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/39W0mRF3/97e1f1a99dcc.png"
     ],
     "createdAt": 1783814400000,
@@ -1464,7 +1466,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/gbYGyJpt/19e227dd3325.jpg"
     ],
     "createdAt": 1785456000000,
@@ -1487,7 +1489,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bRzY1V3Q/c28fbbe0ccd7.jpg"
     ],
     "createdAt": 1785456000000,
@@ -1510,7 +1512,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/3936zTSD/e15e7b482435.jpg"
     ],
     "createdAt": 1786060800000,
@@ -1533,7 +1535,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bMQYJZ92/3df23668628a.png"
     ],
     "createdAt": 1785974400000,
@@ -1556,7 +1558,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DP1HF5d9/28da464f7f9b.jpg"
     ],
     "createdAt": 1785888000000,
@@ -1579,7 +1581,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/TBP8gh0H/77b3f35d70d3.jpg"
     ],
     "createdAt": 1784419200000,
@@ -1602,7 +1604,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bM9wc2CS/d82e89327174.png"
     ],
     "createdAt": 1784851200000,
@@ -1625,7 +1627,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/tMJqhd0y/ef4005193f0a.jpg"
     ],
     "createdAt": 1785024000000,
@@ -1648,7 +1650,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VpgkpZmj/e5eee2c71be5.png"
     ],
     "createdAt": 1783900800000,
@@ -1671,7 +1673,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Kj1vn25W/aea1380c7701.png"
     ],
     "createdAt": 1783900800000,
@@ -1694,7 +1696,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/S4rwHk2W/371b26738718.jpg"
     ],
     "createdAt": 1784764800000,
@@ -1717,7 +1719,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/993XrVsS/9bb5ac68e8ef.jpg"
     ],
     "createdAt": 1785283200000,
@@ -1740,7 +1742,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/QvZzmVFt/d1803e47ee4a.jpg"
     ],
     "createdAt": 1784678400000,
@@ -1763,7 +1765,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/fYw79qVx/673171a201ac.jpg"
     ],
     "createdAt": 1787616000000,
@@ -1786,7 +1788,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DgskHrSw/ee6029ac4daf.jpg"
     ],
     "createdAt": 1785369600000,
@@ -1809,7 +1811,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/8n8DfDPc/bc820cdd6cc4.jpg"
     ],
     "createdAt": 1783814400000,
@@ -1832,7 +1834,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bRjB3pPX/c204b27698f8.png"
     ],
     "createdAt": 1784332800000,
@@ -1855,7 +1857,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/n8N8cF0W/ccafe2c0e1b2.jpg"
     ],
     "createdAt": 1787616000000,
@@ -1878,7 +1880,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JWDnsPCd/be8fe3104337.jpg"
     ],
     "createdAt": 1784592000000,
@@ -1901,7 +1903,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/6cxcgxZ8/9a34bd41e166.jpg"
     ],
     "createdAt": 1783728000000,
@@ -1924,7 +1926,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/mrk98WBK/5f0313fedea1.jpg"
     ],
     "createdAt": 1786406400000,
@@ -1947,7 +1949,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/8DTSy7yD/a9078a36af59.webp"
     ],
     "createdAt": 1784073600000,
@@ -1970,7 +1972,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VY1wxPJx/7346f1d56bdb.png"
     ],
     "createdAt": 1785974400000,
@@ -1993,7 +1995,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/fdNWR9BH/6b7f80fe13e4.jpg"
     ],
     "createdAt": 1783987200000,
@@ -2016,7 +2018,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/BHJb6FFr/ac4cca6cdfb2.png"
     ],
     "createdAt": 1784592000000,
@@ -2039,7 +2041,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Ps0LSr9j/f2638ee022f8.jpg"
     ],
     "createdAt": 1784764800000,
@@ -2062,7 +2064,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/v2wx3Wj/62af168a67fa.jpg"
     ],
     "createdAt": 1785283200000,
@@ -2085,7 +2087,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/YF5QZZCN/2612449ae831.jpg"
     ],
     "createdAt": 1783987200000,
@@ -2108,7 +2110,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/PsWZZNHX/77399a37fa88.png"
     ],
     "createdAt": 1783728000000,
@@ -2131,7 +2133,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/tTG5nnr1/b01412d8aac5.png"
     ],
     "createdAt": 1785024000000,
@@ -2154,7 +2156,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KjcLzxhq/7c99bf703631.jpg"
     ],
     "createdAt": 1785369600000,
@@ -2177,7 +2179,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5XfYbBCB/7be9e1e7e80f.png"
     ],
     "createdAt": 1785715200000,
@@ -2200,7 +2202,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/QF4kzNBd/c4a1bfa199ac.jpg"
     ],
     "createdAt": 1785024000000,
@@ -2223,7 +2225,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/4gRKwkbs/f8075cd546a2.jpg"
     ],
     "createdAt": 1784246400000,
@@ -2246,7 +2248,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KpQLCWxb/98ee53340d98.jpg"
     ],
     "createdAt": 1786492800000,
@@ -2269,7 +2271,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/zHH19RVS/ba4ce7113142.jpg"
     ],
     "createdAt": 1784937600000,
@@ -2292,7 +2294,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JjcbMcxk/abc59d41d03a.jpg"
     ],
     "createdAt": 1785628800000,
@@ -2315,7 +2317,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/wZWGnzjb/ecf2edb59070.jpg"
     ],
     "createdAt": 1783987200000,
@@ -2338,7 +2340,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/GQJj2BrY/e0f1227f2b09.jpg"
     ],
     "createdAt": 1785456000000,
@@ -2361,7 +2363,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/tp5rPR13/8ad2906e60fa.jpg"
     ],
     "createdAt": 1785283200000,
@@ -2384,7 +2386,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/r29LWnF9/c48a7eecf237.png"
     ],
     "createdAt": 1783728000000,
@@ -2407,7 +2409,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KxMf0JMp/91f0e122837b.jpg"
     ],
     "createdAt": 1785888000000,
@@ -2430,7 +2432,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/HfCMtnvP/4cf8983bb295.jpg"
     ],
     "createdAt": 1786320000000,
@@ -2453,7 +2455,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/SDhGSvQ0/587f04c8b83e.jpg"
     ],
     "createdAt": 1786838400000,
@@ -2476,7 +2478,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/wmxXRTn/5bfcfc3ef533.jpg"
     ],
     "createdAt": 1784332800000,
@@ -2499,7 +2501,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/m5j4gkCW/a442b7ad5321.jpg"
     ],
     "createdAt": 1785283200000,
@@ -2522,7 +2524,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5gV5jpcd/36b3ed7cd064.jpg"
     ],
     "createdAt": 1785283200000,
@@ -2545,7 +2547,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/ccxrxqrp/b07c6e36dd4e.jpg"
     ],
     "createdAt": 1785456000000,
@@ -2568,7 +2570,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/rfQs9z66/c31c8ed0a178.jpg"
     ],
     "createdAt": 1785024000000,
@@ -2591,7 +2593,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/4qD14nS/36c29ed79667.png"
     ],
     "createdAt": 1784419200000,
@@ -2614,7 +2616,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/2YynyVwT/d4e92d3ce976.jpg"
     ],
     "createdAt": 1783814400000,
@@ -2637,7 +2639,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/vCGVNJrB/2b63c5f9ac78.jpg"
     ],
     "createdAt": 1785369600000,
@@ -2660,7 +2662,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/HDNZ5Bzs/fdb3148433a2.jpg"
     ],
     "createdAt": 1787184000000,
@@ -2683,7 +2685,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/0RwW5338/b2a7fa84df58.jpg"
     ],
     "createdAt": 1784160000000,
@@ -2706,7 +2708,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/B2sp7ZpK/12424997c4c2.jpg"
     ],
     "createdAt": 1784073600000,
@@ -2729,7 +2731,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/hx2rQv4G/ee70fa60380d.jpg"
     ],
     "createdAt": 1784678400000,
@@ -2752,7 +2754,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/v2yJqcb/393561cffe96.jpg"
     ],
     "createdAt": 1786406400000,
@@ -2775,7 +2777,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7d5LbGmT/3f98adabe141.jpg"
     ],
     "createdAt": 1784160000000,
@@ -2798,7 +2800,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/ynGxQ6YN/7799332994a8.jpg"
     ],
     "createdAt": 1786147200000,
@@ -2821,7 +2823,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VYRypQst/5a53c6e1f061.jpg"
     ],
     "createdAt": 1785628800000,
@@ -2844,7 +2846,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/zhcFGTdN/6a105431f9c0.png"
     ],
     "createdAt": 1786320000000,
@@ -2867,7 +2869,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/YBS5Lxj1/06ce0eb831de.jpg"
     ],
     "createdAt": 1785628800000,
@@ -2890,7 +2892,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Z6wjSMjc/8fe0d3a90d9f.jpg"
     ],
     "createdAt": 1785542400000,
@@ -2913,7 +2915,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Q7mLxZR3/eed25f242b84.jpg"
     ],
     "createdAt": 1785024000000,
@@ -2936,7 +2938,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/k2MRd7mz/b35952a9556d.jpg"
     ],
     "createdAt": 1785283200000,
@@ -2959,7 +2961,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/NgZJ8mcS/c23ca49fc568.jpg"
     ],
     "createdAt": 1786320000000,
@@ -2982,7 +2984,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Txj4JDHk/e28b2cddd0ea.jpg"
     ],
     "createdAt": 1787184000000,
@@ -3005,7 +3007,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/SwtZNV7S/383ee286c9cf.png"
     ],
     "createdAt": 1784073600000,
@@ -3028,7 +3030,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5h7gXxdd/ae702b6beff2.jpg"
     ],
     "createdAt": 1783814400000,
@@ -3051,7 +3053,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KcsgGMzx/7620f66df0a5.png"
     ],
     "createdAt": 1786233600000,
@@ -3074,7 +3076,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/kgwf19Vp/6f6779469afd.jpg"
     ],
     "createdAt": 1787184000000,
@@ -3097,7 +3099,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Q3JFMyb5/217fbf3e097f.jpg"
     ],
     "createdAt": 1785283200000,
@@ -3120,7 +3122,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/bjVkdZK1/9087ca6b32a6.jpg"
     ],
     "createdAt": 1783814400000,
@@ -3143,7 +3145,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Q2wc752/9bf0cbb28c20.png"
     ],
     "createdAt": 1784332800000,
@@ -3166,7 +3168,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/53gC5cD/2af22a5b9b10.jpg"
     ],
     "createdAt": 1785456000000,
@@ -3189,7 +3191,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/4RWzSzKp/7bb9e9bb7d8a.jpg"
     ],
     "createdAt": 1783814400000,
@@ -3212,7 +3214,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KpwC3fKX/ceefe387f377.jpg"
     ],
     "createdAt": 1784332800000,
@@ -3235,7 +3237,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/3m0bVTFJ/ebed06b294f7.jpg"
     ],
     "createdAt": 1786838400000,
@@ -3258,7 +3260,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/cqRpddm/0ff09862aa4f.jpg"
     ],
     "createdAt": 1785283200000,
@@ -3281,7 +3283,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/3mczLJFK/db31835f8d58.jpg"
     ],
     "createdAt": 1783728000000,
@@ -3304,7 +3306,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/9mwk27p6/43af665bf082.jpg"
     ],
     "createdAt": 1785283200000,
@@ -3327,7 +3329,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7dQ955Px/48ff4812c703.jpg"
     ],
     "createdAt": 1785801600000,
@@ -3350,7 +3352,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/B2nBHpJK/be183234182c.jpg"
     ],
     "createdAt": 1783814400000,
@@ -3373,7 +3375,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7tJWMQkD/f2f88b36f1b3.jpg"
     ],
     "createdAt": 1785369600000,
@@ -3396,7 +3398,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/35yD6gh6/521803d972e2.jpg"
     ],
     "createdAt": 1786320000000,
@@ -3419,7 +3421,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/9H2jcJfY/11a736ede755.png"
     ],
     "createdAt": 1784332800000,
@@ -3442,7 +3444,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/zTWFHgK7/b21e73bd3be6.jpg"
     ],
     "createdAt": 1783728000000,
@@ -3465,7 +3467,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7x0XH4jf/c86b4d71a226.png"
     ],
     "createdAt": 1784160000000,
@@ -3488,7 +3490,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7tsd0St8/efdefdf7f477.jpg"
     ],
     "createdAt": 1783728000000,
@@ -3511,7 +3513,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/9mGh2t2C/d1b03072dc85.jpg"
     ],
     "createdAt": 1785456000000,
@@ -3534,7 +3536,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VYbK15Kn/bf36c30462a3.jpg"
     ],
     "createdAt": 1785196800000,
@@ -3557,7 +3559,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/LhcyvN2s/373ae14a2ef0.png"
     ],
     "createdAt": 1784332800000,
@@ -3580,7 +3582,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/21NdHPdd/ce92d749898d.jpg"
     ],
     "createdAt": 1786924800000,
@@ -3603,7 +3605,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/yHj8DDL/983b1c22e3f2.png"
     ],
     "createdAt": 1784592000000,
@@ -3626,7 +3628,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/4wpB9cDV/d2303c141ee2.png"
     ],
     "createdAt": 1784678400000,
@@ -3649,7 +3651,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/GffRSfXC/b351295cfa67.jpg"
     ],
     "createdAt": 1783641600000,
@@ -3672,7 +3674,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JRPt5k5z/53c7c91b231d.jpg"
     ],
     "createdAt": 1787443200000,
@@ -3695,7 +3697,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DDfbDtvK/24609cdcc4ce.jpg"
     ],
     "createdAt": 1786233600000,
@@ -3718,7 +3720,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Nd1sFTSR/153c0f0e176a.png"
     ],
     "createdAt": 1783814400000,
@@ -3741,7 +3743,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/wZqF4PBF/71f807c90090.png"
     ],
     "createdAt": 1785369600000,
@@ -3764,7 +3766,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/27jKjH3N/b533c7b9f209.jpg"
     ],
     "createdAt": 1783900800000,
@@ -3787,7 +3789,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/8gBS05NB/306cb5233576.png"
     ],
     "createdAt": 1784246400000,
@@ -3810,7 +3812,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/prRpxQzW/abbf24d57356.jpg"
     ],
     "createdAt": 1784592000000,
@@ -3833,7 +3835,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/cXKqDHw6/ded9c684043d.jpg"
     ],
     "createdAt": 1784505600000,
@@ -3856,7 +3858,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/PGGQVQxS/01fd96d2da80.png"
     ],
     "createdAt": 1784678400000,
@@ -3879,7 +3881,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DDznXrQd/ef023234d557.png"
     ],
     "createdAt": 1784073600000,
@@ -3902,7 +3904,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/27HzHVV0/3341fdc66d5f.jpg"
     ],
     "createdAt": 1784160000000,
@@ -3925,7 +3927,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/k2yghb7n/f719451d1a3d.jpg"
     ],
     "createdAt": 1783728000000,
@@ -3948,7 +3950,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/WYnq81Q/0862bac1a366.jpg"
     ],
     "createdAt": 1786492800000,
@@ -3971,7 +3973,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Q7R1CZwB/b5137256cc3b.jpg"
     ],
     "createdAt": 1784851200000,
@@ -3994,7 +3996,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/h1M24S8m/6c59c85490c1.png"
     ],
     "createdAt": 1784678400000,
@@ -4017,7 +4019,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/TqNwGzkw/e1ab85a5868f.jpg"
     ],
     "createdAt": 1784678400000,
@@ -4040,7 +4042,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/nTXCWHv/9ccfe90c2b3a.jpg"
     ],
     "createdAt": 1786752000000,
@@ -4063,7 +4065,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Mxm5YLPr/73b75ed65ce0.png"
     ],
     "createdAt": 1783814400000,
@@ -4086,7 +4088,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/vCyQdzhc/415ec8d66ddd.jpg"
     ],
     "createdAt": 1786406400000,
@@ -4109,7 +4111,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/nqdg4pKj/d25eaa069e6a.jpg"
     ],
     "createdAt": 1783728000000,
@@ -4132,7 +4134,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/kV4vFSvK/475005a94f78.jpg"
     ],
     "createdAt": 1784505600000,
@@ -4155,7 +4157,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/ycXbw6gn/c4cfa67533b2.jpg"
     ],
     "createdAt": 1783987200000,
@@ -4178,7 +4180,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/gMB3n6Sd/0cb8c3f1f857.jpg"
     ],
     "createdAt": 1783641600000,
@@ -4201,7 +4203,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7JWF3m0m/bcfa89472afe.jpg"
     ],
     "createdAt": 1783814400000,
@@ -4224,7 +4226,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/M5980Jhf/f0edd4e4b11d.jpg"
     ],
     "createdAt": 1786838400000,
@@ -4247,7 +4249,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/pBjwDPzf/7e8836e19e45.jpg"
     ],
     "createdAt": 1784419200000,
@@ -4270,7 +4272,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/F4f7pL6X/1760bab55fdf.jpg"
     ],
     "createdAt": 1786406400000,
@@ -4293,7 +4295,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7t4Q8D0T/8b92e59a979b.jpg"
     ],
     "createdAt": 1785024000000,
@@ -4316,7 +4318,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Q7Wkq8rC/86d65dc8e266.jpg"
     ],
     "createdAt": 1785801600000,
@@ -4339,7 +4341,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/6cdy0dzj/a612b23f6058.jpg"
     ],
     "createdAt": 1784505600000,
@@ -4362,7 +4364,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/1GfHC25v/4b6d5e22f134.jpg"
     ],
     "createdAt": 1786665600000,
@@ -4385,7 +4387,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/sdKVMhDv/a19812acd757.jpg"
     ],
     "createdAt": 1786838400000,
@@ -4408,7 +4410,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/chcBFV40/a3e388c05638.jpg"
     ],
     "createdAt": 1783814400000,
@@ -4431,7 +4433,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/hFjncXgg/63e916fbab38.jpg"
     ],
     "createdAt": 1784851200000,
@@ -4454,7 +4456,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/C5KrC5qB/bdb78eb21716.jpg"
     ],
     "createdAt": 1785715200000,
@@ -4477,7 +4479,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/V0n5Lmdd/a5c6c560ffef.jpg"
     ],
     "createdAt": 1786579200000,
@@ -4500,7 +4502,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/VYcRhtXK/6852723dc827.jpg"
     ],
     "createdAt": 1784937600000,
@@ -4523,7 +4525,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/SDFBJ6wq/f96e304da2c0.jpg"
     ],
     "createdAt": 1784160000000,
@@ -4546,7 +4548,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JW77LrkP/0bdedd677e2a.jpg"
     ],
     "createdAt": 1783728000000,
@@ -4569,7 +4571,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5xhyW9N9/714b3f37f182.png"
     ],
     "createdAt": 1785369600000,
@@ -4592,7 +4594,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/cXVpLn9c/e7893ec3bac3.jpg"
     ],
     "createdAt": 1785628800000,
@@ -4615,7 +4617,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/k2fDkJFr/2ae7eb2c7a33.jpg"
     ],
     "createdAt": 1785456000000,
@@ -4638,7 +4640,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/2Y3VSZHV/bdc395e123b0.jpg"
     ],
     "createdAt": 1784073600000,
@@ -4661,7 +4663,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/WvmJ0JqC/79bcc5009347.jpg"
     ],
     "createdAt": 1784678400000,
@@ -4684,7 +4686,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/H9vGy9S/a97d9eac676f.jpg"
     ],
     "createdAt": 1783987200000,
@@ -4707,7 +4709,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/21KmR99G/97f6c9a33804.png"
     ],
     "createdAt": 1784246400000,
@@ -4730,7 +4732,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/TxPS4txp/e0c7778f9a0e.png"
     ],
     "createdAt": 1785196800000,
@@ -4753,7 +4755,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/YSPCRLS/efd9ef545ccc.jpg"
     ],
     "createdAt": 1783814400000,
@@ -4776,7 +4778,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/zVqfvKjy/b35f7df3dc26.png"
     ],
     "createdAt": 1784160000000,
@@ -4799,7 +4801,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/jv58jWYX/00fcf02b81b8.jpg"
     ],
     "createdAt": 1783900800000,
@@ -4822,7 +4824,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/Z6zn2xKb/0541c8cfe2c3.png"
     ],
     "createdAt": 1784592000000,
@@ -4845,7 +4847,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/HTrdgVmW/7047f0349aac.jpg"
     ],
     "createdAt": 1786060800000,
@@ -4868,7 +4870,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/wFtn1hDn/116526611f5e.png"
     ],
     "createdAt": 1785196800000,
@@ -4891,7 +4893,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/C5hFdPgk/5fd9b3b7fd11.jpg"
     ],
     "createdAt": 1786492800000,
@@ -4914,7 +4916,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/B2hx9v4H/f6dac7ed4208.png"
     ],
     "createdAt": 1784332800000,
@@ -4937,7 +4939,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/FLLYNGPM/687206f7eab3.png"
     ],
     "createdAt": 1785369600000,
@@ -4960,7 +4962,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/TB5hf7B1/e501003cf693.png"
     ],
     "createdAt": 1785369600000,
@@ -4983,7 +4985,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/8gmHwTs9/40df4edf1b61.jpg"
     ],
     "createdAt": 1785283200000,
@@ -5006,7 +5008,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7xv3LJwv/540b8fa909be.jpg"
     ],
     "createdAt": 1787011200000,
@@ -5029,7 +5031,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/FqDVZPbs/96e5af74ba24.png"
     ],
     "createdAt": 1784332800000,
@@ -5052,7 +5054,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/xt32380v/d07fcc6b5a5f.jpg"
     ],
     "createdAt": 1787097600000,
@@ -5075,7 +5077,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/pv9p3yW2/1e8f2f406120.png"
     ],
     "createdAt": 1786320000000,
@@ -5098,7 +5100,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/qYT6zcvk/a0c81a541e14.png"
     ],
     "createdAt": 1783900800000,
@@ -5121,7 +5123,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/JjryF9x2/33d1c93c52e2.jpg"
     ],
     "createdAt": 1786060800000,
@@ -5144,7 +5146,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/GQQZ9TZz/d6a5f4748d6c.jpg"
     ],
     "createdAt": 1784246400000,
@@ -5167,7 +5169,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/XxwQzBrW/9601ca8e7327.jpg"
     ],
     "createdAt": 1783814400000,
@@ -5190,7 +5192,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/xqgbV3b7/78c407d7248b.jpg"
     ],
     "createdAt": 1784851200000,
@@ -5213,7 +5215,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/hRT8Vj7N/77e816d6c8ef.png"
     ],
     "createdAt": 1783728000000,
@@ -5236,7 +5238,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/YFxDmFsg/83dc6e8cd64e.jpg"
     ],
     "createdAt": 1784160000000,
@@ -5259,7 +5261,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/HDT49VBg/cfc068c1879f.jpg"
     ],
     "createdAt": 1785628800000,
@@ -5282,7 +5284,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/4nstGcmy/9a8672dfcc23.jpg"
     ],
     "createdAt": 1784592000000,
@@ -5305,7 +5307,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/1YDz03PK/6671f81e1648.jpg"
     ],
     "createdAt": 1785024000000,
@@ -5328,7 +5330,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/84XtyQmp/c189bb8200b1.jpg"
     ],
     "createdAt": 1785024000000,
@@ -5351,7 +5353,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/jvwt7RQY/05a66cadc2f5.jpg"
     ],
     "createdAt": 1784073600000,
@@ -5374,7 +5376,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7JQFd8rz/006851cab6d5.png"
     ],
     "createdAt": 1784678400000,
@@ -5397,7 +5399,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/PGNnHHwc/09e63a84ccb3.jpg"
     ],
     "createdAt": 1784505600000,
@@ -5420,7 +5422,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/pjQRR444/9c967ab7eafd.jpg"
     ],
     "createdAt": 1784592000000,
@@ -5443,7 +5445,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/fVKcQmWD/9603ddcd4033.png"
     ],
     "createdAt": 1784332800000,
@@ -5466,7 +5468,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/LzkgfC2n/2016654dd396.webp"
     ],
     "createdAt": 1784851200000,
@@ -5489,7 +5491,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/FbBGd3wc/8184fb1ec00e.jpg"
     ],
     "createdAt": 1786838400000,
@@ -5512,7 +5514,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/NdWtFzKS/3ab624be07b1.jpg"
     ],
     "createdAt": 1785196800000,
@@ -5535,7 +5537,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/vxVyhJtC/7055c1f1864a.jpg"
     ],
     "createdAt": 1787270400000,
@@ -5558,7 +5560,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/7tq86MSr/e8e9756c7748.jpg"
     ],
     "createdAt": 1786060800000,
@@ -5581,7 +5583,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/wFBz7qM8/189a5e256f4d.jpg"
     ],
     "createdAt": 1784592000000,
@@ -5604,7 +5606,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/whK5MZz9/ef3d77fdf3fd.jpg"
     ],
     "createdAt": 1784160000000,
@@ -5627,7 +5629,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/LXwmkspC/c1a16a6f4e4c.jpg"
     ],
     "createdAt": 1784073600000,
@@ -5650,7 +5652,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/v43GRkqT/0fdf8cd70686.jpg"
     ],
     "createdAt": 1785715200000,
@@ -5673,7 +5675,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/KxLKfc80/1ffc12ccbe2b.jpg"
     ],
     "createdAt": 1786665600000,
@@ -5696,7 +5698,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#059669",
       "#34D399"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/r2wR1XY7/71f45bbe6b82.jpg"
     ],
     "createdAt": 1784160000000,
@@ -5719,7 +5721,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/ZpQgXYhP/61cf1024751e.jpg"
     ],
     "createdAt": 1786492800000,
@@ -5742,7 +5744,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C55E",
       "#38BDF8"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/5g5PVjm6/09af5a282e87.jpg"
     ],
     "createdAt": 1784246400000,
@@ -5765,7 +5767,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#34D399",
       "#22C58B"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/DHFC33qx/05054f7e5ef6.jpg"
     ],
     "createdAt": 1786838400000,
@@ -5788,7 +5790,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#4ADE80",
       "#16A34A"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/XrNbxJwK/600ee537ef82.jpg"
     ],
     "createdAt": 1784073600000,
@@ -5811,7 +5813,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#10B981",
       "#4ADE80"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/nMwPpsPF/c74a1ed7f71f.png"
     ],
     "createdAt": 1785715200000,
@@ -5834,7 +5836,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#22C58B",
       "#4FACFE"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/qY5DX6JH/51666d452023.png"
     ],
     "createdAt": 1785715200000,
@@ -5857,7 +5859,7 @@ const GERAN_CATALOG_LISTINGS = [
       "#16A34A",
       "#84CC16"
     ],
-    "photos": [
+    "images": [
       "https://i.ibb.co/qLBFw32S/761418b340b6.jpg"
     ],
     "createdAt": 1785456000000,

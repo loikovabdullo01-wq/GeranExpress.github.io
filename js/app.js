@@ -143,9 +143,17 @@
   }
 
   function cardPhotoInner(listing) {
-    if (listing.photos && listing.photos.length) {
-      return `<div class="photo-skeleton"></div>
-        <img src="${esc(listing.photos[0])}" alt="" loading="lazy" data-photo="${esc(listing.id)}" />`;
+    const photos = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
+    if (photos.length) {
+      return `
+        <div class="card-photo-gallery">
+          ${photos.map((src, index) => `
+            <div class="card-photo-tile ${index === 0 ? "primary" : ""}">
+              <div class="photo-skeleton"></div>
+              <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
+            </div>
+          `).join("")}
+        </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
   }
@@ -703,19 +711,23 @@
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const photos = listing.photos && listing.photos.length ? listing.photos : null;
+    const photos = Array.isArray(listing.photos) ? listing.photos.filter(Boolean) : [];
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
+
+    const galleryMarkup = photos.length
+      ? photos.map((src, index) => `
+          <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
+            <img src="${esc(src)}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
+          </div>
+        `).join("")
+      : `<div class="pd-gallery-slide"><span>${listing.icon}</span></div>`;
 
     const html = `
       ${screenHeader(t("pd.title"))}
       <div class="screen-body">
-        <div class="pd-gallery" id="pdGallery" style="${photos ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
-          ${photos
-            ? `<div class="photo-skeleton"></div>
-               <img id="pdGalleryImg" src="${esc(photos[0])}" alt="" data-photo="${esc(listing.id)}"
-                    style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />`
-            : `<span>${listing.icon}</span>`}
+        <div class="pd-gallery" id="pdGallery" style="${photos.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
+          ${galleryMarkup}
           <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" style="position:absolute;top:12px;right:12px;width:38px;height:38px;">
             <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
           </button>
@@ -789,8 +801,9 @@
       if (editBtn) editBtn.addEventListener("click", () => openAddEditForm(listing));
       hydratePhotos(el);
       if (hasCoords) renderProductMap(el, listing);
-      const galleryImg = el.querySelector("#pdGalleryImg");
-      if (galleryImg) galleryImg.addEventListener("click", () => openImageZoom(galleryImg.src));
+      el.querySelectorAll(".pd-gallery-slide img").forEach((img) => {
+        img.addEventListener("click", () => openImageZoom(img.src));
+      });
     });
   }
 

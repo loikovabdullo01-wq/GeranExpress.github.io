@@ -1,6 +1,6 @@
 {
   "name": "Geran Express",
-  "short_name": "Geran",
+  "short_name": "Geran Express",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f6f3",

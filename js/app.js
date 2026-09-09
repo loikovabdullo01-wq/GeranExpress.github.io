@@ -86,10 +86,34 @@
   let remoteListings = [];
   let unsubscribeListings = null;
 
+  function timestampToMillis(value) {
+    if (value && typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = Date.parse(value);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
+  function formatCardDate(timestamp) {
+    if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) return "";
+    const published = new Date(timestamp);
+    const today = new Date();
+    const publishedDay = new Date(published.getFullYear(), published.getMonth(), published.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const days = Math.round((todayDay - publishedDay) / 86400000);
+    if (days === 0) return t("time.today");
+    if (days === 1) return t("time.yesterday");
+    return published.toLocaleDateString("ru-RU");
+  }
+
   function normalizeRemoteListing(doc) {
     const myUid = currentUserId();
     const isMine = !!(myUid && doc.userId === myUid);
-    const [fallbackLat, fallbackLng] = coordsForLocation(doc.city || "");
+    const location = doc.location || doc.village || doc.city || doc.address || "";
+    const [fallbackLat, fallbackLng] = coordsForLocation(location);
+    const createdAt = timestampToMillis(doc.createdAt || doc.date);
     return {
       id: doc.id,
       title: doc.title || "",
@@ -97,7 +121,7 @@
       category: doc.category || "other",
       condition: doc.condition || "Б/у",
       description: doc.description || "",
-      city: doc.city || "",
+      city: location,
       address: doc.address || "",
       phone: doc.phone || "",
       images: listingImages(doc),
@@ -107,7 +131,7 @@
       userId: doc.userId || null,
       mine: isMine,
       status: doc.status || "active",
-      createdAt: (doc.createdAt && doc.createdAt.toMillis) ? doc.createdAt.toMillis() : (doc.createdAt || Date.now()),
+      createdAt,
       views: doc.views || 0,
       lat: typeof doc.lat === "number" ? doc.lat : fallbackLat,
       lng: typeof doc.lng === "number" ? doc.lng : fallbackLng,
@@ -220,6 +244,8 @@
   function cardHTML(listing) {
     const fav = state.favorites.has(listing.id);
     const sold = listing.status === "sold";
+    const location = listing.location || listing.village || listing.city || listing.address || "";
+    const date = formatCardDate(listing.createdAt);
     return `
     <article class="card" data-id="${listing.id}" role="button" tabindex="0">
       <div class="card-photo">
@@ -233,8 +259,8 @@
         <div class="card-price">${formatPrice(listing)}</div>
         <div class="card-title">${esc(listingTitle(listing))}</div>
         <div class="card-meta">
-          <span>${esc(listing.city)}</span>
-          <span>${timeAgo(listing.createdAt)}</span>
+          ${location ? `<span>${esc(location)}</span>` : ""}
+          ${date ? `<span>${esc(date)}</span>` : ""}
         </div>
       </div>
     </article>`;

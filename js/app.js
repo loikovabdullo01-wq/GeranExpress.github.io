@@ -241,7 +241,6 @@
   function renderGrid(container, listings) {
     container.innerHTML = listings.map(cardHTML).join("");
     hydratePhotos(container);
-    initCardGalleries(container);
   }
 
   function attachGridHandlers(container) {
@@ -753,39 +752,30 @@
     </div>`;
   }
 
-  function loadGalleryImage(src) {
-    return new Promise((resolve) => {
-      const image = new Image();
-      image.onload = () => resolve(src);
-      image.onerror = () => resolve(null);
-      image.src = src;
-    });
-  }
-
-  async function openProductDetail(id) {
+  function openProductDetail(id) {
     const listing = getListing(id);
     if (!listing) return;
     listing.views = (listing.views || 0) + 1;
     const seller = getUser(listing.sellerId);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
-    const galleryImages = (await Promise.all(listingImages(listing).map(loadGalleryImage))).filter(Boolean);
+    const images = Array.isArray(listing.images) ? listing.images : (listing.images ? [listing.images] : (Array.isArray(listing.photos) ? listing.photos : [listing.photos || './assets/no-image.png']));
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
-    const galleryMarkup = galleryImages.length
-      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${galleryImages.map((src, index) => `
+    const galleryMarkup = images.length
+      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${images.map((src, index) => `
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
             <img src="${esc(src)}" alt="" decoding="async" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
         `).join("")}</div></div>
-        <div class="pd-gallery-dots">${galleryImages.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
+        <div class="pd-gallery-dots">${images.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
       : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
 
     const html = `
       ${screenHeader(t("pd.title"))}
       <div class="screen-body">
-        <div class="pd-gallery" id="pdGallery" style="${galleryImages.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
+        <div class="pd-gallery" id="pdGallery" style="${images.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
           ${galleryMarkup}
           <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" style="position:absolute;top:12px;right:12px;width:38px;height:38px;">
             <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>

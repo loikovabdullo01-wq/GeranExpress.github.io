@@ -12,6 +12,7 @@
     meProfile: "bh_me_profile",
     authed: "bh_authed",
     lang: "bh_lang",
+    location: "bh_location",
   };
 
   function loadJSON(key, fallback) {
@@ -79,12 +80,13 @@
     isAuthed: loadJSON(LS.authed, false),
     lang: loadJSON(LS.lang, null) || "ru",
     currentTab: "home",
-    filters: { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" },
+    filters: { category: "all", query: "", location: loadJSON(LS.location, null), priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
 
   function persistFavorites() { saveJSON(LS.favorites, Array.from(state.favorites)); }
   function persistChats() { saveJSON(LS.chats, state.chats); }
   function persistMeProfile() { saveJSON(LS.meProfile, state.meProfile); }
+  function persistLocation() { saveJSON(LS.location, state.filters.location); }
 
   function currentUserId() { return fbAuth && fbAuth.currentUser ? fbAuth.currentUser.uid : null; }
 
@@ -387,6 +389,7 @@
     document.getElementById("qfLocation").addEventListener("click", () =>
       openLocationSheet(state.filters.location, (loc) => {
         state.filters.location = loc;
+        persistLocation();
         updateQuickFilterUI();
         renderHomeTab();
       })
@@ -502,8 +505,9 @@
   }
 
   function renderRussiaLocationStep(currentValue, onSelect) {
+    const listings = countableListings();
     const counts = {};
-    countableListings().forEach((listing) => {
+    listings.forEach((listing) => {
       if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
     });
 
@@ -513,7 +517,13 @@
     document.getElementById("locationSheetTitle").textContent = "Россия";
 
     const list = document.getElementById("locationList");
-    list.innerHTML = FOREIGN_CITIES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
+    list.innerHTML =
+      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${listings.length}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      FOREIGN_CITIES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
     list.querySelectorAll("[data-loc]").forEach((item) => {
       item.addEventListener("click", () => {
         onSelect(item.dataset.loc || null);

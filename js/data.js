@@ -309,6 +309,105 @@ function countryOfCity(name) {
   return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
 }
 
+function normalizeCategoryKey(raw) {
+  if (!raw) return "other";
+  const str = String(raw).trim().toLowerCase();
+
+  if (str === "all" || str === "все" || str === "все категории" || str === "ҳама" || str === "alllocations") return "all";
+
+  if (
+    str === "realty" || str === "real_estate" || str === "property" ||
+    str.includes("недвижим") || str.includes("амлок") || str.includes("квартир") || str.includes("хона")
+  ) {
+    return "realty";
+  }
+
+  if (
+    str === "services" || str === "service" ||
+    str.includes("услуг") || str.includes("хизмат") || str.includes("сервис") || str.includes("таъмир") || str.includes("усто")
+  ) {
+    return "services";
+  }
+
+  if (
+    str === "electronics" || str === "electronic" ||
+    str.includes("электрон") || str.includes("гаджет") || str.includes("телефон") || str.includes("смартфон") || str.includes("ноутбук")
+  ) {
+    return "electronics";
+  }
+
+  if (
+    str === "transport" || str === "auto" || str === "car" ||
+    str.includes("транспорт") || str.includes("авто") || str.includes("машин") || str.includes("мошин")
+  ) {
+    return "transport";
+  }
+
+  if (
+    str === "home" || str === "house" ||
+    str.includes("дом") || str.includes("мебель") || str.includes("сад") || str.includes("посуда")
+  ) {
+    return "home";
+  }
+
+  if (
+    str === "fashion" || str === "clothes" || str === "clothing" ||
+    str.includes("одежд") || str.includes("обувь") || str.includes("мода") || str.includes("пошак") || str.includes("куртка")
+  ) {
+    return "fashion";
+  }
+
+  if (
+    str === "tools" || str === "tool" ||
+    str.includes("инструмент") || str.includes("оборуд") || str.includes("аппарат")
+  ) {
+    return "tools";
+  }
+
+  if (
+    str === "kids" || str === "children" ||
+    str.includes("дет") || str.includes("игрушк") || str.includes("кӯдак")
+  ) {
+    return "kids";
+  }
+
+  if (
+    str === "hobby" || str.includes("хобби") || str.includes("творчеств")
+  ) {
+    return "hobby";
+  }
+
+  if (
+    str === "sport" || str.includes("спорт") || str.includes("фитнес") || str.includes("велосипед")
+  ) {
+    return "sport";
+  }
+
+  if (
+    str === "beauty" || str.includes("красот") || str.includes("косметик") || str.includes("парфюм")
+  ) {
+    return "beauty";
+  }
+
+  if (
+    str === "books" || str === "book" || str.includes("книг") || str.includes("журнал")
+  ) {
+    return "books";
+  }
+
+  if (
+    str === "animals" || str === "pets" || str.includes("животн") || str.includes("питом") || str.includes("ҳайвон")
+  ) {
+    return "animals";
+  }
+
+  if (typeof CATEGORIES !== "undefined" && CATEGORIES.some((c) => c.id === str)) {
+    return str;
+  }
+
+  return "other";
+}
+
 function formatPrice(listing) {
   if (typeof listing === "number") return listing.toLocaleString("ru-RU") + " c.";
   if (!listing) return "0 c.";

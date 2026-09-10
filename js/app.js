@@ -156,7 +156,7 @@
       currency: currency,
       priceText: doc.priceText || null,
       isVip: !!doc.isVip,
-      category: doc.category || "other",
+      category: normalizeCategoryKey(doc.category || "other"),
       condition: doc.condition || "Б/у",
       description: doc.description || doc.desc || doc.text || "",
       city: location,
@@ -184,6 +184,9 @@
     const remoteIds = new Set(remoteListings.map((l) => l.id));
     const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
     const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
+    staticFallback.forEach((l) => {
+      l.category = normalizeCategoryKey(l.category);
+    });
     state.listings = remoteListings.length ? remoteListings : staticFallback;
     console.log("[Geran] Firestore sync: " + remoteListings.length + " remote, " + staticFallback.length + " static fallback, " + state.listings.length + " shown");
     renderHomeTab();
@@ -378,14 +381,16 @@
   ];
 
   function updateQuickFilterUI() {
-    const cat = CATEGORIES.find((c) => c.id === state.filters.category) || CATEGORIES[0];
-    const isAllCats = state.filters.category === "all";
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
+    const cat = CATEGORIES.find((c) => c.id === activeCatKey) || CATEGORIES[0];
+    const isAllCats = activeCatKey === "all";
     document.getElementById("qfCategoryLabel").textContent = isAllCats ? t("qf.allCategories") : cat.name;
-    document.getElementById("qfCategoryEmo").textContent = isAllCats ? "\ud83d\udcc2" : cat.icon;
+    document.getElementById("qfCategoryEmo").textContent = isAllCats ? "📂" : cat.icon;
     document.getElementById("qfCategory").classList.toggle("active", !isAllCats);
 
-    document.getElementById("qfLocationLabel").textContent = state.filters.location || t("qf.allLocations");
-    document.getElementById("qfLocation").classList.toggle("active", !!state.filters.location);
+    const isAllLocs = !state.filters.location || state.filters.location === "all" || state.filters.location === "allLocations";
+    document.getElementById("qfLocationLabel").textContent = isAllLocs ? t("qf.allLocations") : state.filters.location;
+    document.getElementById("qfLocation").classList.toggle("active", !isAllLocs);
 
     const sort = SORT_OPTIONS.find((o) => o.id === state.filters.sort) || SORT_OPTIONS[0];
     document.getElementById("qfSortLabel").textContent = t(sort.key);
@@ -436,9 +441,10 @@
   }
 
   function openCategorySheet() {
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
     const grid = document.getElementById("categoryPickerGrid");
     grid.innerHTML = CATEGORIES.map(
-      (c) => `<div class="category-opt ${c.id === state.filters.category ? "active" : ""}" data-cat="${c.id}"><span class="emo">${c.icon}</span>${c.name}</div>`
+      (c) => `<div class="category-opt ${c.id === activeCatKey ? "active" : ""}" data-cat="${c.id}"><span class="emo">${c.icon}</span>${c.name}</div>`
     ).join("");
     grid.querySelectorAll(".category-opt").forEach((opt) => {
       opt.addEventListener("click", () => {
@@ -481,13 +487,29 @@
     document.getElementById("locationBackBtn").hidden = true;
     document.getElementById("locationSheetTitle").textContent = t("qf.location");
 
+    const totalListingsCount = countableListings().length;
+
     const list = document.getElementById("locationList");
-    list.innerHTML = LOCATION_COUNTRY_TREE.map((country) => `
-      <div class="location-item" data-country="${country.id}">
-        <span class="loc-name">${country.flag} ${esc(country.name)}</span>
-        <span class="loc-count">${counts[country.id] || 0}</span>
-        <span class="chev">&gt;</span>
-      </div>`).join("");
+    list.innerHTML =
+      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${totalListingsCount}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      LOCATION_COUNTRY_TREE.map((country) => `
+        <div class="location-item" data-country="${country.id}">
+          <span class="loc-name">${country.flag} ${esc(country.name)}</span>
+          <span class="loc-count">${counts[country.id] || 0}</span>
+          <span class="chev">&gt;</span>
+        </div>`).join("");
+
+    const allLocBtn = list.querySelector("[data-loc]");
+    if (allLocBtn) {
+      allLocBtn.addEventListener("click", () => {
+        onSelect(null);
+        closeLocationSheet();
+      });
+    }
 
     list.querySelectorAll("[data-country]").forEach((item) => {
       item.addEventListener("click", () => {
@@ -614,12 +636,21 @@
     return l && l.address ? l.city + ", " + l.address : (l ? l.city : "");
   }
 
+  function extractNumericPrice(rawPrice) {
+    if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
+    if (typeof rawPrice === "string") {
+      const num = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
+      return Number.isFinite(num) ? num : null;
+    }
+    return null;
+  }
+
   // A doc with no price, no photo AND no description is an incomplete/corrupt write, not a real
   // listing (e.g. a publish that failed halfway) — hide it from public feeds/profiles but leave it
   // visible under "My listings" so its owner can still find, fix or delete it.
   function isBrokenListing(l) {
     if (!l) return true;
-    const hasPrice = (typeof l.price === "number" && l.price > 0) || !!l.priceText;
+    const hasPrice = (typeof l.price === "number" && l.price > 0) || (typeof l.price === "string" && l.price.trim().length > 0) || !!l.priceText;
     const hasPhoto = listingImages(l).length > 0;
     const hasDesc = !!(l.description && l.description.trim());
     return !hasPrice && !hasPhoto && !hasDesc;
@@ -644,15 +675,43 @@
   function computeFilteredListings() {
     const f = state.filters;
     let list = state.listings.filter((l) => (l.status !== "sold" || l.mine) && listingImages(l).length > 0);
-    if (f.category !== "all") list = list.filter((l) => l.category === f.category);
-    if (f.location) list = list.filter((l) => l.city === f.location);
-    if (f.query.trim()) {
+
+    const filterCat = normalizeCategoryKey(f.category);
+    if (filterCat !== "all") {
+      list = list.filter((l) => normalizeCategoryKey(l.category) === filterCat);
+    }
+
+    if (f.location && f.location !== "all" && f.location !== "allLocations" && f.location !== "null" && f.location !== "undefined") {
+      const targetLoc = normalizeCity(f.location);
+      list = list.filter((l) => {
+        const itemLoc = normalizeCity(l.city);
+        return itemLoc === targetLoc || itemLoc === f.location;
+      });
+    }
+
+    if (f.query && f.query.trim()) {
       const q = f.query.trim().toLowerCase();
       list = list.filter((l) => (l.title + " " + listingTitle(l)).toLowerCase().includes(q));
     }
-    if (f.priceMin != null) list = list.filter((l) => typeof l.price === "number" && l.price >= f.priceMin);
-    if (f.priceMax != null) list = list.filter((l) => typeof l.price === "number" && l.price <= f.priceMax);
-    if (f.condition) list = list.filter((l) => l.condition.startsWith(f.condition === "Новое" ? "Новое" : "Б/у"));
+
+    if (f.priceMin != null) {
+      list = list.filter((l) => {
+        const p = extractNumericPrice(l.price);
+        return p != null && p >= f.priceMin;
+      });
+    }
+    if (f.priceMax != null) {
+      list = list.filter((l) => {
+        const p = extractNumericPrice(l.price);
+        return p != null && p <= f.priceMax;
+      });
+    }
+
+    if (f.condition) {
+      const condTarget = f.condition.startsWith("Новое") ? "Новое" : "Б/у";
+      list = list.filter((l) => String(l.condition || "").startsWith(condTarget));
+    }
+
     switch (f.sort) {
       case "all": {
         const mine = list.filter((l) => l.mine);
@@ -662,12 +721,12 @@
         list = mine.concat(vipNonMine, regularNonMine);
         break;
       }
-      case "new": list = sortWithVipPriority(list.slice(), (a, b) => b.createdAt - a.createdAt); break;
-      case "old": list = sortWithVipPriority(list.slice(), (a, b) => a.createdAt - b.createdAt); break;
-      case "cheap": list = sortWithVipPriority(list.slice(), (a, b) => (typeof a.price === "number" ? a.price : 0) - (typeof b.price === "number" ? b.price : 0)); break;
-      case "expensive": list = sortWithVipPriority(list.slice(), (a, b) => (typeof b.price === "number" ? b.price : 0) - (typeof a.price === "number" ? a.price : 0)); break;
-      case "popular": list = sortWithVipPriority(list.slice(), (a, b) => b.views - a.views); break;
-      default: list = sortWithVipPriority(list.slice(), (a, b) => b.createdAt - a.createdAt);
+      case "new": list = sortWithVipPriority(list.slice(), (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
+      case "old": list = sortWithVipPriority(list.slice(), (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
+      case "cheap": list = sortWithVipPriority(list.slice(), (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
+      case "expensive": list = sortWithVipPriority(list.slice(), (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
+      case "popular": list = sortWithVipPriority(list.slice(), (a, b) => (b.views || 0) - (a.views || 0)); break;
+      default: list = sortWithVipPriority(list.slice(), (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     }
     return list;
   }
@@ -680,9 +739,11 @@
     document.getElementById("homeEmpty").hidden = list.length !== 0;
     grid.style.display = list.length ? "grid" : "none";
     document.getElementById("homeResultsCount").textContent = list.length ? list.length + " " + t("home.count") : "";
-    const cat = CATEGORIES.find((c) => c.id === state.filters.category);
+
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
+    const cat = CATEGORIES.find((c) => c.id === activeCatKey) || CATEGORIES[0];
     document.getElementById("homeResultsTitle").textContent =
-      state.filters.category === "all" ? t("home.all") : cat.name;
+      activeCatKey === "all" ? t("home.all") : cat.name;
 
     const hasActiveFilters = state.filters.priceMin != null || state.filters.priceMax != null || state.filters.condition || state.filters.sort !== "all";
     document.getElementById("openFilterBtn").classList.toggle("has-active", hasActiveFilters);

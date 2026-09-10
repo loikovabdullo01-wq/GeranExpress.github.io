@@ -843,6 +843,17 @@
     );
   }
 
+  function isUserAdmin() {
+    const me = getUser("me");
+    if (!me) return false;
+    if (me.isAdmin === true) return true;
+    if (state.meProfile && state.meProfile.isAdmin === true) return true;
+    if (fbAuth && fbAuth.currentUser) {
+      if (fbAuth.currentUser.isAdmin === true) return true;
+    }
+    return false;
+  }
+
   function renderProfileTab() {
     const me = getUser("me");
     const av = document.getElementById("profileAvatar");
@@ -864,6 +875,13 @@
     document.getElementById("statListings").textContent = mine.filter((l) => l.status !== "sold").length;
     document.getElementById("statSold").textContent = mine.filter((l) => l.status === "sold").length;
     document.getElementById("statFavorites").textContent = state.favorites.size;
+
+    const bannersBtn = document.getElementById("openBannersBtn");
+    if (bannersBtn) {
+      const isAdmin = isUserAdmin();
+      bannersBtn.hidden = !isAdmin;
+      bannersBtn.style.display = isAdmin ? "flex" : "none";
+    }
   }
 
   function starString(rating) {
@@ -1956,6 +1974,11 @@
   }
 
   function openAdminBannersModal() {
+    if (!isUserAdmin()) {
+      showToast("Доступ запрещен: требуется статус администратора");
+      return;
+    }
+
     const banners = [...(state.customBanners || ["", "", "", ""])];
     while (banners.length < 4) banners.push("");
 

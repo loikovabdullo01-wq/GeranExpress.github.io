@@ -79,7 +79,7 @@
     meProfile: loadJSON(LS.meProfile, {}),
     isAuthed: loadJSON(LS.authed, false),
     lang: loadJSON(LS.lang, null) || "ru",
-    customBanners: ["", "", "", ""],
+    customBanners: null,
     currentTab: "home",
     filters: { category: "all", query: "", location: loadJSON(LS.location, null), priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
@@ -1696,8 +1696,9 @@
   }
 
   const PROMO_BANNER_IMAGES = [
-    "./assets/promo-1.jpg",
-    "./assets/promo-2.jpg",
+    "nn.png",
+    "nn.png",
+    "./assets/promo-2.png",
     "./assets/promo-3.jpg",
     "./assets/promo-4.jpg",
   ];
@@ -1714,10 +1715,18 @@
     const dotsWrap = document.getElementById("promoDots");
     if (!track) return;
 
-    const banners = state.customBanners || [];
+    if (track._autoplayTimer) {
+      clearInterval(track._autoplayTimer);
+      track._autoplayTimer = null;
+    }
+
+    track.innerHTML = "";
+    if (dotsWrap) dotsWrap.innerHTML = "";
+
+    const customList = Array.isArray(state.customBanners) ? state.customBanners : null;
 
     track.innerHTML = PROMO_SLIDES.map((s, i) => {
-      const customImg = banners[i] || "";
+      const customImg = (customList && customList[i]) ? customList[i] : "";
       const defaultImg = PROMO_BANNER_IMAGES[i] || "";
       const image = customImg || defaultImg;
 
@@ -1760,13 +1769,14 @@
       track.scrollTo({ left: idx * track.clientWidth, behavior: "smooth" });
     });
 
-    let autoplay = setInterval(next, 4500);
     function next() {
       const idx = Math.round(track.scrollLeft / track.clientWidth);
       const n = (idx + 1) % PROMO_SLIDES.length;
       track.scrollTo({ left: n * track.clientWidth, behavior: "smooth" });
     }
-    function pause() { clearInterval(autoplay); }
+    track._autoplayTimer = setInterval(next, 4500);
+
+    function pause() { if (track._autoplayTimer) clearInterval(track._autoplayTimer); }
     track.addEventListener("mousedown", pause);
     track.addEventListener("touchstart", pause, { passive: true });
   }

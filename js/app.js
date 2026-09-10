@@ -155,6 +155,10 @@
       views: doc.views || 0,
       lat: typeof doc.lat === "number" ? doc.lat : fallbackLat,
       lng: typeof doc.lng === "number" ? doc.lng : fallbackLng,
+      // real author of the listing — only present on new posts, used to show their name/avatar on the product page
+      authorName: doc.authorName || null,
+      authorAvatarPhoto: doc.authorAvatarPhoto || null,
+      authorAvatarEmoji: doc.authorAvatarEmoji || null,
     };
   }
 
@@ -826,11 +830,30 @@
     </div>`;
   }
 
+  // For listings that carry the real poster's name/avatar (new client posts), show that person
+  // in the product-page seller card instead of Geran Express — everywhere else (profile pages,
+  // location counts, grouping) still treats the listing as belonging to Geran Express.
+  function sellerCardDisplay(listing) {
+    const seller = getUser(listing.sellerId);
+    if (!listing.authorName) return seller;
+    return {
+      id: seller.id,
+      name: listing.authorName,
+      avatarImg: listing.authorAvatarPhoto || null,
+      avatar: listing.authorAvatarEmoji || "🙂",
+      verified: false,
+      rating: null,
+      reviews: null,
+      city: listing.city,
+      phone: listing.phone || seller.phone,
+    };
+  }
+
   function openProductDetail(id) {
     const listing = getListing(id);
     if (!listing) return;
     listing.views = (listing.views || 0) + 1;
-    const seller = getUser(listing.sellerId);
+    const seller = sellerCardDisplay(listing);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
     const images = Array.isArray(listing.images) ? listing.images : (listing.images ? [listing.images] : (Array.isArray(listing.photos) ? listing.photos : [listing.photos || './assets/no-image.png']));
@@ -1392,6 +1415,7 @@
           }
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+          const me = getUser("me");
           const listingData = {
             title, price, city, address, phone, description,
             category: draft.category,
@@ -1404,6 +1428,10 @@
             views: 0,
             lat: coordsForLocation(city)[0],
             lng: coordsForLocation(city)[1],
+            // who actually posted this listing — shown on the product page instead of Geran Express
+            authorName: me.name || "",
+            authorAvatarPhoto: me.avatarPhoto || null,
+            authorAvatarEmoji: me.avatarPhoto ? null : (me.avatar || null),
           };
           try {
             let newId;

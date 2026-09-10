@@ -79,6 +79,7 @@
     meProfile: loadJSON(LS.meProfile, {}),
     isAuthed: loadJSON(LS.authed, false),
     lang: loadJSON(LS.lang, null) || "ru",
+    customBanners: ["", "", "", ""],
     currentTab: "home",
     filters: { category: "all", query: "", location: loadJSON(LS.location, null), priceMin: null, priceMax: null, condition: null, sort: "all" },
   };
@@ -119,8 +120,11 @@
   // catalog items with no fixed price) missing/0 with a human priceText like "Договорная".
   function parseRemotePrice(rawPrice) {
     if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
-    const parsed = parseFloat(String(rawPrice == null ? "" : rawPrice).replace(/[^\d.]/g, ""));
-    return Number.isFinite(parsed) ? parsed : 0;
+    if (typeof rawPrice === "string" && rawPrice.trim()) {
+      const parsed = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
+      return Number.isFinite(parsed) ? rawPrice.trim() : rawPrice.trim();
+    }
+    return 0;
   }
 
   function normalizeRemoteListing(doc) {
@@ -133,11 +137,25 @@
     // legacy docs may use different key names, or may be missing a timestamp entirely —
     // fall back through alternates and, as a last resort, "now" so dates never go haywire
     const createdAt = timestampToMillis(doc.createdAt || doc.date || doc.publishedAt || doc.timestamp || doc.created) ?? Date.now();
+
+    let currency = doc.currency || null;
+    if (!currency) {
+      if (doc.priceText && (doc.priceText.includes("c.") || doc.priceText.includes("сомон") || doc.priceText.includes("TJS"))) {
+        currency = "TJS";
+      } else if (doc.priceText && (doc.priceText.includes("р") || doc.priceText.includes("руб") || doc.priceText.includes("RUB"))) {
+        currency = "RUB";
+      } else {
+        currency = countryOfCity(location) === "ru" ? "RUB" : "TJS";
+      }
+    }
+
     return {
       id: doc.id,
       title: doc.title || "",
-      price: parseRemotePrice(doc.price != null ? doc.price : (doc.cost != null ? doc.cost : doc.amount)),
+      price: doc.price != null ? doc.price : (doc.cost != null ? doc.cost : (doc.amount != null ? doc.amount : 0)),
+      currency: currency,
       priceText: doc.priceText || null,
+      isVip: !!doc.isVip,
       category: doc.category || "other",
       condition: doc.condition || "Б/у",
       description: doc.description || doc.desc || doc.text || "",
@@ -184,6 +202,15 @@
       () => showToast(t("form.syncFailed") || "Sync error")
     );
     if (unsubscribeListings) console.info("[Geran] Listening for real-time listing updates from Firestore.");
+  }
+
+  let unsubscribeBanners = null;
+  function startBannersSync() {
+    if (unsubscribeBanners || typeof subscribeToBanners !== "function" || !FIREBASE_READY) return;
+    unsubscribeBanners = subscribeToBanners((list) => {
+      state.customBanners = Array.isArray(list) ? list : [];
+      initPromoBanner();
+    });
   }
 
   function getUser(id) {
@@ -268,12 +295,14 @@
   function cardHTML(listing) {
     const fav = state.favorites.has(listing.id);
     const sold = listing.status === "sold";
+    const isVip = !!listing.isVip;
     const location = listing.location || listing.village || listing.city || listing.address || "";
     const date = formatCardDate(listing.createdAt);
     return `
-    <article class="card" data-id="${listing.id}" role="button" tabindex="0">
+    <article class="card ${isVip ? "card-vip" : ""}" data-id="${listing.id}" role="button" tabindex="0">
       <div class="card-photo">
         ${cardPhotoInner(listing)}
+        ${isVip ? `<div class="badge-vip"><span>VIP</span></div>` : ""}
         ${sold ? `<div class="badge-sold"><span>${t("pd.sold")}</span></div>` : ""}
         <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" aria-label="${t('fav.add')}">
           <svg viewBox="0 0 24 24"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
@@ -602,6 +631,16 @@
     return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
   }
 
+  function sortWithVipPriority(arr, compareFn) {
+    const vip = arr.filter((l) => l.isVip);
+    const nonVip = arr.filter((l) => !l.isVip);
+    if (compareFn) {
+      vip.sort(compareFn);
+      nonVip.sort(compareFn);
+    }
+    return vip.concat(nonVip);
+  }
+
   function computeFilteredListings() {
     const f = state.filters;
     let list = state.listings.filter((l) => (l.status !== "sold" || l.mine) && listingImages(l).length > 0);
@@ -611,22 +650,24 @@
       const q = f.query.trim().toLowerCase();
       list = list.filter((l) => (l.title + " " + listingTitle(l)).toLowerCase().includes(q));
     }
-    if (f.priceMin != null) list = list.filter((l) => l.price >= f.priceMin);
-    if (f.priceMax != null) list = list.filter((l) => l.price <= f.priceMax);
+    if (f.priceMin != null) list = list.filter((l) => typeof l.price === "number" && l.price >= f.priceMin);
+    if (f.priceMax != null) list = list.filter((l) => typeof l.price === "number" && l.price <= f.priceMax);
     if (f.condition) list = list.filter((l) => l.condition.startsWith(f.condition === "Новое" ? "Новое" : "Б/у"));
     switch (f.sort) {
       case "all": {
         const mine = list.filter((l) => l.mine);
-        const rest = shuffleForSession(list.filter((l) => !l.mine));
-        list = mine.concat(rest);
+        const nonMine = list.filter((l) => !l.mine);
+        const vipNonMine = nonMine.filter((l) => l.isVip);
+        const regularNonMine = shuffleForSession(nonMine.filter((l) => !l.isVip));
+        list = mine.concat(vipNonMine, regularNonMine);
         break;
       }
-      case "new": list = list.slice().sort((a, b) => b.createdAt - a.createdAt); break;
-      case "old": list = list.slice().sort((a, b) => a.createdAt - b.createdAt); break;
-      case "cheap": list = list.slice().sort((a, b) => a.price - b.price); break;
-      case "expensive": list = list.slice().sort((a, b) => b.price - a.price); break;
-      case "popular": list = list.slice().sort((a, b) => b.views - a.views); break;
-      default: list = list.slice().sort((a, b) => b.createdAt - a.createdAt);
+      case "new": list = sortWithVipPriority(list.slice(), (a, b) => b.createdAt - a.createdAt); break;
+      case "old": list = sortWithVipPriority(list.slice(), (a, b) => a.createdAt - b.createdAt); break;
+      case "cheap": list = sortWithVipPriority(list.slice(), (a, b) => (typeof a.price === "number" ? a.price : 0) - (typeof b.price === "number" ? b.price : 0)); break;
+      case "expensive": list = sortWithVipPriority(list.slice(), (a, b) => (typeof b.price === "number" ? b.price : 0) - (typeof a.price === "number" ? a.price : 0)); break;
+      case "popular": list = sortWithVipPriority(list.slice(), (a, b) => b.views - a.views); break;
+      default: list = sortWithVipPriority(list.slice(), (a, b) => b.createdAt - a.createdAt);
     }
     return list;
   }
@@ -1180,10 +1221,15 @@
 
   function openAddEditForm(existing) {
     const isEdit = !!existing;
+    const initialCity = isEdit ? existing.city : (getUser("me").city || "Душанбе");
+    const initialCountry = countryOfCity(initialCity);
+    const defaultCurrency = initialCountry === "ru" ? "RUB" : "TJS";
+    const initialCurrency = isEdit ? (existing.currency || defaultCurrency) : defaultCurrency;
+
     const draft = isEdit
-      ? { ...existing, photos: listingImages(existing) }
-      : { title: "", price: "", category: "electronics", condition: "Новое", description: "",
-          city: getUser("me").city, address: "", phone: getUser("me").phone || "", photos: [] };
+      ? { ...existing, photos: listingImages(existing), currency: initialCurrency }
+      : { title: "", price: "", currency: initialCurrency, category: "electronics", condition: "Новое", description: "",
+          city: initialCity, address: "", phone: getUser("me").phone || "", photos: [] };
 
     const catOptions = CATEGORIES.filter((c) => c.id !== "all");
 
@@ -1211,7 +1257,27 @@
 
         <div class="form-group">
           <label>${t("form.price")}</label>
-          <input class="form-input" id="fPrice" type="number" inputmode="numeric" placeholder="0" value="${esc(draft.price)}" />
+          <div style="display:flex; gap:8px;">
+            <input class="form-input" id="fPrice" type="text" placeholder="Укажите цену" value="${esc(draft.price)}" style="flex:1;" />
+            <select class="form-input" id="fCurrency" style="width:135px; padding:0 8px; font-size:13.5px;">
+              ${CURRENCIES.map((c) => `<option value="${c.code}" ${c.code === (draft.currency || defaultCurrency) ? "selected" : ""}>${esc(c.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; cursor:pointer; user-select:none;">
+              <input type="checkbox" id="fFreeCheck" ${draft.price === "Бесплатно" ? "checked" : ""} style="width:18px; height:18px; accent-color:var(--accent);" />
+              <span>🎁 Отдам даром / Бесплатно</span>
+            </label>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; cursor:pointer; user-select:none; background:rgba(255,215,0,0.12); padding:8px 10px; border-radius:var(--radius-sm); border:1px solid rgba(218,165,32,0.4);">
+              <input type="checkbox" id="fVipCheck" ${draft.isVip ? "checked" : ""} style="width:18px; height:18px; accent-color:#e6a100;" />
+              <span>⭐ Включить VIP-размещение</span>
+            </label>
+            <div id="fVipInfo" style="display:${draft.isVip ? "block" : "none"}; font-size:12px; color:var(--text-dim); background:var(--surface-2); padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+              💡 <strong>Стоимость VIP-размещения:</strong> 50 сомони (для Таджикистана) или 500 рублей (для России).<br/>
+              <em>Объявление появится в топе с рамкой VIP. Оплата после публикации.</em>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -1317,11 +1383,51 @@
         photoInput.value = "";
       });
 
+      const priceInput = el.querySelector("#fPrice");
+      const freeCheck = el.querySelector("#fFreeCheck");
+      const vipCheck = el.querySelector("#fVipCheck");
+      const vipInfo = el.querySelector("#fVipInfo");
+
+      if (freeCheck) {
+        freeCheck.addEventListener("change", () => {
+          if (freeCheck.checked) {
+            priceInput.value = "Бесплатно";
+            priceInput.disabled = true;
+          } else {
+            if (priceInput.value === "Бесплатно") priceInput.value = "";
+            priceInput.disabled = false;
+          }
+        });
+        if (freeCheck.checked) priceInput.disabled = true;
+      }
+
+      if (vipCheck) {
+        vipCheck.addEventListener("change", () => {
+          vipInfo.style.display = vipCheck.checked ? "block" : "none";
+        });
+      }
+
+      const currencySelect = el.querySelector("#fCurrency");
+      if (currencySelect) {
+        if (isEdit && existing && existing.currency) currencySelect.dataset.userModified = "true";
+        currencySelect.addEventListener("change", () => {
+          currencySelect.dataset.userModified = "true";
+          draft.currency = currencySelect.value;
+        });
+      }
+
       el.querySelector("#fCityBtn").addEventListener("click", () =>
         openLocationSheet(draft.city, (loc) => {
           if (!loc) return;
           draft.city = loc;
           el.querySelector("#fCityLabel").textContent = loc;
+
+          if (currencySelect && currencySelect.dataset.userModified !== "true") {
+            const locCountry = countryOfCity(loc);
+            const newDefaultCurrency = locCountry === "ru" ? "RUB" : "TJS";
+            currencySelect.value = newDefaultCurrency;
+            draft.currency = newDefaultCurrency;
+          }
         })
       );
 
@@ -1341,14 +1447,18 @@
 
       el.querySelector("#submitListingBtn").addEventListener("click", async () => {
         const title = el.querySelector("#fTitle").value.trim();
-        const price = Number(el.querySelector("#fPrice").value);
+        const rawPriceVal = el.querySelector("#fPrice").value.trim();
+        const parsedNum = parseFloat(rawPriceVal.replace(/[^\d.]/g, ""));
+        const price = (!rawPriceVal || isNaN(parsedNum)) ? (rawPriceVal || "Договорная") : parsedNum;
+        const currency = el.querySelector("#fCurrency").value || "RUB";
+        const isVip = !!(el.querySelector("#fVipCheck") && el.querySelector("#fVipCheck").checked);
         const city = draft.city || getUser("me").city;
         const phone = el.querySelector("#fPhone").value.trim();
         const address = el.querySelector("#fAddress").value.trim();
         const description = el.querySelector("#fDesc").value.trim();
 
         if (!title) { showToast(t("form.needName")); el.querySelector("#fTitle").focus(); return; }
-        if (!price || price <= 0) { showToast(t("form.needPrice")); el.querySelector("#fPrice").focus(); return; }
+        if (price === "" || price == null) { showToast(t("form.needPrice")); el.querySelector("#fPrice").focus(); return; }
         if (!description) { showToast(t("form.needDesc")); el.querySelector("#fDesc").focus(); return; }
         if (!phone || phone.replace(/\D/g, "").length < 9) { showToast(t("form.needPhone")); el.querySelector("#fPhone").focus(); return; }
 
@@ -1378,15 +1488,26 @@
         }
         draft.photos = uploadedPhotos;
 
-        // last-resort sanity check — never let a listing reach Firestore with a lost/zeroed price
-        if (!price || price <= 0 || !Number.isFinite(price)) {
-          console.error("[Geran] Aborting publish: price became invalid before write:", price);
+        // last-resort sanity check
+        if (price === "" || price == null) {
+          console.error("[Geran] Aborting publish: price empty before write:", price);
           showToast(t("form.needPrice"));
           submitBtn.disabled = false;
           return;
         }
 
-        const uidNow = currentUserId();
+        submitBtn.disabled = true;
+
+        let uidNow = currentUserId();
+        if (FIREBASE_READY && typeof ensureFirebaseAuth === "function") {
+          try {
+            const authedUser = await ensureFirebaseAuth();
+            if (authedUser) uidNow = authedUser.uid;
+          } catch (err) {
+            console.error("[Geran] Auth check failed:", err);
+          }
+        }
+
         if (FIREBASE_READY && !uidNow) {
           console.error("[Geran] Ошибка: Пользователь не авторизован!");
           showToast(t("form.needAuth"));
@@ -1395,11 +1516,10 @@
         }
 
         const cat = CATEGORIES.find((c) => c.id === draft.category) || CATEGORIES[1];
-        submitBtn.disabled = true;
 
         if (isEdit) {
           const [eLat, eLng] = coordsForLocation(city);
-          const patch = { title, price, city, address, phone, description, category: draft.category, condition: draft.condition, images: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
+          const patch = { title, price, currency, isVip, city, address, phone, description, category: draft.category, condition: draft.condition, images: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
           Object.assign(existing, patch);
           try {
             if (FIREBASE_READY) {
@@ -1417,7 +1537,7 @@
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
           const me = getUser("me");
           const listingData = {
-            title, price, city, address, phone, description,
+            title, price, currency, isVip, city, address, phone, description,
             category: draft.category,
             condition: draft.condition,
             images: draft.photos,
@@ -1594,14 +1714,20 @@
     const dotsWrap = document.getElementById("promoDots");
     if (!track) return;
 
+    const banners = state.customBanners || [];
+
     track.innerHTML = PROMO_SLIDES.map((s, i) => {
-      const image = PROMO_BANNER_IMAGES[i] || "";
+      const customImg = banners[i] || "";
+      const defaultImg = PROMO_BANNER_IMAGES[i] || "";
+      const image = customImg || defaultImg;
+
       const backgroundStyle = image
-        ? `background-image: linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}), url('${esc(image)}'); background-size: cover; background-position: center; background-repeat: no-repeat;`
+        ? `background-image: ${customImg ? "" : `linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}), `}url('${esc(image)}'); background-size: cover; background-position: center; background-repeat: no-repeat;`
         : `background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});`;
+
       return `<div class="promo-slide" style="${backgroundStyle}">
-        <div class="promo-slide-text"><div class="promo-slide-title">${esc(t(s.key + ".t"))}</div><div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div></div>
-        <span class="promo-slide-emo">${s.emo}</span>
+        ${!customImg ? `<div class="promo-slide-text"><div class="promo-slide-title">${esc(t(s.key + ".t"))}</div><div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div></div>
+        <span class="promo-slide-emo">${s.emo}</span>` : ''}
       </div>`;
     }).join("");
     dotsWrap.innerHTML = PROMO_SLIDES.map((_, i) => `<span class="promo-dot ${i === 0 ? "active" : ""}"></span>`).join("");
@@ -1732,6 +1858,89 @@
       };
       el.querySelector("#editorSaveBtn").addEventListener("click", save);
       input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+    });
+  }
+
+  function openAdminBannersModal() {
+    const banners = [...(state.customBanners || ["", "", "", ""])];
+    while (banners.length < 4) banners.push("");
+
+    const html = `
+      ${screenHeader("Управление баннерами (4 шт.)")}
+      <div class="screen-body">
+        <div style="background:var(--surface-2); padding:12px; border-radius:var(--radius-md); font-size:13px; line-height:1.4; margin-bottom:16px;">
+          <strong>📏 Размеры баннеров:</strong><br/>
+          Рекомендуемый единый размер: <strong>1200 × 400 px</strong> (соотношение 3:1).<br/>
+          Также подходят 800 × 400 px и 600 × 600 px.
+        </div>
+        ${[0, 1, 2, 3].map((i) => `
+          <div class="form-group" style="border:1px solid var(--border); padding:12px; border-radius:var(--radius-md); margin-bottom:12px;">
+            <label style="font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+              Баннер #${i + 1}
+              ${banners[i] ? `<button type="button" class="btn btn-sm btn-danger" data-remove-banner="${i}" style="padding:4px 8px; font-size:11px;">Удалить</button>` : ""}
+            </label>
+            <div id="bannerPreview_${i}" style="margin-top:8px; height:80px; border-radius:var(--radius-sm); background:var(--surface-2); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--border);">
+              ${banners[i] ? `<img src="${banners[i]}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`}
+            </div>
+            <input type="file" id="bannerInput_${i}" accept="image/*" hidden />
+            <button type="button" class="btn btn-sm btn-secondary btn-block" id="uploadBannerBtn_${i}" style="margin-top:8px; font-size:12px;">
+              ${banners[i] ? "Заменить фото" : "+ Загрузить фото баннера"}
+            </button>
+          </div>
+        `).join("")}
+        <button class="btn btn-primary btn-block" id="saveBannersBtn" style="margin-top:12px;">Сохранить баннеры</button>
+      </div>
+    `;
+
+    pushScreen(html, (el) => {
+      [0, 1, 2, 3].forEach((i) => {
+        const input = el.querySelector(`#bannerInput_${i}`);
+        const uploadBtn = el.querySelector(`#uploadBannerBtn_${i}`);
+        const preview = el.querySelector(`#bannerPreview_${i}`);
+
+        if (uploadBtn) uploadBtn.addEventListener("click", () => input.click());
+
+        if (input) input.addEventListener("change", async () => {
+          const file = input.files[0];
+          if (!file) return;
+          showToast("Загрузка фото баннера...");
+          uploadBtn.disabled = true;
+          const url = await uploadToImgBB(file);
+          uploadBtn.disabled = false;
+          if (url) {
+            banners[i] = url;
+            preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" />`;
+            showToast(`Баннер #${i + 1} загружен!`);
+          } else {
+            showToast("Ошибка загрузки фото");
+          }
+        });
+
+        const removeBtn = el.querySelector(`[data-remove-banner="${i}"]`);
+        if (removeBtn) removeBtn.addEventListener("click", () => {
+          banners[i] = "";
+          preview.innerHTML = `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`;
+          removeBtn.remove();
+        });
+      });
+
+      const saveBtn = el.querySelector("#saveBannersBtn");
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true;
+        try {
+          if (FIREBASE_READY && typeof saveBannersToFirestore === "function") {
+            await saveBannersToFirestore(banners);
+          }
+          state.customBanners = banners;
+          initPromoBanner();
+          showToast("Баннеры успешно сохранены! 🎉");
+          popScreen();
+        } catch (e) {
+          console.error("[Geran] Failed to save banners:", e);
+          showToast("Не удалось сохранить баннеры");
+          saveBtn.disabled = false;
+        }
+      });
     });
   }
 
@@ -2180,7 +2389,10 @@
     });
   }
 
-  function requireAuth(onDone) {
+  async function requireAuth(onDone) {
+    if (FIREBASE_READY && typeof ensureFirebaseAuth === "function") {
+      await ensureFirebaseAuth().catch(() => {});
+    }
     if (state.isAuthed) { onDone(); return; }
     showAuthScreen(onDone);
   }
@@ -2438,6 +2650,7 @@
     document.getElementById("confirmLogoutBtn").addEventListener("click", doLogout);
     document.getElementById("logoutOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLogoutSheet(); });
     document.getElementById("openLangBtn").addEventListener("click", openLanguageSheet);
+    document.getElementById("openBannersBtn")?.addEventListener("click", openAdminBannersModal);
     document.getElementById("closeLangBtn").addEventListener("click", closeLanguageSheet);
     document.getElementById("langOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLanguageSheet(); });
     document.getElementById("editAvatarBtn").addEventListener("click", openAvatarEditor);
@@ -2574,6 +2787,7 @@
     initPullToRefresh();
     syncHeaderHeight();
     startListingsSync();
+    if (typeof startBannersSync === "function") startBannersSync();
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);

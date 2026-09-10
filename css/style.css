@@ -578,6 +578,19 @@ svg[fill]{ stroke:none; }
   letter-spacing:.3px;
 }
 
+.card.card-vip{
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.22) !important;
+}
+.badge-vip{
+  position: absolute; top: 8px; left: 8px; z-index: 2;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #111; font-weight: 900; font-size: 11px;
+  padding: 3px 8px; border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  letter-spacing: .5px; text-transform: uppercase;
+}
+
 .card-body{ padding: 10px 11px 12px; }
 .card-price{ font-weight:800; font-size:15.5px; letter-spacing:-.2px; }
 .card-title{

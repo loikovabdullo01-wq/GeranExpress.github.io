@@ -280,10 +280,66 @@ MOCK_LISTINGS.forEach((l) => {
 
 const MOCK_REVIEWS = buildReviews();
 
+const CURRENCIES = [
+  { code: "RUB", symbol: "₽", name: "Российский рубль (₽)" },
+  { code: "TJS", symbol: "c.", name: "Таджикский сомони (с.)" },
+  { code: "KZT", symbol: "₸", name: "Казахстанский тенге (₸)" },
+  { code: "UZS", symbol: "сум", name: "Узбекский сум (сум)" },
+  { code: "KGS", symbol: "сом", name: "Кыргызский сом (сом)" },
+  { code: "BYN", symbol: "Br", name: "Белорусский рубль (Br)" },
+  { code: "AMD", symbol: "֏", name: "Армянский драм (֏)" },
+  { code: "AZN", symbol: "₼", name: "Азербайджанский манат (₼)" },
+  { code: "MDL", symbol: "L", name: "Молдавский лей (L)" },
+];
+
+const CURRENCY_MAP = {
+  RUB: "₽",
+  TJS: "c.",
+  KZT: "₸",
+  UZS: "сум",
+  KGS: "сом",
+  BYN: "Br",
+  AMD: "֏",
+  AZN: "₼",
+  MDL: "L",
+};
+
+function countryOfCity(name) {
+  if (typeof FOREIGN_CITIES === "undefined") return "tj";
+  return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
+}
+
 function formatPrice(listing) {
-  if (typeof listing === "number") return listing.toLocaleString("ru-RU") + " " + t("currency");
-  if (listing && listing.priceText) return listing.priceText;
-  return listing.price.toLocaleString("ru-RU") + " " + t("currency");
+  if (typeof listing === "number") return listing.toLocaleString("ru-RU") + " c.";
+  if (!listing) return "0 c.";
+  if (listing.priceText && (listing.price == null || listing.price === 0)) return listing.priceText;
+
+  const rawPrice = listing.price != null ? listing.price : (listing.cost != null ? listing.cost : listing.amount);
+
+  // If price is a string that contains non-digits (e.g. "Договорная", "Обмен", "Бесплатно")
+  if (typeof rawPrice === "string") {
+    const trimmed = rawPrice.trim();
+    if (!trimmed) return "0 c.";
+    const hasOnlyDigits = /^[\d\s.,]+$/.test(trimmed);
+    if (!hasOnlyDigits) {
+      return trimmed;
+    }
+  }
+
+  const num = typeof rawPrice === "number" ? rawPrice : parseFloat(String(rawPrice || 0).replace(/[^\d.]/g, "")) || 0;
+
+  let code = listing.currency;
+  if (!code) {
+    if (listing.priceText && (listing.priceText.includes("c.") || listing.priceText.includes("сомон") || listing.priceText.includes("TJS"))) {
+      code = "TJS";
+    } else if (listing.priceText && (listing.priceText.includes("р") || listing.priceText.includes("руб") || listing.priceText.includes("RUB"))) {
+      code = "RUB";
+    } else {
+      code = countryOfCity(listing.city) === "ru" ? "RUB" : "TJS";
+    }
+  }
+  const symbol = CURRENCY_MAP[code] || code || "c.";
+  return num.toLocaleString("ru-RU") + " " + symbol;
 }
 
 function timeAgo(ts) {

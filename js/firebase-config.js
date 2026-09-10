@@ -88,6 +88,47 @@ let FIREBASE_READY = false;
 
 const LISTINGS_COLLECTION = "listings";
 const DONATIONS_COLLECTION = "donations";
+const SETTINGS_COLLECTION = "settings";
+
+// Ensures Firebase Auth currentUser is active and non-null before database writes.
+async function ensureFirebaseAuth() {
+  if (!FIREBASE_READY || !fbAuth) return null;
+  if (fbAuth.currentUser) return fbAuth.currentUser;
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    const finish = (user) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(user || null);
+    };
+
+    const unsubscribe = fbAuth.onAuthStateChanged((user) => {
+      unsubscribe();
+      if (user) {
+        finish(user);
+      } else {
+        fbAuth.signInAnonymously()
+          .then((cred) => finish(cred.user))
+          .catch((err) => {
+            console.error("[Firebase] Auto auth restore failed:", err);
+            finish(null);
+          });
+      }
+    });
+
+    setTimeout(() => {
+      if (!resolved) {
+        if (fbAuth.currentUser) finish(fbAuth.currentUser);
+        else {
+          fbAuth.signInAnonymously()
+            .then((cred) => finish(cred.user))
+            .catch(() => finish(null));
+        }
+      }
+    }, 1500);
+  });
+}
 
 // Live-syncs the "listings" collection; calls onChange(docsArray) on every update.
 // Returns an unsubscribe function, or null if Firestore isn't available.
@@ -104,33 +145,63 @@ function subscribeToListings(onChange, onError) {
 
 // Creates a new listing doc with an auto-generated id and a server-side timestamp
 // (rules require data.userId === auth.uid to create). Returns the new doc reference.
-function addListingToFirestore(listingData) {
+async function addListingToFirestore(listingData) {
   if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
+  const user = await ensureFirebaseAuth();
+  if (!user) throw new Error("Пользователь не авторизован");
   const now = firebase.firestore.FieldValue.serverTimestamp();
-  return fbDb.collection(LISTINGS_COLLECTION).add({
+  const dataToSend = {
     ...listingData,
+    userId: user.uid,
     date: now,
     createdAt: now,
     updatedAt: now,
-  }).then((docRef) => {
+  };
+  return fbDb.collection(LISTINGS_COLLECTION).add(dataToSend).then((docRef) => {
     console.info("[Firestore] Listing created:", docRef.id);
     return docRef;
   }).catch((e) => { console.error("[Firestore] Failed to create listing:", e); throw e; });
 }
 
 // Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).
-function updateListingInFirestore(id, patch) {
+async function updateListingInFirestore(id, patch) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  await ensureFirebaseAuth();
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(
     { ...patch, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
     { merge: true }
   ).catch((e) => { console.error("[Firestore] Failed to update listing " + id + ":", e); throw e; });
 }
 
-function deleteListingFromFirestore(id) {
+async function deleteListingFromFirestore(id) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  await ensureFirebaseAuth();
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
     .catch((e) => { console.error("[Firestore] Failed to delete listing " + id + ":", e); });
+}
+
+function subscribeToBanners(onChange) {
+  if (!FIREBASE_READY || !fbDb) return null;
+  return fbDb.collection(SETTINGS_COLLECTION).doc("banners").onSnapshot(
+    (snap) => {
+      if (snap.exists) {
+        const data = snap.data();
+        onChange(Array.isArray(data.list) ? data.list : []);
+      } else {
+        onChange([]);
+      }
+    },
+    (err) => console.error("[Firestore] Banners subscription failed:", err)
+  );
+}
+
+async function saveBannersToFirestore(bannersArray) {
+  if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
+  await ensureFirebaseAuth();
+  return fbDb.collection(SETTINGS_COLLECTION).doc("banners").set({
+    list: bannersArray,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
 }
 
 function saveSponsorDonation(payload) {

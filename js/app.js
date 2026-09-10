@@ -124,7 +124,9 @@
   function normalizeRemoteListing(doc) {
     const myUid = currentUserId();
     const isMine = !!(myUid && doc.userId === myUid);
-    const location = doc.location || doc.village || doc.city || doc.address || "";
+    // canonicalize spelling/alias variants (e.g. "Город Казань" -> "Казань, Россия") so location
+    // counts and grouping match the same city keys used everywhere else in the app
+    const location = normalizeCity(doc.location || doc.village || doc.city || doc.address || "");
     const [fallbackLat, fallbackLng] = coordsForLocation(location);
     // legacy docs may use different key names, or may be missing a timestamp entirely —
     // fall back through alternates and, as a last resort, "now" so dates never go haywire
@@ -433,7 +435,7 @@
 
   function renderLocationCountryStep(currentValue, onSelect) {
     const counts = {};
-    state.listings.forEach((listing) => {
+    countableListings().forEach((listing) => {
       if (listing.city) {
         const countryId = countryOfCity(listing.city);
         counts[countryId] = (counts[countryId] || 0) + 1;
@@ -460,8 +462,9 @@
   }
 
   function renderTajikistanLocationStep(currentValue, onSelect) {
+    const listings = countableListings();
     const counts = {};
-    state.listings.forEach((listing) => {
+    listings.forEach((listing) => {
       if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
     });
 
@@ -478,7 +481,7 @@
     list.innerHTML =
       `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
         <span class="loc-name">${t("qf.allLocations")}</span>
-        <span class="loc-count">${state.listings.length}</span>
+        <span class="loc-count">${listings.length}</span>
         <span class="check">\u2713</span>
       </div>` +
       `<div class="location-group-label">${majorCities.label}</div>` +
@@ -500,7 +503,7 @@
 
   function renderRussiaLocationStep(currentValue, onSelect) {
     const counts = {};
-    state.listings.forEach((listing) => {
+    countableListings().forEach((listing) => {
       if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
     });
 
@@ -521,7 +524,7 @@
 
   function renderChaykhunVillageStep(currentValue, onSelect) {
     const counts = {};
-    state.listings.forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
+    countableListings().forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
 
     const backBtn = document.getElementById("locationBackBtn");
     backBtn.hidden = false;
@@ -577,6 +580,12 @@
     const hasPhoto = listingImages(l).length > 0;
     const hasDesc = !!(l.description && l.description.trim());
     return !hasPrice && !hasPhoto && !hasDesc;
+  }
+
+  // Real, currently-visible listings for location counts — sold and broken/ghost docs are excluded
+  // so the numbers on the location picker match what people actually see on the site.
+  function countableListings() {
+    return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
   }
 
   function computeFilteredListings() {

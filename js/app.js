@@ -1519,7 +1519,22 @@
 
         if (isEdit) {
           const [eLat, eLng] = coordsForLocation(city);
-          const patch = { title, price, currency, isVip, city, address, phone, description, category: draft.category, condition: draft.condition, images: draft.photos, icon: cat.icon, lat: eLat, lng: eLng };
+          const patch = {
+            title: title || "",
+            price: price !== undefined && price !== null ? price : "Договорная",
+            currency: currency || "RUB",
+            isVip: !!isVip,
+            city: city || "",
+            address: address || "",
+            phone: phone || "",
+            description: description || "",
+            category: draft.category || "electronics",
+            condition: draft.condition || "Новое",
+            images: Array.isArray(draft.photos) ? draft.photos : [],
+            icon: cat ? cat.icon : "🏷️",
+            lat: typeof eLat === "number" ? eLat : 0,
+            lng: typeof eLng === "number" ? eLng : 0,
+          };
           Object.assign(existing, patch);
           try {
             if (FIREBASE_READY) {
@@ -1528,6 +1543,7 @@
             }
             showToast(t("form.saved"));
           } catch (e) {
+            console.error("Ошибка Firestore:", e);
             console.error("[Geran] Failed to update listing in Firestore:", existing.id, e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
@@ -1535,20 +1551,26 @@
           }
         } else {
           const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
-          const me = getUser("me");
+          const me = getUser("me") || {};
           const listingData = {
-            title, price, currency, isVip, city, address, phone, description,
-            category: draft.category,
-            condition: draft.condition,
-            images: draft.photos,
-            icon: cat.icon,
-            gradient,
-            userId: uidNow,
+            title: title || "",
+            price: price !== undefined && price !== null ? price : "Договорная",
+            currency: currency || "RUB",
+            isVip: !!isVip,
+            city: city || "",
+            address: address || "",
+            phone: phone || "",
+            description: description || "",
+            category: draft.category || "electronics",
+            condition: draft.condition || "Новое",
+            images: Array.isArray(draft.photos) ? draft.photos : [],
+            icon: cat ? cat.icon : "🏷️",
+            gradient: gradient || "",
+            userId: uidNow || "",
             status: "active",
             views: 0,
-            lat: coordsForLocation(city)[0],
-            lng: coordsForLocation(city)[1],
-            // who actually posted this listing — shown on the product page instead of Geran Express
+            lat: (coordsForLocation(city) && typeof coordsForLocation(city)[0] === "number") ? coordsForLocation(city)[0] : 0,
+            lng: (coordsForLocation(city) && typeof coordsForLocation(city)[1] === "number") ? coordsForLocation(city)[1] : 0,
             authorName: me.name || "",
             authorAvatarPhoto: me.avatarPhoto || null,
             authorAvatarEmoji: me.avatarPhoto ? null : (me.avatar || null),
@@ -1566,6 +1588,7 @@
             state.listings.unshift({ ...listingData, id: newId, sellerId: "geran", mine: true, createdAt: Date.now() });
             showToast(t("form.published"));
           } catch (e) {
+            console.error("Ошибка Firestore:", e);
             console.error("[Geran] Failed to publish listing to Firestore:", e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
@@ -1698,7 +1721,7 @@
   const PROMO_BANNER_IMAGES = [
     "nn.png",
     "nn.png",
-    "./assets/promo-2.png",
+    "nn.png",
     "./assets/promo-3.jpg",
     "./assets/promo-4.jpg",
   ];

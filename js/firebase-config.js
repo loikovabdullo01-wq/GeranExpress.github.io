@@ -130,6 +130,17 @@ async function ensureFirebaseAuth() {
   });
 }
 
+function sanitizeFirestoreData(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const clean = {};
+  Object.keys(obj).forEach((key) => {
+    if (obj[key] !== undefined) {
+      clean[key] = obj[key];
+    }
+  });
+  return clean;
+}
+
 // Live-syncs the "listings" collection; calls onChange(docsArray) on every update.
 // Returns an unsubscribe function, or null if Firestore isn't available.
 function subscribeToListings(onChange, onError) {
@@ -137,6 +148,7 @@ function subscribeToListings(onChange, onError) {
   return fbDb.collection(LISTINGS_COLLECTION).onSnapshot(
     (snap) => onChange(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))),
     (err) => {
+      console.error("Ошибка Firestore:", err);
       console.error("[Firestore] listings subscription failed:", err);
       if (onError) onError(err);
     }
@@ -148,36 +160,56 @@ function subscribeToListings(onChange, onError) {
 async function addListingToFirestore(listingData) {
   if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
   const user = await ensureFirebaseAuth();
-  if (!user) throw new Error("Пользователь не авторизован");
+  if (!user) {
+    const err = new Error("Пользователь не авторизован");
+    console.error("Ошибка Firestore:", err);
+    throw err;
+  }
   const now = firebase.firestore.FieldValue.serverTimestamp();
-  const dataToSend = {
+  const rawData = {
     ...listingData,
     userId: user.uid,
     date: now,
     createdAt: now,
     updatedAt: now,
   };
+  const dataToSend = sanitizeFirestoreData(rawData);
   return fbDb.collection(LISTINGS_COLLECTION).add(dataToSend).then((docRef) => {
     console.info("[Firestore] Listing created:", docRef.id);
     return docRef;
-  }).catch((e) => { console.error("[Firestore] Failed to create listing:", e); throw e; });
+  }).catch((e) => {
+    console.error("Ошибка Firestore:", e);
+    console.error("[Firestore] Failed to create listing:", e);
+    throw e;
+  });
 }
 
 // Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).
 async function updateListingInFirestore(id, patch) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
   await ensureFirebaseAuth();
-  return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(
-    { ...patch, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
-    { merge: true }
-  ).catch((e) => { console.error("[Firestore] Failed to update listing " + id + ":", e); throw e; });
+  const rawData = {
+    ...patch,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const dataToSend = sanitizeFirestoreData(rawData);
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(dataToSend, { merge: true })
+    .catch((e) => {
+      console.error("Ошибка Firestore:", e);
+      console.error("[Firestore] Failed to update listing " + id + ":", e);
+      throw e;
+    });
 }
 
 async function deleteListingFromFirestore(id) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
   await ensureFirebaseAuth();
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
-    .catch((e) => { console.error("[Firestore] Failed to delete listing " + id + ":", e); });
+    .catch((e) => {
+      console.error("Ошибка Firestore:", e);
+      console.error("[Firestore] Failed to delete listing " + id + ":", e);
+      throw e;
+    });
 }
 
 function subscribeToBanners(onChange) {

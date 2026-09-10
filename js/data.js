@@ -287,6 +287,7 @@ function formatPrice(listing) {
 }
 
 function timeAgo(ts) {
+  if (typeof ts !== "number" || !Number.isFinite(ts)) return t("time.today");
   const diff = Date.now() - ts;
   const days = Math.floor(diff / 86400000);
   if (days <= 0) return t("time.today");

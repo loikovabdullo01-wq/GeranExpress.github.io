@@ -58,8 +58,13 @@
 
   function listingImages(listing) {
     if (!listing) return [];
-    const images = normalizePhotos(listing.images);
-    return images.length ? images : normalizePhotos(listing.photos);
+    // some older/legacy docs stored photos under different key names — try them all
+    const candidates = [listing.images, listing.photos, listing.photoURLs, listing.photoUrls, listing.pictures, listing.img, listing.image, listing.photo];
+    for (const candidate of candidates) {
+      const images = normalizePhotos(candidate);
+      if (images.length) return images;
+    }
+    return [];
   }
 
   const MAX_LISTING_PHOTOS = 10;
@@ -108,26 +113,37 @@
     return published.toLocaleDateString("ru-RU");
   }
 
+  // Firestore price fields can be a clean number, a numeric string ("1500"), or (for
+  // catalog items with no fixed price) missing/0 with a human priceText like "Договорная".
+  function parseRemotePrice(rawPrice) {
+    if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
+    const parsed = parseFloat(String(rawPrice == null ? "" : rawPrice).replace(/[^\d.]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
   function normalizeRemoteListing(doc) {
     const myUid = currentUserId();
     const isMine = !!(myUid && doc.userId === myUid);
     const location = doc.location || doc.village || doc.city || doc.address || "";
     const [fallbackLat, fallbackLng] = coordsForLocation(location);
-    const createdAt = timestampToMillis(doc.createdAt || doc.date);
+    // legacy docs may use different key names, or may be missing a timestamp entirely —
+    // fall back through alternates and, as a last resort, "now" so dates never go haywire
+    const createdAt = timestampToMillis(doc.createdAt || doc.date || doc.publishedAt || doc.timestamp || doc.created) ?? Date.now();
     return {
       id: doc.id,
       title: doc.title || "",
-      price: doc.price || 0,
+      price: parseRemotePrice(doc.price != null ? doc.price : (doc.cost != null ? doc.cost : doc.amount)),
+      priceText: doc.priceText || null,
       category: doc.category || "other",
       condition: doc.condition || "Б/у",
-      description: doc.description || "",
+      description: doc.description || doc.desc || doc.text || "",
       city: location,
       address: doc.address || "",
       phone: doc.phone || "",
       images: listingImages(doc),
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
-      sellerId: isMine ? "me" : (doc.userId || "geran"),
+      sellerId: "geran", // all listings are shown as posted by Geran Express, regardless of who added them
       userId: doc.userId || null,
       mine: isMine,
       status: doc.status || "active",
@@ -552,6 +568,17 @@
     return l && l.address ? l.city + ", " + l.address : (l ? l.city : "");
   }
 
+  // A doc with no price, no photo AND no description is an incomplete/corrupt write, not a real
+  // listing (e.g. a publish that failed halfway) — hide it from public feeds/profiles but leave it
+  // visible under "My listings" so its owner can still find, fix or delete it.
+  function isBrokenListing(l) {
+    if (!l) return true;
+    const hasPrice = (typeof l.price === "number" && l.price > 0) || !!l.priceText;
+    const hasPhoto = listingImages(l).length > 0;
+    const hasDesc = !!(l.description && l.description.trim());
+    return !hasPrice && !hasPhoto && !hasDesc;
+  }
+
   function computeFilteredListings() {
     const f = state.filters;
     let list = state.listings.filter((l) => (l.status !== "sold" || l.mine) && listingImages(l).length > 0);
@@ -928,7 +955,7 @@
   function openSellerProfile(sellerId) {
     const seller = getUser(sellerId);
     const reviews = MOCK_REVIEWS[sellerId] || [];
-    const sellerListings = state.listings.filter((l) => l.sellerId === sellerId && l.status !== "sold");
+    const sellerListings = state.listings.filter((l) => l.sellerId === sellerId && l.status !== "sold" && (l.mine || !isBrokenListing(l)));
     const sellerSold = state.listings.filter((l) => l.sellerId === sellerId && l.status === "sold").length;
 
     const html = `
@@ -1206,6 +1233,9 @@
 
       // in-flight ImgBB uploads; publish must wait for these so we never write base64 into Firestore
       const pendingUploads = new Set();
+      // in-flight FileReader reads; without this, clicking "publish" right after picking photos
+      // (before onload fires) would race ahead and silently drop those photos from the listing
+      const pendingReads = new Set();
 
       photoInput.addEventListener("change", () => {
         const remainingSlots = MAX_LISTING_PHOTOS - draft.photos.length;
@@ -1218,23 +1248,28 @@
         const files = Array.from(photoInput.files).slice(0, remainingSlots);
         files.forEach((file) => {
           const reader = new FileReader();
-          reader.onload = () => {
-            const localIndex = draft.photos.push(reader.result) - 1;
-            renderPhotoGrid();
-            // upload in the background, then swap the base64 preview for the hosted ImgBB URL
-            const uploadTask = uploadToImgBB(file)
-              .then((url) => {
-                if (url && draft.photos[localIndex] === reader.result) {
-                  draft.photos[localIndex] = url;
-                  renderPhotoGrid();
-                  console.info("[Geran] ImgBB upload ok for photo #" + localIndex + ":", url);
-                } else if (!url) {
-                  console.error("[Geran] ImgBB upload failed for photo #" + localIndex + "; it will be dropped on publish.");
-                }
-              })
-              .finally(() => pendingUploads.delete(uploadTask));
-            pendingUploads.add(uploadTask);
-          };
+          const readTask = new Promise((resolve) => {
+            reader.onload = () => {
+              const localIndex = draft.photos.push(reader.result) - 1;
+              renderPhotoGrid();
+              // upload in the background, then swap the base64 preview for the hosted ImgBB URL
+              const uploadTask = uploadToImgBB(file)
+                .then((url) => {
+                  if (url && draft.photos[localIndex] === reader.result) {
+                    draft.photos[localIndex] = url;
+                    renderPhotoGrid();
+                    console.info("[Geran] ImgBB upload ok for photo #" + localIndex + ":", url);
+                  } else if (!url) {
+                    console.error("[Geran] ImgBB upload failed for photo #" + localIndex + "; it will be dropped on publish.");
+                  }
+                })
+                .finally(() => pendingUploads.delete(uploadTask));
+              pendingUploads.add(uploadTask);
+              resolve();
+            };
+            reader.onerror = () => resolve();
+          }).finally(() => pendingReads.delete(readTask));
+          pendingReads.add(readTask);
           reader.readAsDataURL(file);
         });
         photoInput.value = "";
@@ -1277,6 +1312,14 @@
 
         const submitBtn = el.querySelector("#submitListingBtn");
 
+        // wait for any photos still being read from disk (FileReader) so a fast click right after
+        // picking files can't race ahead and publish before those photos ever reach draft.photos
+        if (pendingReads.size) {
+          submitBtn.disabled = true;
+          showToast(t("form.uploadingPhotos"));
+          await Promise.all(Array.from(pendingReads)).catch(() => {});
+        }
+
         // wait for any still-uploading photos so we never write base64 previews into Firestore
         if (pendingUploads.size) {
           submitBtn.disabled = true;
@@ -1292,6 +1335,14 @@
           showToast(t("form.someSyncFailed"));
         }
         draft.photos = uploadedPhotos;
+
+        // last-resort sanity check — never let a listing reach Firestore with a lost/zeroed price
+        if (!price || price <= 0 || !Number.isFinite(price)) {
+          console.error("[Geran] Aborting publish: price became invalid before write:", price);
+          showToast(t("form.needPrice"));
+          submitBtn.disabled = false;
+          return;
+        }
 
         const uidNow = currentUserId();
         if (FIREBASE_READY && !uidNow) {
@@ -1345,7 +1396,7 @@
             } else {
               newId = uid("l"); // local-only demo mode (no Firebase configured)
             }
-            state.listings.unshift({ ...listingData, id: newId, sellerId: "me", mine: true, createdAt: Date.now() });
+            state.listings.unshift({ ...listingData, id: newId, sellerId: "geran", mine: true, createdAt: Date.now() });
             showToast(t("form.published"));
           } catch (e) {
             console.error("[Geran] Failed to publish listing to Firestore:", e);

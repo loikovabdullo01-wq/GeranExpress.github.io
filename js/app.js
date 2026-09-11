@@ -357,6 +357,7 @@
   }
 
   function switchTab(tab) {
+    const enteringHome = tab === "home" && state.currentTab !== "home";
     state.currentTab = tab;
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     document.querySelectorAll(".tab-view").forEach((v) => v.classList.toggle("active", v.dataset.tab === tab));
@@ -366,6 +367,12 @@
     if (tab === "favorites") renderFavoritesTab();
     if (tab === "listings") renderMyListingsTab();
     if (tab === "profile") renderProfileTab();
+    // re-shuffle the feed order every time the user comes back to the home tab, so it never
+    // looks "stuck" showing the exact same listings on top
+    if (enteringHome) {
+      reseedHomeOrder();
+      renderHomeTab();
+    }
     document.getElementById("appMain").scrollTop = 0;
     resetHeaderCollapsed();
     requestAnimationFrame(syncHeaderHeight);
@@ -389,7 +396,15 @@
     document.getElementById("qfCategory").classList.toggle("active", !isAllCats);
 
     const isAllLocs = !state.filters.location || state.filters.location === "all" || state.filters.location === "allLocations";
-    document.getElementById("qfLocationLabel").textContent = isAllLocs ? t("qf.allLocations") : state.filters.location;
+    const scopedLocCountry = countryOfLocationFilter(state.filters.location);
+    let locLabel = t("qf.allLocations");
+    if (scopedLocCountry) {
+      const countryInfo = LOCATION_COUNTRY_TREE.find((c) => c.id === scopedLocCountry);
+      locLabel = t("qf.allLocations") + (countryInfo ? " · " + countryInfo.name : "");
+    } else if (!isAllLocs) {
+      locLabel = state.filters.location;
+    }
+    document.getElementById("qfLocationLabel").textContent = locLabel;
     document.getElementById("qfLocation").classList.toggle("active", !isAllLocs);
 
     const sort = SORT_OPTIONS.find((o) => o.id === state.filters.sort) || SORT_OPTIONS[0];
@@ -475,6 +490,16 @@
     return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
   }
 
+  // Markers used when the user picks "Все локации" from *inside* a country step, so that
+  // choice stays scoped to that country instead of falling back to the global "all" filter.
+  const LOCATION_ALL_RU = "__ALL_LOCATIONS_RU__";
+  const LOCATION_ALL_TJ = "__ALL_LOCATIONS_TJ__";
+  function countryOfLocationFilter(value) {
+    if (value === LOCATION_ALL_RU) return "ru";
+    if (value === LOCATION_ALL_TJ) return "tj";
+    return null;
+  }
+
   function renderLocationCountryStep(currentValue, onSelect) {
     const counts = {};
     countableListings().forEach((listing) => {
@@ -537,7 +562,7 @@
     const district = districtSection.locations[0];
     const list = document.getElementById("locationList");
     list.innerHTML =
-      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+      `<div class="location-item ${currentValue === LOCATION_ALL_TJ ? "active" : ""}" data-loc="${LOCATION_ALL_TJ}">
         <span class="loc-name">${t("qf.allLocations")}</span>
         <span class="loc-count">${listings.length}</span>
         <span class="check">\u2713</span>
@@ -573,7 +598,7 @@
 
     const list = document.getElementById("locationList");
     list.innerHTML =
-      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+      `<div class="location-item ${currentValue === LOCATION_ALL_RU ? "active" : ""}" data-loc="${LOCATION_ALL_RU}">
         <span class="loc-name">${t("qf.allLocations")}</span>
         <span class="loc-count">${listings.length}</span>
         <span class="check">\u2713</span>
@@ -619,9 +644,15 @@
 
   let SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
 
-  function shuffleForSession(list) {
+  // Re-rolled whenever the user (re)enters the home feed (fresh load, pull-to-refresh, tab
+  // switch, app resumed from background) so the feed order isn't stuck the same every visit.
+  function reseedHomeOrder() {
+    SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+  }
+
+  function seededShuffle(list, seed) {
     const arr = list.slice();
-    let s = SESSION_ORDER_SEED || 1;
+    let s = seed || 1;
     for (let i = arr.length - 1; i > 0; i--) {
       s = (s * 1664525 + 1013904223) >>> 0;
       const j = s % (i + 1);
@@ -630,6 +661,33 @@
       arr[j] = tmp;
     }
     return arr;
+  }
+
+  function shuffleForSession(list) {
+    return seededShuffle(list, SESSION_ORDER_SEED);
+  }
+
+  function nextSeededRandom(seedBox) {
+    seedBox.s = (seedBox.s * 1664525 + 1013904223) >>> 0;
+    return seedBox.s / 4294967296;
+  }
+
+  // Gives VIP listings extra visibility by scattering them through the top of the feed
+  // (weighted toward the front) instead of hard-pinning the same card to position 1 forever.
+  function interleaveVipListings(regular, vip) {
+    if (!vip.length) return regular;
+    const shuffledVip = seededShuffle(vip, (SESSION_ORDER_SEED ^ 0x9e3779b9) >>> 0);
+    const seedBox = { s: ((SESSION_ORDER_SEED ^ 0x2545f491) >>> 0) || 1 };
+    const result = regular.slice();
+    shuffledVip.forEach((item) => {
+      const windowSize = Math.min(20, result.length + 1);
+      // min of two uniform draws skews toward the front of the window without ever forcing index 0
+      const r1 = nextSeededRandom(seedBox);
+      const r2 = nextSeededRandom(seedBox);
+      const pos = Math.floor(Math.min(r1, r2) * windowSize);
+      result.splice(pos, 0, item);
+    });
+    return result;
   }
 
   function placeLine(l) {
@@ -669,7 +727,7 @@
       vip.sort(compareFn);
       nonVip.sort(compareFn);
     }
-    return vip.concat(nonVip);
+    return interleaveVipListings(nonVip, vip);
   }
 
   function computeFilteredListings() {
@@ -682,11 +740,16 @@
     }
 
     if (f.location && f.location !== "all" && f.location !== "allLocations" && f.location !== "null" && f.location !== "undefined") {
-      const targetLoc = normalizeCity(f.location);
-      list = list.filter((l) => {
-        const itemLoc = normalizeCity(l.city);
-        return itemLoc === targetLoc || itemLoc === f.location;
-      });
+      const scopedCountry = countryOfLocationFilter(f.location);
+      if (scopedCountry) {
+        list = list.filter((l) => countryOfCity(l.city) === scopedCountry);
+      } else {
+        const targetLoc = normalizeCity(f.location);
+        list = list.filter((l) => {
+          const itemLoc = normalizeCity(l.city);
+          return itemLoc === targetLoc || itemLoc === f.location;
+        });
+      }
     }
 
     if (f.query && f.query.trim()) {
@@ -718,7 +781,7 @@
         const nonMine = list.filter((l) => !l.mine);
         const vipNonMine = nonMine.filter((l) => l.isVip);
         const regularNonMine = shuffleForSession(nonMine.filter((l) => !l.isVip));
-        list = mine.concat(vipNonMine, regularNonMine);
+        list = mine.concat(interleaveVipListings(regularNonMine, vipNonMine));
         break;
       }
       case "new": list = sortWithVipPriority(list.slice(), (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
@@ -856,14 +919,6 @@
 
   function renderProfileTab() {
     const me = getUser("me");
-    const av = document.getElementById("profileAvatar");
-    if (me.avatarPhoto) {
-      av.textContent = "";
-      av.style.backgroundImage = `url(${me.avatarPhoto})`;
-    } else {
-      av.style.backgroundImage = "";
-      av.textContent = me.avatar;
-    }
     document.getElementById("profileName").textContent = me.name;
     const addr = document.getElementById("addressValue");
     if (addr) addr.textContent = me.city || "";
@@ -1497,7 +1552,7 @@
 
       el.querySelector("#fCityBtn").addEventListener("click", () =>
         openLocationSheet(draft.city, (loc) => {
-          if (!loc) return;
+          if (!loc || countryOfLocationFilter(loc)) return;
           draft.city = loc;
           el.querySelector("#fCityLabel").textContent = loc;
 
@@ -2770,7 +2825,6 @@
     document.getElementById("openBannersBtn")?.addEventListener("click", openAdminBannersModal);
     document.getElementById("closeLangBtn").addEventListener("click", closeLanguageSheet);
     document.getElementById("langOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLanguageSheet(); });
-    document.getElementById("editAvatarBtn").addEventListener("click", openAvatarEditor);
     document.getElementById("editNameBtn").addEventListener("click", () =>
       openTextEditor({
         title: t("name.title"), label: t("name.label"), value: getUser("me").name, placeholder: t("name.placeholder"),
@@ -2787,7 +2841,7 @@
     );
     document.getElementById("openAddressBtn").addEventListener("click", () =>
       openLocationSheet(getUser("me").city, (loc) => {
-        if (!loc) return;
+        if (!loc || countryOfLocationFilter(loc)) return;
         state.meProfile.city = loc;
         persistMeProfile();
         renderProfileTab();
@@ -2906,6 +2960,13 @@
     startListingsSync();
     if (typeof startBannersSync === "function") startBannersSync();
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
+    // resuming the app on mobile (switching back from another app/tab) should also feel fresh
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && state.currentTab === "home") {
+        reseedHomeOrder();
+        renderHomeTab();
+      }
+    });
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);
     requestAnimationFrame(playEntrance);

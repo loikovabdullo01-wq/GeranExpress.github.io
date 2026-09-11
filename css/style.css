@@ -668,23 +668,13 @@ svg[fill]{ stroke:none; }
   content:""; position:absolute; top:-60px; left:-30px; width:200px; height:140px;
   background: var(--accent-grad); opacity:.15; filter: blur(30px); border-radius:50%;
 }
-.profile-avatar{
-  width:76px; height:76px; border-radius:50%; margin:0 auto 12px;
-  background: var(--accent-grad); display:flex; align-items:center; justify-content:center;
-  font-size:34px; box-shadow: 0 10px 26px rgba(22,163,74,.4); position:relative; z-index:1;
+.profile-logo-badge{
+  width:84px; height:84px; border-radius:50%; margin:0 auto 14px;
+  background: var(--surface); display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 10px 26px rgba(22,163,74,.28); position:relative; z-index:1;
+  border: 1px solid var(--border);
 }
-.profile-avatar-btn{
-  border:none; background:none; padding:0; cursor:pointer; position:relative;
-  display:inline-block; z-index:1;
-}
-.profile-avatar-btn:active{ transform: scale(.96); }
-.avatar-edit-badge{
-  position:absolute; right:0; bottom:12px; width:26px; height:26px; border-radius:50%;
-  background: var(--accent-grad); color:#fff; font-size:12px;
-  display:flex; align-items:center; justify-content:center;
-  border:2.5px solid var(--surface); z-index:2;
-}
-.profile-avatar{ background-size:cover; background-position:center; }
+.profile-logo-img{ width:56px; height:56px; object-fit:contain; }
 .profile-name-btn{
   border:none; background:none; cursor:pointer; font:inherit; color:inherit;
   display:inline-flex; align-items:center; gap:7px; padding:2px 4px;

@@ -5,39 +5,24 @@
 // filled in below, FIREBASE_READY stays false and the whole app keeps
 // working exactly like today (phone number saved locally, listings in
 // this browser only) — nothing breaks by adding this file.
-//
-// Where to get these values:
-//   Firebase Console -> (your project) -> gear icon -> Project settings
-//   -> General tab -> scroll to "Your apps" -> Web app -> the
-//   firebaseConfig object shown there. Copy each field below.
-//
-// Also make sure, in the same console, you have enabled:
-//   Build -> Authentication -> Sign-in method -> Phone
-//   Build -> Firestore Database -> Create database
-//   Build -> Storage -> Get started
-// (Phone auth on the free "Spark" plan only sends real SMS to test
-// numbers you add yourself in the console; real SMS to real users
-// needs the pay-as-you-go "Blaze" plan.)
 
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
-    authDomain: "geran-express.firebaseapp.com",
-    projectId: "geran-express",
-    storageBucket: "geran-express.firebasestorage.app",
-    messagingSenderId: "100329986906",
-    appId: "1:100329986906:web:4998c36eecc975b46bf163",
-    measurementId: "G-WP2S70R07C"
-  };
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBcg07lrmxf7ixeHxa29rSrkWxb03G4w4U",
+  authDomain: "geran-express.firebaseapp.com",
+  projectId: "geran-express",
+  storageBucket: "geran-express.firebasestorage.app",
+  messagingSenderId: "100329986906",
+  appId: "1:100329986906:web:4998c36eecc975b46bf163",
+  measurementId: "G-WP2S70R07C"
+};
 
-// ImgBB is used instead of Firebase Storage for listing photos (free, no billing plan needed).
-// Get a key at https://api.imgbb.com/ and paste it below to enable uploads;
-// until then, photos are kept as local base64 data (old behavior).
+// ImgBB — бесплатный хостинг картинок. Получи ключ на https://api.imgbb.com/
 const IMGBB_API_KEY = "044c84fb33e068293052ead694715174";
 
-// Uploads a File/Blob to ImgBB and resolves with its direct hosted URL, or null if not configured.
+// Загрузка файла в ImgBB, возвращает URL или null.
 async function uploadToImgBB(file) {
   if (!IMGBB_API_KEY) {
-    console.warn("[ImgBB] IMGBB_API_KEY not set in js/firebase-config.js — falling back to local base64 photo storage.");
+    console.warn("[ImgBB] IMGBB_API_KEY not set — falling back to local base64 photo storage.");
     return null;
   }
   const formData = new FormData();
@@ -67,11 +52,11 @@ let FIREBASE_READY = false;
 (function initFirebaseIfConfigured() {
   const looksConfigured = FIREBASE_CONFIG.apiKey && !String(FIREBASE_CONFIG.apiKey).startsWith("YOUR_");
   if (!looksConfigured) {
-    console.info("[Firebase] Not configured yet — running in local-only demo mode. Fill in js/firebase-config.js to go live.");
+    console.info("[Firebase] Not configured — running in local-only demo mode.");
     return;
   }
   if (typeof firebase === "undefined") {
-    console.warn("[Firebase] SDK script did not load (offline or blocked) — running in local-only demo mode.");
+    console.warn("[Firebase] SDK script did not load — running in local-only demo mode.");
     return;
   }
   try {
@@ -80,9 +65,9 @@ let FIREBASE_READY = false;
     fbDb = firebase.firestore();
     fbStorage = firebase.storage();
     FIREBASE_READY = true;
-    console.info("[Firebase] Connected — running in live mode (real SMS auth, shared listings).");
+    console.info("[Firebase] Connected — live mode.");
   } catch (e) {
-    console.error("[Firebase] init failed — running in local-only demo mode.", e);
+    console.error("[Firebase] init failed — local-only demo mode.", e);
   }
 })();
 
@@ -90,7 +75,6 @@ const LISTINGS_COLLECTION = "listings";
 const DONATIONS_COLLECTION = "donations";
 const SETTINGS_COLLECTION = "settings";
 
-// Ensures Firebase Auth currentUser is active and non-null before database writes.
 async function ensureFirebaseAuth() {
   if (!FIREBASE_READY || !fbAuth) return null;
   if (fbAuth.currentUser) return fbAuth.currentUser;
@@ -105,9 +89,8 @@ async function ensureFirebaseAuth() {
 
     const unsubscribe = fbAuth.onAuthStateChanged((user) => {
       unsubscribe();
-      if (user) {
-        finish(user);
-      } else {
+      if (user) finish(user);
+      else {
         fbAuth.signInAnonymously()
           .then((cred) => finish(cred.user))
           .catch((err) => {
@@ -134,29 +117,22 @@ function sanitizeFirestoreData(obj) {
   if (!obj || typeof obj !== "object") return obj;
   const clean = {};
   Object.keys(obj).forEach((key) => {
-    if (obj[key] !== undefined) {
-      clean[key] = obj[key];
-    }
+    if (obj[key] !== undefined) clean[key] = obj[key];
   });
   return clean;
 }
 
-// Live-syncs the "listings" collection; calls onChange(docsArray) on every update.
-// Returns an unsubscribe function, or null if Firestore isn't available.
 function subscribeToListings(onChange, onError) {
   if (!FIREBASE_READY || !fbDb) return null;
   return fbDb.collection(LISTINGS_COLLECTION).onSnapshot(
     (snap) => onChange(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))),
     (err) => {
-      console.error("Ошибка Firestore:", err);
       console.error("[Firestore] listings subscription failed:", err);
       if (onError) onError(err);
     }
   );
 }
 
-// Creates a new listing doc with an auto-generated id and a server-side timestamp
-// (rules require data.userId === auth.uid to create). Returns the new doc reference.
 async function addListingToFirestore(listingData) {
   if (!FIREBASE_READY || !fbDb) return Promise.reject(new Error("Firestore not configured"));
   const user = await ensureFirebaseAuth();
@@ -172,19 +148,19 @@ async function addListingToFirestore(listingData) {
     date: now,
     createdAt: now,
     updatedAt: now,
+    favoritedBy: Array.isArray(listingData.favoritedBy) ? listingData.favoritedBy : [],
+    views: typeof listingData.views === "number" ? listingData.views : 0,
   };
   const dataToSend = sanitizeFirestoreData(rawData);
   return fbDb.collection(LISTINGS_COLLECTION).add(dataToSend).then((docRef) => {
     console.info("[Firestore] Listing created:", docRef.id);
     return docRef;
   }).catch((e) => {
-    console.error("Ошибка Firestore:", e);
     console.error("[Firestore] Failed to create listing:", e);
     throw e;
   });
 }
 
-// Patches a subset of fields on an existing listing doc (e.g. status toggle, edit form).
 async function updateListingInFirestore(id, patch) {
   if (!FIREBASE_READY || !fbDb) return Promise.resolve();
   await ensureFirebaseAuth();
@@ -195,7 +171,6 @@ async function updateListingInFirestore(id, patch) {
   const dataToSend = sanitizeFirestoreData(rawData);
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).set(dataToSend, { merge: true })
     .catch((e) => {
-      console.error("Ошибка Firestore:", e);
       console.error("[Firestore] Failed to update listing " + id + ":", e);
       throw e;
     });
@@ -206,8 +181,35 @@ async function deleteListingFromFirestore(id) {
   await ensureFirebaseAuth();
   return fbDb.collection(LISTINGS_COLLECTION).doc(id).delete()
     .catch((e) => {
-      console.error("Ошибка Firestore:", e);
       console.error("[Firestore] Failed to delete listing " + id + ":", e);
+      throw e;
+    });
+}
+
+// Увеличивает числовое поле (views, likes и т.п.) атомарно.
+async function incrementListingField(id, field, amount) {
+  if (!FIREBASE_READY || !fbDb) return Promise.resolve();
+  await ensureFirebaseAuth();
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id)
+    .update({ [field]: firebase.firestore.FieldValue.increment(amount) })
+    .catch((e) => {
+      console.error("[Firestore] increment " + field + " failed:", e);
+      throw e;
+    });
+}
+
+// Добавляет/удаляет uid в массиве favoritedBy.
+async function toggleListingFavoriteRemote(id, uid, isAdding) {
+  if (!FIREBASE_READY || !fbDb || !uid) return Promise.resolve();
+  await ensureFirebaseAuth();
+  return fbDb.collection(LISTINGS_COLLECTION).doc(id)
+    .update({
+      favoritedBy: isAdding
+        ? firebase.firestore.FieldValue.arrayUnion(uid)
+        : firebase.firestore.FieldValue.arrayRemove(uid),
+    })
+    .catch((e) => {
+      console.error("[Firestore] favorite toggle failed:", e);
       throw e;
     });
 }
@@ -219,9 +221,7 @@ function subscribeToBanners(onChange) {
       if (snap.exists) {
         const data = snap.data();
         onChange(Array.isArray(data.list) ? data.list : []);
-      } else {
-        onChange([]);
-      }
+      } else onChange([]);
     },
     (err) => console.error("[Firestore] Banners subscription failed:", err)
   );
@@ -258,11 +258,6 @@ function saveSponsorDonation(payload) {
 }
 
 // --- Online presence ---------------------------------------------------
-// Each browser tab gets its own presence doc (id kept in sessionStorage) that
-// is refreshed with a heartbeat while the tab is open. A session only counts
-// as "online" if its last heartbeat is recent (PRESENCE_STALE_MS), so crashed
-// tabs / closed laptops naturally drop out of the count without needing a
-// reliable "close" event.
 const PRESENCE_COLLECTION = "presence";
 const PRESENCE_HEARTBEAT_MS = 25000;
 const PRESENCE_STALE_MS = 70000;
@@ -288,8 +283,6 @@ function markPresenceOffline() {
   fbDb.collection(PRESENCE_COLLECTION).doc(getPresenceSessionId()).delete().catch(() => {});
 }
 
-// Subscribes to the presence collection and reports a live online count via onCount(n).
-// Returns a cleanup function that stops the heartbeat and marks this session offline.
 function initPresenceTracking(onCount) {
   if (!FIREBASE_READY || !fbDb) return null;
 
@@ -301,7 +294,7 @@ function initPresenceTracking(onCount) {
     const cutoff = Date.now() - PRESENCE_STALE_MS;
     let online = 0;
     lastSeenById.forEach((ms) => { if (ms > cutoff) online++; });
-    onCount(Math.max(online, 1)); // this tab is always online
+    onCount(Math.max(online, 1));
   }
 
   const unsubscribe = fbDb.collection(PRESENCE_COLLECTION).onSnapshot(
@@ -317,7 +310,6 @@ function initPresenceTracking(onCount) {
     (err) => console.error("[Presence] Subscription failed:", err)
   );
 
-  // re-evaluate staleness even between snapshots, so the count decays in real time
   const tickTimer = setInterval(recomputeCount, 5000);
 
   const onVisibilityChange = () => {

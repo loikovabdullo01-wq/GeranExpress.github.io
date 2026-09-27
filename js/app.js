@@ -1,4 +1,3 @@
-
 (function () {
   "use strict";
 
@@ -40,6 +39,81 @@
     return d.innerHTML;
   }
 
+  // ─────────────────────────────────────────────────────────────
+  //  КАРТИНКИ БАННЕРА НА ГЛАВНОЙ
+  //  Просто подмени путь — баннер обновится при следующей загрузке.
+  //  Если в Firestore settings/banners.list будут картинки — они
+  //  приоритетнее этих (управление через админку в профиле).
+  // ─────────────────────────────────────────────────────────────
+  const PROMO_BANNER_IMAGES = [
+    "./assets/promo-1.jpg",
+    "./assets/promo-2.jpg",
+    "./assets/promo-3.jpg",
+    "./assets/promo-4.jpg",
+  ];
+
+  // ─────────────────────────────────────────────────────────────
+  //  КАРТА — свои координаты и свои картинки для городов/сёл.
+  //  Если для локации задана картинка — вместо Leaflet покажем её.
+  //  Если заданы координаты — поставим точную метку.
+  // ─────────────────────────────────────────────────────────────
+  const CUSTOM_CITY_COORDS = {
+    // Таджикистан
+    "Душанбе":         { lat: 38.5598, lng: 68.7870 },
+    "Худжанд":         { lat: 40.2833, lng: 69.6333 },
+    "Бохтар":          { lat: 37.8364, lng: 68.7797 },
+    "Куляб":           { lat: 37.9148, lng: 69.7847 },
+    "Истаравшан":      { lat: 39.9137, lng: 69.0034 },
+    "Турсунзаде":      { lat: 37.5869, lng: 68.2314 },
+    "Вахдат":          { lat: 38.5561, lng: 69.0192 },
+    "Гиссар":          { lat: 38.5264, lng: 68.5528 },
+    "Нурек":           { lat: 38.3894, lng: 69.3258 },
+    "Рогун":           { lat: 38.7817, lng: 69.8722 },
+    "Хорог":           { lat: 37.4896, lng: 71.5520 },
+    "Пенджикент":      { lat: 39.4956, lng: 67.6103 },
+    "Исфара":          { lat: 40.1247, lng: 70.6264 },
+    "Канибадам":       { lat: 40.2981, lng: 70.4239 },
+    // Россия
+    "Казань":          { lat: 55.7963, lng: 49.1088 },
+    "Москва":          { lat: 55.7558, lng: 37.6173 },
+    "Нижний Новгород": { lat: 56.3269, lng: 44.0059 },
+    "Дзержинск":       { lat: 56.2377, lng: 43.4595 },
+    "Санкт-Петербург": { lat: 59.9343, lng: 30.3351 },
+    "Екатеринбург":    { lat: 56.8389, lng: 60.6057 },
+    "Новосибирск":     { lat: 55.0084, lng: 82.9357 },
+    "Краснодар":       { lat: 45.0355, lng: 38.9753 },
+  };
+
+  // Опционально: свои картинки-карты. Ключ — название локации.
+  // Если задано — вместо Leaflet покажется картинка.
+  const CUSTOM_MAP_IMAGES = {
+    // "Чайхун":     "./assets/maps/chaykhun.png",
+    // "Дехканобод": "./assets/maps/dehkanobod.png",
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  //  ДОПОЛНЕНИЕ ГОРОДОВ РОССИИ (в нужном порядке)
+  // ─────────────────────────────────────────────────────────────
+  (function augmentRussiaCities() {
+    if (typeof FOREIGN_CITIES === "undefined" || !Array.isArray(FOREIGN_CITIES)) return;
+    const needed = [
+      "Казань",
+      "Москва",
+      "Нижний Новгород",
+      "Дзержинск",
+      "Санкт-Петербург",
+      "Екатеринбург",
+      "Новосибирск",
+      "Краснодар",
+    ];
+    needed.forEach((city) => {
+      if (!FOREIGN_CITIES.includes(city)) FOREIGN_CITIES.push(city);
+    });
+  })();
+
+  // ВАЖНО: список сёл Чайхуна берём из data.js как есть (CHAYKHUN_VILLAGES).
+  // Никаких придуманных районов/группировок — оригинальные названия и порядок.
+
   function normalizePhotos(value) {
     if (!value) return [];
     const list = Array.isArray(value) ? value : [value];
@@ -59,7 +133,6 @@
 
   function listingImages(listing) {
     if (!listing) return [];
-    // some older/legacy docs stored photos under different key names — try them all
     const candidates = [listing.images, listing.photos, listing.photoURLs, listing.photoUrls, listing.pictures, listing.img, listing.image, listing.photo];
     for (const candidate of candidates) {
       const images = normalizePhotos(candidate);
@@ -73,7 +146,6 @@
   const state = {
     theme: loadJSON(LS.theme, null) || "light",
     favorites: new Set(loadJSON(LS.favorites, [])),
-    // listings are never cached locally — always the static demo catalog plus whatever Firestore sends via onSnapshot
     listings: typeof MOCK_LISTINGS !== "undefined" ? JSON.parse(JSON.stringify(MOCK_LISTINGS)) : [],
     chats: loadJSON(LS.chats, {}),
     meProfile: loadJSON(LS.meProfile, {}),
@@ -116,8 +188,6 @@
     return published.toLocaleDateString("ru-RU");
   }
 
-  // Firestore price fields can be a clean number, a numeric string ("1500"), or (for
-  // catalog items with no fixed price) missing/0 with a human priceText like "Договорная".
   function parseRemotePrice(rawPrice) {
     if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
     if (typeof rawPrice === "string" && rawPrice.trim()) {
@@ -130,12 +200,8 @@
   function normalizeRemoteListing(doc) {
     const myUid = currentUserId();
     const isMine = !!(myUid && doc.userId === myUid);
-    // canonicalize spelling/alias variants (e.g. "Город Казань" -> "Казань, Россия") so location
-    // counts and grouping match the same city keys used everywhere else in the app
     const location = normalizeCity(doc.location || doc.village || doc.city || doc.address || "");
     const [fallbackLat, fallbackLng] = coordsForLocation(location);
-    // legacy docs may use different key names, or may be missing a timestamp entirely —
-    // fall back through alternates and, as a last resort, "now" so dates never go haywire
     const createdAt = timestampToMillis(doc.createdAt || doc.date || doc.publishedAt || doc.timestamp || doc.created) ?? Date.now();
 
     let currency = doc.currency || null;
@@ -165,15 +231,15 @@
       images: listingImages(doc),
       icon: doc.icon || "🏷️",
       gradient: doc.gradient || GRADIENTS[0],
-      sellerId: "geran", // all listings are shown as posted by Geran Express, regardless of who added them
+      sellerId: "geran",
       userId: doc.userId || null,
       mine: isMine,
       status: doc.status || "active",
       createdAt,
-      views: doc.views || 0,
+      views: typeof doc.views === "number" ? doc.views : 0,
+      favoritedBy: Array.isArray(doc.favoritedBy) ? doc.favoritedBy : [],
       lat: typeof doc.lat === "number" ? doc.lat : fallbackLat,
       lng: typeof doc.lng === "number" ? doc.lng : fallbackLng,
-      // real author of the listing — only present on new posts, used to show their name/avatar on the product page
       authorName: doc.authorName || null,
       authorAvatarPhoto: doc.authorAvatarPhoto || null,
       authorAvatarEmoji: doc.authorAvatarEmoji || null,
@@ -286,9 +352,7 @@
   }
   function avatarClass(user) { return user.avatarImg ? " has-img" : ""; }
 
-  function telHref(phone) {
-    return String(phone || "").replace(/[^\d+]/g, "");
-  }
+  function telHref(phone) { return String(phone || "").replace(/[^\d+]/g, ""); }
   function waHref(phone, listing) {
     const digits = String(phone || "").replace(/\D/g, "");
     const text = encodeURIComponent(`Здравствуйте! Пишу по объявлению «${listingTitle(listing)}» на Geran Express.`);
@@ -301,6 +365,7 @@
     const isVip = !!listing.isVip;
     const location = listing.location || listing.village || listing.city || listing.address || "";
     const date = formatCardDate(listing.createdAt);
+
     return `
     <article class="card ${isVip ? "card-vip" : ""}" data-id="${listing.id}" role="button" tabindex="0">
       <div class="card-photo">
@@ -345,6 +410,21 @@
     if (isFav) state.favorites.delete(id);
     else state.favorites.add(id);
     persistFavorites();
+
+    const listing = getListing(id);
+    const uidNow = currentUserId();
+    if (listing && uidNow) {
+      if (!Array.isArray(listing.favoritedBy)) listing.favoritedBy = [];
+      if (!isFav) {
+        if (!listing.favoritedBy.includes(uidNow)) listing.favoritedBy.push(uidNow);
+      } else {
+        listing.favoritedBy = listing.favoritedBy.filter((u) => u !== uidNow);
+      }
+      if (FIREBASE_READY && remoteListings.some((l) => l.id === id) && typeof toggleListingFavoriteRemote === "function") {
+        toggleListingFavoriteRemote(id, uidNow, !isFav).catch(() => {});
+      }
+    }
+
     if (btnEl) {
       btnEl.classList.toggle("active", !isFav);
       btnEl.classList.remove("pop");
@@ -352,6 +432,12 @@
       btnEl.classList.add("pop");
     }
     document.querySelectorAll(`[data-fav="${id}"]`).forEach((b) => b.classList.toggle("active", !isFav));
+    document.querySelectorAll(`[data-fav-inline="${id}"]`).forEach((b) => {
+      b.classList.toggle("active", !isFav);
+      const cnt = b.querySelector(".pd-fav-count");
+      if (cnt && listing) cnt.textContent = (listing.favoritedBy || []).length;
+      b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+    });
     if (document.getElementById("tab-favorites").classList.contains("active")) renderFavoritesTab();
     if (!isFav) showToast(t("fav.added"));
   }
@@ -367,8 +453,6 @@
     if (tab === "favorites") renderFavoritesTab();
     if (tab === "listings") renderMyListingsTab();
     if (tab === "profile") renderProfileTab();
-    // re-shuffle the feed order every time the user comes back to the home tab, so it never
-    // looks "stuck" showing the exact same listings on top
     if (enteringHome) {
       reseedHomeOrder();
       renderHomeTab();
@@ -490,8 +574,6 @@
     return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
   }
 
-  // Markers used when the user picks "Все локации" from *inside* a country step, so that
-  // choice stays scoped to that country instead of falling back to the global "all" filter.
   const LOCATION_ALL_RU = "__ALL_LOCATIONS_RU__";
   const LOCATION_ALL_TJ = "__ALL_LOCATIONS_TJ__";
   function countryOfLocationFilter(value) {
@@ -612,6 +694,8 @@
     });
   }
 
+  // ОРИГИНАЛ: рендерим плоский список сёл/адресов из CHAYKHUN_VILLAGES (js/data.js),
+  // без группировки, без изменения названий и порядка.
   function renderChaykhunVillageStep(currentValue, onSelect) {
     const counts = {};
     countableListings().forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
@@ -644,8 +728,6 @@
 
   let SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
 
-  // Re-rolled whenever the user (re)enters the home feed (fresh load, pull-to-refresh, tab
-  // switch, app resumed from background) so the feed order isn't stuck the same every visit.
   function reseedHomeOrder() {
     SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
   }
@@ -672,8 +754,6 @@
     return seedBox.s / 4294967296;
   }
 
-  // Gives VIP listings extra visibility by scattering them through the top of the feed
-  // (weighted toward the front) instead of hard-pinning the same card to position 1 forever.
   function interleaveVipListings(regular, vip) {
     if (!vip.length) return regular;
     const shuffledVip = seededShuffle(vip, (SESSION_ORDER_SEED ^ 0x9e3779b9) >>> 0);
@@ -681,7 +761,6 @@
     const result = regular.slice();
     shuffledVip.forEach((item) => {
       const windowSize = Math.min(20, result.length + 1);
-      // min of two uniform draws skews toward the front of the window without ever forcing index 0
       const r1 = nextSeededRandom(seedBox);
       const r2 = nextSeededRandom(seedBox);
       const pos = Math.floor(Math.min(r1, r2) * windowSize);
@@ -703,9 +782,6 @@
     return null;
   }
 
-  // A doc with no price, no photo AND no description is an incomplete/corrupt write, not a real
-  // listing (e.g. a publish that failed halfway) — hide it from public feeds/profiles but leave it
-  // visible under "My listings" so its owner can still find, fix or delete it.
   function isBrokenListing(l) {
     if (!l) return true;
     const hasPrice = (typeof l.price === "number" && l.price > 0) || (typeof l.price === "string" && l.price.trim().length > 0) || !!l.priceText;
@@ -714,8 +790,6 @@
     return !hasPrice && !hasPhoto && !hasDesc;
   }
 
-  // Real, currently-visible listings for location counts — sold and broken/ghost docs are excluded
-  // so the numbers on the location picker match what people actually see on the site.
   function countableListings() {
     return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
   }
@@ -728,6 +802,21 @@
       nonVip.sort(compareFn);
     }
     return interleaveVipListings(nonVip, vip);
+  }
+
+  // Приоритет: свои VIP → свои обычные → чужие VIP (вкраплены) → чужие обычные.
+  function sortMineThenVip(arr, compareFn) {
+    const mineVip = arr.filter((l) => l.mine && l.isVip);
+    const mineReg = arr.filter((l) => l.mine && !l.isVip);
+    const othVip  = arr.filter((l) => !l.mine && l.isVip);
+    const othReg  = arr.filter((l) => !l.mine && !l.isVip);
+    if (compareFn) {
+      mineVip.sort(compareFn);
+      mineReg.sort(compareFn);
+      othVip.sort(compareFn);
+      othReg.sort(compareFn);
+    }
+    return mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
   }
 
   function computeFilteredListings() {
@@ -777,19 +866,19 @@
 
     switch (f.sort) {
       case "all": {
-        const mine = list.filter((l) => l.mine);
-        const nonMine = list.filter((l) => !l.mine);
-        const vipNonMine = nonMine.filter((l) => l.isVip);
-        const regularNonMine = shuffleForSession(nonMine.filter((l) => !l.isVip));
-        list = mine.concat(interleaveVipListings(regularNonMine, vipNonMine));
+        const mineVip = list.filter((l) => l.mine && l.isVip);
+        const mineReg = shuffleForSession(list.filter((l) => l.mine && !l.isVip));
+        const othVip  = list.filter((l) => !l.mine && l.isVip);
+        const othReg  = shuffleForSession(list.filter((l) => !l.mine && !l.isVip));
+        list = mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
         break;
       }
-      case "new": list = sortWithVipPriority(list.slice(), (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
-      case "old": list = sortWithVipPriority(list.slice(), (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
-      case "cheap": list = sortWithVipPriority(list.slice(), (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
-      case "expensive": list = sortWithVipPriority(list.slice(), (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
-      case "popular": list = sortWithVipPriority(list.slice(), (a, b) => (b.views || 0) - (a.views || 0)); break;
-      default: list = sortWithVipPriority(list.slice(), (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      case "new":       list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
+      case "old":       list = sortMineThenVip(list, (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
+      case "cheap":     list = sortMineThenVip(list, (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
+      case "expensive": list = sortMineThenVip(list, (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
+      case "popular":   list = sortMineThenVip(list, (a, b) => (b.views || 0) - (a.views || 0)); break;
+      default:          list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     }
     return list;
   }
@@ -919,6 +1008,18 @@
 
   function renderProfileTab() {
     const me = getUser("me");
+
+    const av = document.getElementById("profileAvatar");
+    if (av) {
+      if (me.avatarPhoto) {
+        av.innerHTML = `<img src="${esc(me.avatarPhoto)}" alt="" />`;
+        av.classList.add("has-img");
+      } else {
+        av.textContent = me.avatar || "🙂";
+        av.classList.remove("has-img");
+      }
+    }
+
     document.getElementById("profileName").textContent = me.name;
     const addr = document.getElementById("addressValue");
     if (addr) addr.textContent = me.city || "";
@@ -1005,9 +1106,6 @@
     </div>`;
   }
 
-  // For listings that carry the real poster's name/avatar (new client posts), show that person
-  // in the product-page seller card instead of Geran Express — everywhere else (profile pages,
-  // location counts, grouping) still treats the listing as belonging to Geran Express.
   function sellerCardDisplay(listing) {
     const seller = getUser(listing.sellerId);
     if (!listing.authorName) return seller;
@@ -1024,13 +1122,24 @@
     };
   }
 
+  const viewedThisSession = new Set();
+  function bumpViewsOnce(listing) {
+    if (!listing || viewedThisSession.has(listing.id)) return;
+    viewedThisSession.add(listing.id);
+    listing.views = (listing.views || 0) + 1;
+    if (FIREBASE_READY && remoteListings.some((l) => l.id === listing.id) && typeof incrementListingField === "function") {
+      incrementListingField(listing.id, "views", 1).catch(() => {});
+    }
+  }
+
   function openProductDetail(id) {
     const listing = getListing(id);
     if (!listing) return;
-    listing.views = (listing.views || 0) + 1;
+    bumpViewsOnce(listing);
     const seller = sellerCardDisplay(listing);
     const isMine = listing.mine;
     const fav = state.favorites.has(listing.id);
+    const favCount = Array.isArray(listing.favoritedBy) ? listing.favoritedBy.length : 0;
     const images = Array.isArray(listing.images) ? listing.images : (listing.images ? [listing.images] : (Array.isArray(listing.photos) ? listing.photos : [listing.photos || './assets/no-image.png']));
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
@@ -1063,7 +1172,14 @@
         <div class="pd-meta">
           <span>📍 ${esc(placeLine(listing))}</span>
           <span>· ${timeAgo(listing.createdAt)}</span>
-          <span>· 👁 ${listing.views}</span>
+          <span class="pd-meta-views">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${listing.views || 0}
+          </span>
+          <button type="button" class="pd-meta-fav ${fav ? "active" : ""}" data-fav-inline="${esc(listing.id)}" aria-label="${t('fav.add')}">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
+            <span class="pd-fav-count">${favCount}</span>
+          </button>
         </div>
         <div class="pd-desc"><h4>${t("pd.description")}</h4>${esc(listing.description)}</div>
         ${hasCoords ? `
@@ -1117,7 +1233,15 @@
         fav2.classList.toggle("active", state.favorites.has(listing.id));
         fav2.classList.remove("pop"); void fav2.offsetWidth; fav2.classList.add("pop");
       });
-      el.querySelector("#sellerCardBtn").addEventListener("click", () => openSellerProfile(seller.id));
+      const favInline = el.querySelector("[data-fav-inline]");
+      if (favInline) favInline.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavorite(listing.id, favInline);
+      });
+      el.querySelector("#sellerCardBtn").addEventListener("click", () => {
+        if (listing.authorName) openRealUserProfile(listing);
+        else openSellerProfile(seller.id);
+      });
       const editBtn = el.querySelector("[data-edit-mine]");
       if (editBtn) editBtn.addEventListener("click", () => openAddEditForm(listing));
       hydratePhotos(el);
@@ -1202,6 +1326,34 @@
         renderGrid(g, sellerListings);
         attachGridHandlers(g);
       }
+    });
+  }
+
+  function openRealUserProfile(listing) {
+    const theirListings = state.listings.filter(
+      (l) => l.status !== "sold" && l.authorName && l.authorName === listing.authorName
+    );
+    const avatarImg = listing.authorAvatarPhoto;
+    const avatarEmoji = listing.authorAvatarEmoji || "🙂";
+
+    const html = `
+      ${screenHeader(listing.authorName)}
+      <div class="screen-body">
+        <div class="seller-hero">
+          <div class="seller-hero-avatar${avatarImg ? " has-img" : ""}">
+            ${avatarImg ? `<img src="${esc(avatarImg)}" alt="" />` : avatarEmoji}
+          </div>
+          <div class="seller-hero-name">${esc(listing.authorName)}</div>
+          <div class="profile-stats" style="max-width:280px;margin:18px auto 0;">
+            <div class="stat"><b>${theirListings.length}</b><span>${t("seller.listings")}</span></div>
+          </div>
+        </div>
+        ${theirListings.length ? `<h4 style="margin:18px 0 10px;font-size:14px;">${t("seller.itsListings")}</h4><div class="grid" id="sellerGrid"></div>` : ""}
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const g = el.querySelector("#sellerGrid");
+      if (g) { renderGrid(g, theirListings); attachGridHandlers(g); }
     });
   }
 
@@ -1473,10 +1625,7 @@
       }
       renderPhotoGrid();
 
-      // in-flight ImgBB uploads; publish must wait for these so we never write base64 into Firestore
       const pendingUploads = new Set();
-      // in-flight FileReader reads; without this, clicking "publish" right after picking photos
-      // (before onload fires) would race ahead and silently drop those photos from the listing
       const pendingReads = new Set();
 
       photoInput.addEventListener("change", () => {
@@ -1494,7 +1643,6 @@
             reader.onload = () => {
               const localIndex = draft.photos.push(reader.result) - 1;
               renderPhotoGrid();
-              // upload in the background, then swap the base64 preview for the hosted ImgBB URL
               const uploadTask = uploadToImgBB(file)
                 .then((url) => {
                   if (url && draft.photos[localIndex] === reader.result) {
@@ -1598,15 +1746,12 @@
 
         const submitBtn = el.querySelector("#submitListingBtn");
 
-        // wait for any photos still being read from disk (FileReader) so a fast click right after
-        // picking files can't race ahead and publish before those photos ever reach draft.photos
         if (pendingReads.size) {
           submitBtn.disabled = true;
           showToast(t("form.uploadingPhotos"));
           await Promise.all(Array.from(pendingReads)).catch(() => {});
         }
 
-        // wait for any still-uploading photos so we never write base64 previews into Firestore
         if (pendingUploads.size) {
           submitBtn.disabled = true;
           showToast(t("form.uploadingPhotos"));
@@ -1614,7 +1759,6 @@
           await Promise.all(Array.from(pendingUploads)).catch(() => {});
         }
 
-        // drop photos that never finished uploading — base64 in Firestore can blow the 1MiB doc limit and silently fail the write
         const uploadedPhotos = draft.photos.filter((p) => typeof p === "string" && !p.startsWith("data:"));
         if (uploadedPhotos.length !== draft.photos.length) {
           console.warn("[Geran] " + (draft.photos.length - uploadedPhotos.length) + " photo(s) failed to upload to ImgBB and were dropped before publishing.");
@@ -1622,7 +1766,6 @@
         }
         draft.photos = uploadedPhotos;
 
-        // last-resort sanity check
         if (price === "" || price == null) {
           console.error("[Geran] Aborting publish: price empty before write:", price);
           showToast(t("form.needPrice"));
@@ -1677,7 +1820,6 @@
             }
             showToast(t("form.saved"));
           } catch (e) {
-            console.error("Ошибка Firestore:", e);
             console.error("[Geran] Failed to update listing in Firestore:", existing.id, e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
@@ -1703,6 +1845,7 @@
             userId: uidNow || "",
             status: "active",
             views: 0,
+            favoritedBy: [],
             lat: (coordsForLocation(city) && typeof coordsForLocation(city)[0] === "number") ? coordsForLocation(city)[0] : 0,
             lng: (coordsForLocation(city) && typeof coordsForLocation(city)[1] === "number") ? coordsForLocation(city)[1] : 0,
             authorName: me.name || "",
@@ -1717,12 +1860,11 @@
               newId = docRef.id;
               console.info("[Geran] Listing published to Firestore with id:", newId);
             } else {
-              newId = uid("l"); // local-only demo mode (no Firebase configured)
+              newId = uid("l");
             }
             state.listings.unshift({ ...listingData, id: newId, sellerId: "geran", mine: true, createdAt: Date.now() });
             showToast(t("form.published"));
           } catch (e) {
-            console.error("Ошибка Firestore:", e);
             console.error("[Geran] Failed to publish listing to Firestore:", e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
@@ -1821,7 +1963,7 @@
     const el = document.getElementById("onlineCount");
     if (!el) return;
     if (typeof initPresenceTracking !== "function" || !FIREBASE_READY) {
-      el.textContent = 1; // local-only demo mode: no shared presence backend, just this session
+      el.textContent = 1;
       return;
     }
     initPresenceTracking((count) => { el.textContent = count; });
@@ -1851,14 +1993,6 @@
       </div>`;
     pushScreen(html);
   }
-
-  const PROMO_BANNER_IMAGES = [
-    "nn.png",
-    "nn.png",
-    "nn.png",
-    "./assets/promo-3.jpg",
-    "./assets/promo-4.jpg",
-  ];
 
   const PROMO_SLIDES = [
     { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: ["#16A34A", "#4ADE80"] },
@@ -1944,7 +2078,7 @@
       ${screenHeader(t("avatar.title"))}
       <div class="screen-body">
         <div class="avatar-preview-big" id="avatarPreview"
-             style="${me.avatarPhoto ? `background-image:url(${me.avatarPhoto})` : ""}">${me.avatarPhoto ? "" : me.avatar}</div>
+             style="${me.avatarPhoto ? `background-image:url(${me.avatarPhoto})` : ""}">${me.avatarPhoto ? "" : (me.avatar || "🙂")}</div>
 
         <div class="form-group">
           <button class="btn btn-primary btn-block" id="uploadAvatarBtn">${t("avatar.upload")}</button>
@@ -1955,7 +2089,7 @@
         <div class="form-group">
           <label>${t("avatar.orEmoji")}</label>
           <div class="avatar-emoji-grid" id="avatarEmojiGrid">
-            ${AVATAR_EMOJI.map((e) => `<div class="avatar-emoji-opt ${!me.avatarPhoto && me.avatar === e ? "active" : ""}" data-emo="${e}">${e}</div>`).join("")}
+            ${AVATAR_EMOJI.map((e) => `<div class="avatar-emoji-opt ${!me.avatarPhoto && (me.avatar || "🙂") === e ? "active" : ""}" data-emo="${e}">${e}</div>`).join("")}
           </div>
         </div>
       </div>`;
@@ -2120,11 +2254,36 @@
     const mapEl = el.querySelector("#pdMap");
     if (!mapEl) return;
 
+    // 1) Своя статичная картинка — приоритетнее живой карты.
+    const customImg = CUSTOM_MAP_IMAGES[listing.city];
+    if (customImg) {
+      const img = document.createElement("img");
+      img.src = customImg;
+      img.alt = "";
+      img.style.cssText = "width:100%;height:190px;object-fit:cover;border-radius:inherit;display:block;";
+      mapEl.replaceWith(img);
+      return;
+    }
+
+    // 2) Точные координаты из конфига — приоритетнее listing.lat/lng.
+    const custom = CUSTOM_CITY_COORDS[listing.city];
+    const lat = custom ? custom.lat : listing.lat;
+    const lng = custom ? custom.lng : listing.lng;
+    const hasCoords = typeof lat === "number" && typeof lng === "number";
+
+    if (!hasCoords) {
+      mapEl.className = "pd-map-offline";
+      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span>
+        <span>${t("pd.mapOffline")}</span>
+        <span>${esc(listing.city)}</span>`;
+      return;
+    }
+
     if (typeof L === "undefined") {
       mapEl.className = "pd-map-offline";
       mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span>
         <span>${t("pd.mapOffline")}</span>
-        <span>${esc(listing.city)} \u00b7 ${listing.lat.toFixed(4)}, ${listing.lng.toFixed(4)}</span>`;
+        <span>${esc(listing.city)} \u00b7 ${lat.toFixed(4)}, ${lng.toFixed(4)}</span>`;
       return;
     }
 
@@ -2132,10 +2291,10 @@
       const map = L.map(mapEl, {
         zoomControl: true,
         attributionControl: true,
-        scrollWheelZoom: false,   
+        scrollWheelZoom: false,
         doubleClickZoom: true,
         dragging: true,
-      }).setView([listing.lat, listing.lng], 13);
+      }).setView([lat, lng], 13);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
@@ -2149,7 +2308,7 @@
         iconAnchor: [14, 28],
         popupAnchor: [0, -30],
       });
-      L.marker([listing.lat, listing.lng], { icon, title: listing.city })
+      L.marker([lat, lng], { icon, title: listing.city })
         .addTo(map)
         .bindPopup(`<b>${esc(listingTitle(listing))}</b><br>${esc(listing.city)}`);
 
@@ -2386,10 +2545,9 @@
 
   function ensureRecaptcha() {
     if (recaptchaVerifier) {
-      try { recaptchaVerifier.clear(); } catch (e) { /* already gone */ }
+      try { recaptchaVerifier.clear(); } catch (e) {}
       recaptchaVerifier = null;
     }
-    // classic reCAPTCHA v2 invisible; the SDK's own Enterprise probe (recaptchaConfig 400) is expected and falls back to this automatically
     recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", {
       size: "invisible",
       callback: () => {},
@@ -2427,9 +2585,6 @@
 
   function sendAuthCode(fullPhone, ui) {
     // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
-    // Uses a real Firebase Anonymous Auth session (not signInWithPhoneNumber) so
-    // fbAuth.currentUser is genuinely set and Firestore rules (request.auth.uid == userId)
-    // still pass. Requires Authentication → Sign-in method → Anonymous enabled in console.
     const { screen, displayPhone, btn } = ui;
     console.log("[Geran] SMS bypass active for", fullPhone);
     fbAuth.signInAnonymously()
@@ -2437,7 +2592,7 @@
         finishAuthSuccess(screen, displayPhone || fullPhone, cred.user.uid);
       })
       .catch((e) => {
-        console.error("[Geran] Anonymous auth bypass failed — enable Authentication → Sign-in method → Anonymous in Firebase Console:", e && e.code, e);
+        console.error("[Geran] Anonymous auth bypass failed:", e && e.code, e);
         if (btn) { btn.classList.remove("loading"); btn.disabled = false; }
         showToast(t("form.syncFailed"));
       });
@@ -2456,7 +2611,7 @@
         finishAuthSuccess(screen, authPendingPhone, result.user.uid);
       })
       .catch((e) => {
-        console.error("[Geran] confirmationResult.confirm failed — real Firebase error code/message:", e && e.code, e);
+        console.error("[Geran] confirmationResult.confirm failed:", e && e.code, e);
         verifyBtn.classList.remove("loading");
         verifyBtn.disabled = codeInput.value.length !== 6;
         codeErr.textContent = mapFirebaseAuthError(e);
@@ -2825,6 +2980,10 @@
     document.getElementById("openBannersBtn")?.addEventListener("click", openAdminBannersModal);
     document.getElementById("closeLangBtn").addEventListener("click", closeLanguageSheet);
     document.getElementById("langOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLanguageSheet(); });
+
+    const editAvatarBtn = document.getElementById("editAvatarBtn");
+    if (editAvatarBtn) editAvatarBtn.addEventListener("click", openAvatarEditor);
+
     document.getElementById("editNameBtn").addEventListener("click", () =>
       openTextEditor({
         title: t("name.title"), label: t("name.label"), value: getUser("me").name, placeholder: t("name.placeholder"),
@@ -2850,16 +3009,15 @@
     );
     document.getElementById("refreshDataBtn").addEventListener("click", () => {
       if (typeof MOCK_LISTINGS === "undefined" || !MOCK_LISTINGS.length) {
-        console.error("[Geran] Manual refresh aborted: MOCK_LISTINGS is empty (catalog script not loaded).");
+        console.error("[Geran] Manual refresh aborted: MOCK_LISTINGS is empty.");
         showToast(t("catalog.refreshed"));
         return;
       }
       rebuildListingsFromRemote();
       showToast(`${t("catalog.refreshed")} · ${state.listings.length} ${t("home.count")}`);
     });
-    document.getElementById("aboutBtn").addEventListener("click", () =>
-      showToast(t("app.about"))
-    );
+    document.getElementById("aboutBtn").addEventListener("click", () => showToast(t("app.about")));
+
     document.getElementById("beSponsorBtn").addEventListener("click", () => {
       const html = `
         ${screenHeader(t("sponsor.title"))}
@@ -2960,7 +3118,6 @@
     startListingsSync();
     if (typeof startBannersSync === "function") startBannersSync();
     window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
-    // resuming the app on mobile (switching back from another app/tab) should also feel fresh
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && state.currentTab === "home") {
         reseedHomeOrder();

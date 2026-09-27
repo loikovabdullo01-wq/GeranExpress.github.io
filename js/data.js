@@ -1,4 +1,3 @@
-
 const CATEGORIES = [
   { id: "all", get name() { return t("cat.all"); }, icon: "✨" },
   { id: "services", get name() { return t("cat.services"); }, icon: "🛠️" },
@@ -14,6 +13,8 @@ const CATEGORIES = [
   { id: "beauty", get name() { return t("cat.beauty"); }, icon: "💄" },
   { id: "books", get name() { return t("cat.books"); }, icon: "📚" },
   { id: "animals", get name() { return t("cat.animals"); }, icon: "🐾" },
+  { id: "moto",  name: "Мото",         icon: "🏍️" },
+  { id: "free",  name: "Отдам даром",  icon: "🎁" },
   { id: "other", get name() { return t("cat.other"); }, icon: "🏷️" },
 ];
 
@@ -399,6 +400,24 @@ function normalizeCategoryKey(raw) {
     str === "animals" || str === "pets" || str.includes("животн") || str.includes("питом") || str.includes("ҳайвон")
   ) {
     return "animals";
+  }
+
+  // «Мото» — принимает и "moto", и русские/таджикские варианты
+  if (
+    str === "moto" || str === "motorcycle" ||
+    str.includes("мото") || str.includes("мотоцикл") ||
+    str.includes("мотоб") || str.includes("скутер")
+  ) {
+    return "moto";
+  }
+
+  // «Отдам даром» — русские и таджикские варианты
+  if (
+    str === "free" || str === "gift" ||
+    str.includes("даром") || str.includes("бесплатн") ||
+    str.includes("отдам") || str.includes("туҳфа")
+  ) {
+    return "free";
   }
 
   if (typeof CATEGORIES !== "undefined" && CATEGORIES.some((c) => c.id === str)) {

@@ -46,9 +46,9 @@
   //  приоритетнее этих (управление через админку в профиле).
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
-    "./assets/promo-1.jpg",
-    "./assets/promo-2.jpg",
-    "./assets/promo-3.jpg",
+    ".nn.png",
+    "nn.png",
+    ".nn.png",
     "./assets/promo-4.jpg",
   ];
 
@@ -1158,9 +1158,6 @@
       <div class="screen-body">
         <div class="pd-gallery" id="pdGallery" style="${images.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
           ${galleryMarkup}
-          <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" style="position:absolute;top:12px;right:12px;width:38px;height:38px;">
-            <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
-          </button>
         </div>
         <div class="pd-top-row">
           <div>
@@ -1226,7 +1223,8 @@
       </div>`;
 
     pushScreen(html, (el) => {
-      el.querySelector("[data-fav]").addEventListener("click", (e) => toggleFavorite(listing.id, e.currentTarget));
+      const favBtn = el.querySelector("[data-fav]");
+      if (favBtn) favBtn.addEventListener("click", (e) => toggleFavorite(listing.id, e.currentTarget));
       const fav2 = el.querySelector("[data-fav-btn2]");
       if (fav2) fav2.addEventListener("click", () => {
         toggleFavorite(listing.id);
@@ -2021,8 +2019,10 @@
       const defaultImg = PROMO_BANNER_IMAGES[i] || "";
       const image = customImg || defaultImg;
 
+      // Картинка ставится ВЕРХНИМ слоем, градиент — под ней.
+      // Если URL битый — градиент всё равно виден как fallback.
       const backgroundStyle = image
-        ? `background-image: ${customImg ? "" : `linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}), `}url('${esc(image)}'); background-size: cover; background-position: center; background-repeat: no-repeat;`
+        ? `background-image: url('${esc(image)}'), linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}); background-size: cover, cover; background-position: center center, center center; background-repeat: no-repeat, no-repeat;`
         : `background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});`;
 
       return `<div class="promo-slide" style="${backgroundStyle}">
@@ -2951,6 +2951,85 @@
     setTimeout(() => frame.classList.remove("entering"), 1100);
   }
 
+  // ─────────────────────────────────────────────────────────────
+  //  PWA INSTALL PROMPT — предложение установить ярлык
+  //  Показывается автоматически при событии beforeinstallprompt
+  //  (Chrome / Edge / Android). На iOS покажем инструкцию вручную.
+  // ─────────────────────────────────────────────────────────────
+  let deferredInstallPrompt = null;
+  const INSTALL_DISMISS_KEY = "bh_install_dismissed_at";
+  const INSTALL_DISMISS_DAYS = 7;
+
+  function wasInstallRecentlyDismissed() {
+    try {
+      const ts = Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0);
+      if (!ts) return false;
+      return (Date.now() - ts) < INSTALL_DISMISS_DAYS * 86400000;
+    } catch (e) { return false; }
+  }
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+      || window.navigator.standalone === true;
+  }
+
+  function showInstallBanner() {
+    if (isStandalone()) return;
+    if (wasInstallRecentlyDismissed()) return;
+    const banner = document.getElementById("installBanner");
+    if (!banner) return;
+    banner.hidden = false;
+  }
+
+  function hideInstallBanner() {
+    const banner = document.getElementById("installBanner");
+    if (banner) banner.hidden = true;
+  }
+
+  function initInstallPrompt() {
+    const banner = document.getElementById("installBanner");
+    const installBtn = document.getElementById("installBannerBtn");
+    const closeBtn = document.getElementById("installBannerClose");
+    if (!banner || !installBtn || !closeBtn) return;
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      // Небольшая задержка, чтобы не мешать splash-экрану
+      setTimeout(showInstallBanner, 3500);
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      hideInstallBanner();
+      showToast("Приложение установлено!");
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) {
+        // iOS Safari и некоторые браузеры не поддерживают beforeinstallprompt —
+        // показываем подсказку как установить вручную.
+        showToast("Откройте меню браузера → «На главный экран»");
+        hideInstallBanner();
+        return;
+      }
+      hideInstallBanner();
+      deferredInstallPrompt.prompt();
+      try {
+        const choice = await deferredInstallPrompt.userChoice;
+        console.info("[Geran] Install prompt choice:", choice && choice.outcome);
+      } catch (e) {
+        console.warn("[Geran] Install prompt failed:", e);
+      }
+      deferredInstallPrompt = null;
+    });
+
+    closeBtn.addEventListener("click", () => {
+      hideInstallBanner();
+      try { localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now())); } catch (e) {}
+    });
+  }
+
   function init() {
     applyTheme(state.theme);
 
@@ -3114,6 +3193,7 @@
     initZoomViewer();
     initHeaderCollapse();
     initPullToRefresh();
+    initInstallPrompt();
     syncHeaderHeight();
     startListingsSync();
     if (typeof startBannersSync === "function") startBannersSync();

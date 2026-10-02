@@ -129,7 +129,7 @@ function seededRandom(seed) {
 }
 
 const USERS = [
-  { id: "me", name: "Вы", city: "Душанбе", avatar: "🙂", phone: "+992 900 00 00 00", memberSince: "2026", verified: false, about: "" },
+  { id: "me", name: "User", city: "Душанбе", avatar: "🙂", phone: "+992 900 00 00 00", memberSince: "2026", verified: false, about: "" },
   { id: "u1", name: "Азиз Каримов", city: "Душанбе", avatar: "🧑", phone: "+992 918 11 22 33", rating: 4.9, reviews: 34, sales: 61, memberSince: "2021", verified: true, about: "Электроника и гаджеты. Только рабочее состояние." },
   { id: "u2", name: "Дилноза Юсупова", city: "Худжанд", avatar: "👩", phone: "+992 927 22 33 44", rating: 4.7, reviews: 21, sales: 40, memberSince: "2022", verified: true, about: "Люблю красивые вещи и делюсь ими 💫" },
   { id: "u3", name: "Тимур Ахметов", city: "Бохтар", avatar: "🧔", phone: "+992 935 33 44 55", rating: 4.6, reviews: 15, sales: 22, memberSince: "2023", verified: false, about: "Продаю технику после апгрейда." },

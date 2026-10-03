@@ -1316,20 +1316,21 @@ svg[fill]{ stroke:none; }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
-/* Баннер: показывать целиком, высота по пропорциям картинки */
-[id^="banner_"],
-[id^="banner_"] .swiper-slide,
-.swiper,
-.swiper-wrapper,
-.swiper-slide {
-  height: auto !important;
-}
-
-[id^="banner_"] img,
-.swiper-slide img {
+/* сама картинка баннера */
+img[src*="nn.png"] {
   width: 100% !important;
   height: auto !important;
-  aspect-ratio: 3 / 1;
+  max-width: 100% !important;
   object-fit: contain !important;
-  display: block;
+  object-position: center !important;
+  display: block !important;
+  transform: none !important;
+}
+
+/* два уровня родителей: снимаем фиксированную высоту */
+div:has(> img[src*="nn.png"]),
+div:has(> div > img[src*="nn.png"]) {
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
 }

@@ -6,8 +6,15 @@ const LANGUAGES = [
 
 const TRANSLATIONS = {
   ru: {
-  "promo.2.t": " ",
-"promo.2.s": " ",
+    // Тексты баннеров пустые — надписи уже внутри картинок nn.png
+    "promo.1.t": " ",
+    "promo.1.s": " ",
+    "promo.2.t": " ",
+    "promo.2.s": " ",
+    "promo.3.t": " ",
+    "promo.3.s": " ",
+    "promo.4.t": " ",
+    "promo.4.s": " ",
 
     "profile.logout": "Выйти из аккаунта",
     "logout.title": "Выйти из аккаунта?",

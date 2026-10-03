@@ -1316,4 +1316,10 @@ svg[fill]{ stroke:none; }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+/* Делаем баннеры адаптивными, чтобы текст не обрезался по бокам */
+.swiper-slide img, 
+[id^="banner_"] img {
+    object-fit: contain !important;
+    background-color: #ffffff !important;
+}
 

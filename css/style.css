@@ -1316,10 +1316,20 @@ svg[fill]{ stroke:none; }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
-/* Делаем баннеры адаптивными, чтобы текст не обрезался по бокам */
-.swiper-slide img, 
-[id^="banner_"] img {
-    object-fit: contain !important;
-    background-color: #ffffff !important;
+/* Баннер: показывать целиком, высота по пропорциям картинки */
+[id^="banner_"],
+[id^="banner_"] .swiper-slide,
+.swiper,
+.swiper-wrapper,
+.swiper-slide {
+  height: auto !important;
 }
 
+[id^="banner_"] img,
+.swiper-slide img {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3 / 1;
+  object-fit: contain !important;
+  display: block;
+}

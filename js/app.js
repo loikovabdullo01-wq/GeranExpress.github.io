@@ -50,7 +50,7 @@
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
     "nn.png",
-    "nn.png",
+    "nnn.png",
     "nn.png",
     "nn.png"
   ];

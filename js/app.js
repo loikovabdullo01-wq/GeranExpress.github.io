@@ -41,24 +41,24 @@
 
   // ─────────────────────────────────────────────────────────────
   //  КАРТИНКИ БАННЕРА НА ГЛАВНОЙ
-  //  Просто подмени путь — баннер обновится при следующей загрузке.
-  //  Если в Firestore settings/banners.list будут картинки — они
-  //  приоритетнее этих (управление через админку в профиле).
+  //  Файлы лежат в корне репозитория и/или в папке assets/.
+  //  Порядок соответствует PROMO_SLIDES (4 слайда). Если у вас
+  //  есть ещё баннеры — просто замените строки ниже на их имена,
+  //  количество элементов должно совпадать с PROMO_SLIDES.length.
+  //  Если файла нет — покажется градиент с текстом (не сломается).
+  //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
-const PROMO_BANNER_IMAGES = [
-  "nn.png",
-  "nn.png",
-  "nn.png",
-  "nn.png"
-]
+  const PROMO_BANNER_IMAGES = [
+    "nn.png",
+    "nn.png",
+    "nn.png",
+    "nn.png"
+  ];
 
   // ─────────────────────────────────────────────────────────────
   //  КАРТА — свои координаты и свои картинки для городов/сёл.
-  //  Если для локации задана картинка — вместо Leaflet покажем её.
-  //  Если заданы координаты — поставим точную метку.
   // ─────────────────────────────────────────────────────────────
   const CUSTOM_CITY_COORDS = {
-    // Таджикистан
     "Душанбе":         { lat: 38.5598, lng: 68.7870 },
     "Худжанд":         { lat: 40.2833, lng: 69.6333 },
     "Бохтар":          { lat: 37.8364, lng: 68.7797 },
@@ -73,7 +73,6 @@ const PROMO_BANNER_IMAGES = [
     "Пенджикент":      { lat: 39.4956, lng: 67.6103 },
     "Исфара":          { lat: 40.1247, lng: 70.6264 },
     "Канибадам":       { lat: 40.2981, lng: 70.4239 },
-    // Россия
     "Казань":          { lat: 55.7963, lng: 49.1088 },
     "Москва":          { lat: 55.7558, lng: 37.6173 },
     "Нижний Новгород": { lat: 56.3269, lng: 44.0059 },
@@ -84,40 +83,25 @@ const PROMO_BANNER_IMAGES = [
     "Краснодар":       { lat: 45.0355, lng: 38.9753 },
   };
 
-  // Опционально: свои картинки-карты. Ключ — название локации.
-  // Если задано — вместо Leaflet покажется картинка.
-  const CUSTOM_MAP_IMAGES = {
-    // "Чайхун":     "./assets/maps/chaykhun.png",
-    // "Дехканобод": "./assets/maps/dehkanobod.png",
-  };
+  const CUSTOM_MAP_IMAGES = {};
 
-  // ─────────────────────────────────────────────────────────────
-  //  ДОПОЛНЕНИЕ ГОРОДОВ РОССИИ (в нужном порядке)
-  // ─────────────────────────────────────────────────────────────
   (function augmentRussiaCities() {
     if (typeof FOREIGN_CITIES === "undefined" || !Array.isArray(FOREIGN_CITIES)) return;
     const needed = [
-      "Казань",
-      "Москва",
-      "Нижний Новгород",
-      "Дзержинск",
-      "Санкт-Петербург",
-      "Екатеринбург",
-      "Новосибирск",
-      "Краснодар",
+      "Казань", "Москва", "Нижний Новгород", "Дзержинск",
+      "Санкт-Петербург", "Екатеринбург", "Новосибирск", "Краснодар",
     ];
     needed.forEach((city) => {
       if (!FOREIGN_CITIES.includes(city)) FOREIGN_CITIES.push(city);
     });
   })();
 
-  // ВАЖНО: список сёл Чайхуна берём из data.js как есть (CHAYKHUN_VILLAGES).
-  // Никаких придуманных районов/группировок — оригинальные названия и порядок.
+  const MAX_LISTING_PHOTOS = 10;
 
   function normalizePhotos(value) {
     if (!value) return [];
     const list = Array.isArray(value) ? value : [value];
-    const cleaned = list
+    return list
       .flatMap((item) => Array.isArray(item) ? item : [item])
       .map((item) => {
         if (typeof item === "string") return item.trim();
@@ -127,8 +111,6 @@ const PROMO_BANNER_IMAGES = [
       .filter((src) => typeof src === "string" && src.length > 0)
       .filter((src, index, arr) => arr.indexOf(src) === index)
       .slice(0, MAX_LISTING_PHOTOS);
-
-    return cleaned;
   }
 
   function listingImages(listing) {
@@ -140,8 +122,6 @@ const PROMO_BANNER_IMAGES = [
     }
     return [];
   }
-
-  const MAX_LISTING_PHOTOS = 10;
 
   const state = {
     theme: loadJSON(LS.theme, null) || "light",
@@ -186,15 +166,6 @@ const PROMO_BANNER_IMAGES = [
     if (days === 0) return t("time.today");
     if (days === 1) return t("time.yesterday");
     return published.toLocaleDateString("ru-RU");
-  }
-
-  function parseRemotePrice(rawPrice) {
-    if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
-    if (typeof rawPrice === "string" && rawPrice.trim()) {
-      const parsed = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
-      return Number.isFinite(parsed) ? rawPrice.trim() : rawPrice.trim();
-    }
-    return 0;
   }
 
   function normalizeRemoteListing(doc) {
@@ -250,9 +221,7 @@ const PROMO_BANNER_IMAGES = [
     const remoteIds = new Set(remoteListings.map((l) => l.id));
     const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
     const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
-    staticFallback.forEach((l) => {
-      l.category = normalizeCategoryKey(l.category);
-    });
+    staticFallback.forEach((l) => { l.category = normalizeCategoryKey(l.category); });
     state.listings = remoteListings.length ? remoteListings : staticFallback;
     console.log("[Geran] Firestore sync: " + remoteListings.length + " remote, " + staticFallback.length + " static fallback, " + state.listings.length + " shown");
     renderHomeTab();
@@ -270,7 +239,6 @@ const PROMO_BANNER_IMAGES = [
       },
       () => showToast(t("form.syncFailed") || "Sync error")
     );
-    if (unsubscribeListings) console.info("[Geran] Listening for real-time listing updates from Firestore.");
   }
 
   let unsubscribeBanners = null;
@@ -694,8 +662,6 @@ const PROMO_BANNER_IMAGES = [
     });
   }
 
-  // ОРИГИНАЛ: рендерим плоский список сёл/адресов из CHAYKHUN_VILLAGES (js/data.js),
-  // без группировки, без изменения названий и порядка.
   function renderChaykhunVillageStep(currentValue, onSelect) {
     const counts = {};
     countableListings().forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
@@ -745,9 +711,7 @@ const PROMO_BANNER_IMAGES = [
     return arr;
   }
 
-  function shuffleForSession(list) {
-    return seededShuffle(list, SESSION_ORDER_SEED);
-  }
+  function shuffleForSession(list) { return seededShuffle(list, SESSION_ORDER_SEED); }
 
   function nextSeededRandom(seedBox) {
     seedBox.s = (seedBox.s * 1664525 + 1013904223) >>> 0;
@@ -794,17 +758,6 @@ const PROMO_BANNER_IMAGES = [
     return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
   }
 
-  function sortWithVipPriority(arr, compareFn) {
-    const vip = arr.filter((l) => l.isVip);
-    const nonVip = arr.filter((l) => !l.isVip);
-    if (compareFn) {
-      vip.sort(compareFn);
-      nonVip.sort(compareFn);
-    }
-    return interleaveVipListings(nonVip, vip);
-  }
-
-  // Приоритет: свои VIP → свои обычные → чужие VIP (вкраплены) → чужие обычные.
   function sortMineThenVip(arr, compareFn) {
     const mineVip = arr.filter((l) => l.mine && l.isVip);
     const mineReg = arr.filter((l) => l.mine && !l.isVip);
@@ -885,7 +838,6 @@ const PROMO_BANNER_IMAGES = [
 
   function renderHomeTab() {
     const list = computeFilteredListings();
-    console.log("[Geran] renderHomeTab: totalListings=" + state.listings.length + ", afterFilters=" + list.length + ", filters=" + JSON.stringify(state.filters));
     const grid = document.getElementById("homeGrid");
     renderGrid(grid, list);
     document.getElementById("homeEmpty").hidden = list.length !== 0;
@@ -925,9 +877,7 @@ const PROMO_BANNER_IMAGES = [
       try {
         const snap = await fbDb.collection(LISTINGS_COLLECTION).where("userId", "==", uidNow).get();
         mine = snap.docs.map((d) => normalizeRemoteListing({ id: d.id, ...d.data() }));
-        console.log("[Geran] My listings fetched from Firestore: " + mine.length);
       } catch (e) {
-        console.error("[Geran] Failed to fetch my listings from Firestore:", e);
         showToast(t("form.syncFailed"));
         mine = state.listings.filter((l) => l.mine);
       }
@@ -1000,9 +950,6 @@ const PROMO_BANNER_IMAGES = [
     if (!me) return false;
     if (me.isAdmin === true) return true;
     if (state.meProfile && state.meProfile.isAdmin === true) return true;
-    if (fbAuth && fbAuth.currentUser) {
-      if (fbAuth.currentUser.isAdmin === true) return true;
-    }
     return false;
   }
 
@@ -1250,38 +1197,29 @@ const PROMO_BANNER_IMAGES = [
       const gallerySlides = el.querySelectorAll(".pd-gallery-slide");
       const galleryDots = el.querySelectorAll(".pd-gallery-dot");
       if (galleryViewport && galleryTrack && gallerySlides.length > 1) {
-        let index = 0;
-        let startX = 0;
-        let deltaX = 0;
-
+        let index = 0, startX = 0, deltaX = 0;
         const updateSlider = () => {
           galleryTrack.style.transform = `translateX(-${index * 100}%)`;
-          gallerySlides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === index));
-          galleryDots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
+          gallerySlides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+          galleryDots.forEach((dot, i) => dot.classList.toggle("active", i === index));
         };
-
         galleryDots.forEach((dot) => {
           dot.addEventListener("click", () => {
             index = Number(dot.dataset.galleryIndex || 0);
             updateSlider();
           });
         });
-
         galleryViewport.addEventListener("touchstart", (event) => {
-          startX = event.touches[0].clientX;
-          deltaX = 0;
+          startX = event.touches[0].clientX; deltaX = 0;
         }, { passive: true });
-
         galleryViewport.addEventListener("touchmove", (event) => {
           deltaX = event.touches[0].clientX - startX;
         }, { passive: true });
-
         galleryViewport.addEventListener("touchend", () => {
           if (deltaX < -40) index = Math.min(index + 1, gallerySlides.length - 1);
           if (deltaX > 40) index = Math.max(index - 1, 0);
           updateSlider();
         }, { passive: true });
-
         updateSlider();
       }
 
@@ -1320,10 +1258,7 @@ const PROMO_BANNER_IMAGES = [
 
     pushScreen(html, (el) => {
       const g = el.querySelector("#sellerGrid");
-      if (g) {
-        renderGrid(g, sellerListings);
-        attachGridHandlers(g);
-      }
+      if (g) { renderGrid(g, sellerListings); attachGridHandlers(g); }
     });
   }
 
@@ -1633,7 +1568,6 @@ const PROMO_BANNER_IMAGES = [
           photoInput.value = "";
           return;
         }
-
         const files = Array.from(photoInput.files).slice(0, remainingSlots);
         files.forEach((file) => {
           const reader = new FileReader();
@@ -1646,9 +1580,6 @@ const PROMO_BANNER_IMAGES = [
                   if (url && draft.photos[localIndex] === reader.result) {
                     draft.photos[localIndex] = url;
                     renderPhotoGrid();
-                    console.info("[Geran] ImgBB upload ok for photo #" + localIndex + ":", url);
-                  } else if (!url) {
-                    console.error("[Geran] ImgBB upload failed for photo #" + localIndex + "; it will be dropped on publish.");
                   }
                 })
                 .finally(() => pendingUploads.delete(uploadTask));
@@ -1701,7 +1632,6 @@ const PROMO_BANNER_IMAGES = [
           if (!loc || countryOfLocationFilter(loc)) return;
           draft.city = loc;
           el.querySelector("#fCityLabel").textContent = loc;
-
           if (currencySelect && currencySelect.dataset.userModified !== "true") {
             const locCountry = countryOfCity(loc);
             const newDefaultCurrency = locCountry === "ru" ? "RUB" : "TJS";
@@ -1749,28 +1679,17 @@ const PROMO_BANNER_IMAGES = [
           showToast(t("form.uploadingPhotos"));
           await Promise.all(Array.from(pendingReads)).catch(() => {});
         }
-
         if (pendingUploads.size) {
           submitBtn.disabled = true;
           showToast(t("form.uploadingPhotos"));
-          console.info("[Geran] Publish waiting on " + pendingUploads.size + " pending photo upload(s)...");
           await Promise.all(Array.from(pendingUploads)).catch(() => {});
         }
 
         const uploadedPhotos = draft.photos.filter((p) => typeof p === "string" && !p.startsWith("data:"));
         if (uploadedPhotos.length !== draft.photos.length) {
-          console.warn("[Geran] " + (draft.photos.length - uploadedPhotos.length) + " photo(s) failed to upload to ImgBB and were dropped before publishing.");
           showToast(t("form.someSyncFailed"));
         }
         draft.photos = uploadedPhotos;
-
-        if (price === "" || price == null) {
-          console.error("[Geran] Aborting publish: price empty before write:", price);
-          showToast(t("form.needPrice"));
-          submitBtn.disabled = false;
-          return;
-        }
-
         submitBtn.disabled = true;
 
         let uidNow = currentUserId();
@@ -1778,13 +1697,9 @@ const PROMO_BANNER_IMAGES = [
           try {
             const authedUser = await ensureFirebaseAuth();
             if (authedUser) uidNow = authedUser.uid;
-          } catch (err) {
-            console.error("[Geran] Auth check failed:", err);
-          }
+          } catch (err) {}
         }
-
         if (FIREBASE_READY && !uidNow) {
-          console.error("[Geran] Ошибка: Пользователь не авторизован!");
           showToast(t("form.needAuth"));
           submitBtn.disabled = false;
           return;
@@ -1812,13 +1727,9 @@ const PROMO_BANNER_IMAGES = [
           };
           Object.assign(existing, patch);
           try {
-            if (FIREBASE_READY) {
-              await updateListingInFirestore(existing.id, patch);
-              console.info("[Geran] Listing updated in Firestore:", existing.id);
-            }
+            if (FIREBASE_READY) await updateListingInFirestore(existing.id, patch);
             showToast(t("form.saved"));
           } catch (e) {
-            console.error("[Geran] Failed to update listing in Firestore:", existing.id, e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
             return;
@@ -1853,17 +1764,14 @@ const PROMO_BANNER_IMAGES = [
           try {
             let newId;
             if (FIREBASE_READY) {
-              console.info("[Geran] Publishing listing to Firestore:", listingData);
               const docRef = await addListingToFirestore(listingData);
               newId = docRef.id;
-              console.info("[Geran] Listing published to Firestore with id:", newId);
             } else {
               newId = uid("l");
             }
             state.listings.unshift({ ...listingData, id: newId, sellerId: "geran", mine: true, createdAt: Date.now() });
             showToast(t("form.published"));
           } catch (e) {
-            console.error("[Geran] Failed to publish listing to Firestore:", e);
             showToast(t("form.syncFailed"));
             submitBtn.disabled = false;
             return;
@@ -2014,22 +1922,31 @@ const PROMO_BANNER_IMAGES = [
 
     const customList = Array.isArray(state.customBanners) ? state.customBanners : null;
 
+    // Важно: количество слайдов = PROMO_SLIDES.length (4).
+    // Если картинка для слайда задана — рендерим только <img class="promo-slide-img">
+    // (текст/эмодзи не накладываем, т.к. они уже внутри баннера).
+    // Если картинки нет — показываем градиент с текстом и эмодзи.
     track.innerHTML = PROMO_SLIDES.map((s, i) => {
       const customImg = (customList && customList[i]) ? customList[i] : "";
       const defaultImg = PROMO_BANNER_IMAGES[i] || "";
-      const image = customImg || defaultImg;
+      const image = (customImg || defaultImg || "").trim();
 
-      // Картинка ставится ВЕРХНИМ слоем, градиент — под ней.
-      // Если URL битый — градиент всё равно виден как fallback.
-      const backgroundStyle = image
-        ? `background-image: url('${esc(image)}'), linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]}); background-size: cover, cover; background-position: center center, center center; background-repeat: no-repeat, no-repeat;`
-        : `background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});`;
+      if (image) {
+        return `<div class="promo-slide has-img">
+          <img class="promo-slide-img" src="${esc(image)}" alt="" loading="lazy"
+               onerror="this.parentElement.classList.remove('has-img'); this.remove();" />
+        </div>`;
+      }
 
-      return `<div class="promo-slide" style="${backgroundStyle}">
-        ${!customImg ? `<div class="promo-slide-text"><div class="promo-slide-title">${esc(t(s.key + ".t"))}</div><div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div></div>
-        <span class="promo-slide-emo">${s.emo}</span>` : ''}
+      return `<div class="promo-slide" style="background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});">
+        <div class="promo-slide-text">
+          <div class="promo-slide-title">${esc(t(s.key + ".t"))}</div>
+          <div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div>
+        </div>
+        <span class="promo-slide-emo">${s.emo}</span>
       </div>`;
     }).join("");
+
     dotsWrap.innerHTML = PROMO_SLIDES.map((_, i) => `<span class="promo-dot ${i === 0 ? "active" : ""}"></span>`).join("");
     const dots = dotsWrap.querySelectorAll(".promo-dot");
 
@@ -2176,8 +2093,7 @@ const PROMO_BANNER_IMAGES = [
       <div class="screen-body">
         <div style="background:var(--surface-2); padding:12px; border-radius:var(--radius-md); font-size:13px; line-height:1.4; margin-bottom:16px;">
           <strong>📏 Размеры баннеров:</strong><br/>
-          Рекомендуемый единый размер: <strong>1200 × 400 px</strong> (соотношение 3:1).<br/>
-          Также подходят 800 × 400 px и 600 × 600 px.
+          Рекомендуемый единый размер: <strong>1200 × 400 px</strong> (соотношение 3:1).
         </div>
         ${[0, 1, 2, 3].map((i) => `
           <div class="form-group" style="border:1px solid var(--border); padding:12px; border-radius:var(--radius-md); margin-bottom:12px;">
@@ -2185,8 +2101,8 @@ const PROMO_BANNER_IMAGES = [
               Баннер #${i + 1}
               ${banners[i] ? `<button type="button" class="btn btn-sm btn-danger" data-remove-banner="${i}" style="padding:4px 8px; font-size:11px;">Удалить</button>` : ""}
             </label>
-            <div id="bannerPreview_${i}" style="margin-top:8px; height:80px; border-radius:var(--radius-sm); background:var(--surface-2); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--border);">
-              ${banners[i] ? `<img src="${banners[i]}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`}
+            <div id="bannerPreview_${i}" style="margin-top:8px; width:100%; aspect-ratio:3/1; border-radius:var(--radius-sm); background:var(--surface-2); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--border);">
+              ${banners[i] ? `<img src="${banners[i]}" style="width:100%; height:100%; object-fit:contain;" />` : `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`}
             </div>
             <input type="file" id="bannerInput_${i}" accept="image/*" hidden />
             <button type="button" class="btn btn-sm btn-secondary btn-block" id="uploadBannerBtn_${i}" style="margin-top:8px; font-size:12px;">
@@ -2215,7 +2131,7 @@ const PROMO_BANNER_IMAGES = [
           uploadBtn.disabled = false;
           if (url) {
             banners[i] = url;
-            preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" />`;
+            preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:contain;" />`;
             showToast(`Баннер #${i + 1} загружен!`);
           } else {
             showToast("Ошибка загрузки фото");
@@ -2242,7 +2158,6 @@ const PROMO_BANNER_IMAGES = [
           showToast("Баннеры успешно сохранены! 🎉");
           popScreen();
         } catch (e) {
-          console.error("[Geran] Failed to save banners:", e);
           showToast("Не удалось сохранить баннеры");
           saveBtn.disabled = false;
         }
@@ -2254,7 +2169,6 @@ const PROMO_BANNER_IMAGES = [
     const mapEl = el.querySelector("#pdMap");
     if (!mapEl) return;
 
-    // 1) Своя статичная картинка — приоритетнее живой карты.
     const customImg = CUSTOM_MAP_IMAGES[listing.city];
     if (customImg) {
       const img = document.createElement("img");
@@ -2265,7 +2179,6 @@ const PROMO_BANNER_IMAGES = [
       return;
     }
 
-    // 2) Точные координаты из конфига — приоритетнее listing.lat/lng.
     const custom = CUSTOM_CITY_COORDS[listing.city];
     const lat = custom ? custom.lat : listing.lat;
     const lng = custom ? custom.lng : listing.lng;
@@ -2443,10 +2356,7 @@ const PROMO_BANNER_IMAGES = [
     const d = digits.slice(0, country.digits);
     const parts = [];
     let i = 0;
-    for (const size of country.groups) {
-      parts.push(d.slice(i, i + size));
-      i += size;
-    }
+    for (const size of country.groups) { parts.push(d.slice(i, i + size)); i += size; }
     return parts.filter(Boolean).join(" ");
   }
 
@@ -2525,33 +2435,12 @@ const PROMO_BANNER_IMAGES = [
     document.getElementById("authPhoneStep").hidden = false;
   }
 
-  function startResendCooldown() {
-    const resendBtn = document.getElementById("authResendBtn");
-    clearInterval(authResendTimer);
-    let secondsLeft = 30;
-    resendBtn.disabled = true;
-    resendBtn.textContent = t("auth.resendIn").replace("{s}", secondsLeft);
-    authResendTimer = setInterval(() => {
-      secondsLeft -= 1;
-      if (secondsLeft <= 0) {
-        clearInterval(authResendTimer);
-        resendBtn.disabled = false;
-        resendBtn.textContent = t("auth.resend");
-        return;
-      }
-      resendBtn.textContent = t("auth.resendIn").replace("{s}", secondsLeft);
-    }, 1000);
-  }
-
   function ensureRecaptcha() {
-    if (recaptchaVerifier) {
-      try { recaptchaVerifier.clear(); } catch (e) {}
-      recaptchaVerifier = null;
-    }
+    if (recaptchaVerifier) { try { recaptchaVerifier.clear(); } catch (e) {} recaptchaVerifier = null; }
     recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", {
       size: "invisible",
       callback: () => {},
-      "expired-callback": () => { console.warn("[Geran] reCAPTCHA expired, will re-create on next attempt."); },
+      "expired-callback": () => {},
     });
     return recaptchaVerifier;
   }
@@ -2586,13 +2475,11 @@ const PROMO_BANNER_IMAGES = [
   function sendAuthCode(fullPhone, ui) {
     // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
     const { screen, displayPhone, btn } = ui;
-    console.log("[Geran] SMS bypass active for", fullPhone);
     fbAuth.signInAnonymously()
       .then((cred) => {
         finishAuthSuccess(screen, displayPhone || fullPhone, cred.user.uid);
       })
       .catch((e) => {
-        console.error("[Geran] Anonymous auth bypass failed:", e && e.code, e);
         if (btn) { btn.classList.remove("loading"); btn.disabled = false; }
         showToast(t("form.syncFailed"));
       });
@@ -2611,7 +2498,6 @@ const PROMO_BANNER_IMAGES = [
         finishAuthSuccess(screen, authPendingPhone, result.user.uid);
       })
       .catch((e) => {
-        console.error("[Geran] confirmationResult.confirm failed:", e && e.code, e);
         verifyBtn.classList.remove("loading");
         verifyBtn.disabled = codeInput.value.length !== 6;
         codeErr.textContent = mapFirebaseAuthError(e);
@@ -2869,10 +2755,7 @@ const PROMO_BANNER_IMAGES = [
     const TRIGGER = 62;
     const DAMPING = 0.45;
 
-    let startY = 0;
-    let lastPull = 0;
-    let dragging = false;
-    let refreshing = false;
+    let startY = 0, lastPull = 0, dragging = false, refreshing = false;
 
     function applyPull(px, animated) {
       lastPull = px;
@@ -2888,20 +2771,11 @@ const PROMO_BANNER_IMAGES = [
       return !refreshing && state.currentTab === "home" && main.scrollTop === 0;
     }
 
-    function start(y) {
-      if (!canStart()) return false;
-      startY = y;
-      dragging = true;
-      return true;
-    }
+    function start(y) { if (!canStart()) return false; startY = y; dragging = true; return true; }
 
     function move(y) {
       if (!dragging) return false;
-      if (main.scrollTop !== 0 || y < startY) {
-        dragging = false;
-        applyPull(0, true);
-        return false;
-      }
+      if (main.scrollTop !== 0 || y < startY) { dragging = false; applyPull(0, true); return false; }
       const raw = y - startY;
       if (raw <= 0) { applyPull(0, false); return false; }
       applyPull(Math.min(MAX_PULL, raw * DAMPING), false);
@@ -2930,17 +2804,12 @@ const PROMO_BANNER_IMAGES = [
     }
 
     main.addEventListener("touchstart", (e) => { start(e.touches[0].clientY); }, { passive: true });
-    main.addEventListener("touchmove", (e) => {
-      if (move(e.touches[0].clientY)) e.preventDefault();
-    }, { passive: false });
+    main.addEventListener("touchmove", (e) => { if (move(e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
     main.addEventListener("touchend", finish, { passive: true });
     main.addEventListener("touchcancel", finish, { passive: true });
 
     let mouseActive = false;
-    main.addEventListener("mousedown", (e) => {
-      mouseActive = start(e.clientY);
-      if (mouseActive) e.preventDefault();
-    });
+    main.addEventListener("mousedown", (e) => { mouseActive = start(e.clientY); if (mouseActive) e.preventDefault(); });
     window.addEventListener("mousemove", (e) => { if (mouseActive) move(e.clientY); });
     window.addEventListener("mouseup", () => { if (mouseActive) { mouseActive = false; finish(); } });
   }
@@ -2951,11 +2820,7 @@ const PROMO_BANNER_IMAGES = [
     setTimeout(() => frame.classList.remove("entering"), 1100);
   }
 
-  // ─────────────────────────────────────────────────────────────
-  //  PWA INSTALL PROMPT — предложение установить ярлык
-  //  Показывается автоматически при событии beforeinstallprompt
-  //  (Chrome / Edge / Android). На iOS покажем инструкцию вручную.
-  // ─────────────────────────────────────────────────────────────
+  // PWA INSTALL PROMPT
   let deferredInstallPrompt = null;
   const INSTALL_DISMISS_KEY = "bh_install_dismissed_at";
   const INSTALL_DISMISS_DAYS = 7;
@@ -2967,12 +2832,10 @@ const PROMO_BANNER_IMAGES = [
       return (Date.now() - ts) < INSTALL_DISMISS_DAYS * 86400000;
     } catch (e) { return false; }
   }
-
   function isStandalone() {
     return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
       || window.navigator.standalone === true;
   }
-
   function showInstallBanner() {
     if (isStandalone()) return;
     if (wasInstallRecentlyDismissed()) return;
@@ -2980,22 +2843,25 @@ const PROMO_BANNER_IMAGES = [
     if (!banner) return;
     banner.hidden = false;
   }
-
   function hideInstallBanner() {
     const banner = document.getElementById("installBanner");
     if (banner) banner.hidden = true;
   }
-
   function initInstallPrompt() {
     const banner = document.getElementById("installBanner");
     const installBtn = document.getElementById("installBannerBtn");
     const closeBtn = document.getElementById("installBannerClose");
     if (!banner || !installBtn || !closeBtn) return;
 
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch((e) => {
+        console.warn("[Geran] SW registration failed:", e);
+      });
+    }
+
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
-      // Небольшая задержка, чтобы не мешать splash-экрану
       setTimeout(showInstallBanner, 3500);
     });
 
@@ -3007,8 +2873,6 @@ const PROMO_BANNER_IMAGES = [
 
     installBtn.addEventListener("click", async () => {
       if (!deferredInstallPrompt) {
-        // iOS Safari и некоторые браузеры не поддерживают beforeinstallprompt —
-        // показываем подсказку как установить вручную.
         showToast("Откройте меню браузера → «На главный экран»");
         hideInstallBanner();
         return;
@@ -3018,9 +2882,7 @@ const PROMO_BANNER_IMAGES = [
       try {
         const choice = await deferredInstallPrompt.userChoice;
         console.info("[Geran] Install prompt choice:", choice && choice.outcome);
-      } catch (e) {
-        console.warn("[Geran] Install prompt failed:", e);
-      }
+      } catch (e) {}
       deferredInstallPrompt = null;
     });
 
@@ -3088,7 +2950,6 @@ const PROMO_BANNER_IMAGES = [
     );
     document.getElementById("refreshDataBtn").addEventListener("click", () => {
       if (typeof MOCK_LISTINGS === "undefined" || !MOCK_LISTINGS.length) {
-        console.error("[Geran] Manual refresh aborted: MOCK_LISTINGS is empty.");
         showToast(t("catalog.refreshed"));
         return;
       }
@@ -3125,26 +2986,13 @@ const PROMO_BANNER_IMAGES = [
 
         submitBtn.addEventListener("click", async () => {
           const amount = Number(amountInput.value);
-          if (!amount || amount <= 0) {
-            showToast(t("sponsor.needAmount"));
-            amountInput.focus();
-            return;
-          }
+          if (!amount || amount <= 0) { showToast(t("sponsor.needAmount")); amountInput.focus(); return; }
 
           submitBtn.disabled = true;
-          const payload = {
-            userId: currentUserId(),
-            amount,
-            bank: "Эсхата",
-            account: "971 220 800",
-            message: messageInput.value.trim(),
-            receiptUrl: "",
-          };
+          const payload = { userId: currentUserId(), amount, bank: "Эсхата", account: "971 220 800", message: messageInput.value.trim(), receiptUrl: "" };
 
           try {
-            if (FIREBASE_READY && typeof saveSponsorDonation === "function") {
-              await saveSponsorDonation(payload);
-            }
+            if (FIREBASE_READY && typeof saveSponsorDonation === "function") await saveSponsorDonation(payload);
             const waText = encodeURIComponent(`Здравствуйте! Я хочу поддержать Geran Express на сумму ${amount} сомони. ${payload.message ? "Комментарий: " + payload.message : ""}`);
             const tgText = encodeURIComponent(`Поддержка Geran Express: ${amount} сомони. ${payload.message || ""}`);
             window.open(`https://wa.me/79385401876?text=${waText}`, "_blank");
@@ -3152,7 +3000,6 @@ const PROMO_BANNER_IMAGES = [
             showToast(t("sponsor.thanks"));
             popScreen();
           } catch (e) {
-            console.error("[Geran] Sponsor save failed:", e);
             showToast(t("sponsor.sendFailed"));
             submitBtn.disabled = false;
           }
@@ -3166,10 +3013,7 @@ const PROMO_BANNER_IMAGES = [
     searchInput.addEventListener("input", () => {
       clearBtn.hidden = !searchInput.value;
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        state.filters.query = searchInput.value;
-        renderHomeTab();
-      }, 180);
+      searchTimer = setTimeout(() => { state.filters.query = searchInput.value; renderHomeTab(); }, 180);
     });
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";

@@ -49,7 +49,7 @@
   //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
-    "nnnn.png",
+    "pp.png",
     "nn.png",
     "nnn.png",
     "nn.png"

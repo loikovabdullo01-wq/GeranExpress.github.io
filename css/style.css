@@ -1316,3 +1316,8 @@ svg[fill]{ stroke:none; }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+/* Скрываем дефолтный текстовый заглушечный контент под баннером */
+[id^="banner_"] span {
+    display: none !important;
+}
+

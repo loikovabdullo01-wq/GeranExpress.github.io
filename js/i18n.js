@@ -6,8 +6,9 @@ const LANGUAGES = [
 
 const TRANSLATIONS = {
   ru: {
-  "promo.2.t": "",
-"promo.2.s": "",
+  "promo.2.t": " ",
+"promo.2.s": " ",
+
     "profile.logout": "Выйти из аккаунта",
     "logout.title": "Выйти из аккаунта?",
     "logout.text": "Вы вернётесь к экрану входа. Ваши объявления и избранное останутся на этом устройстве.",

@@ -49,10 +49,13 @@
   //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
+    "ddddd.jpg",
+    "dddd.jpg",
+    "dd.jpg",
     "nn.png",
-    "nnnn.png",
-    "nnn.png",
-
+    "ss.jpg",
+    "aa.jpg"
+    
   ];
 
   // ─────────────────────────────────────────────────────────────
@@ -1900,12 +1903,15 @@
     pushScreen(html);
   }
 
-  const PROMO_SLIDES = [
-    { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: ["#16A34A", "#4ADE80"] },
-    { key: "promo.2", emo: "\ud83d\udce6", grad: ["#22C58B", "#4FACFE"] },
-    { key: "promo.3", emo: "\u26a1", grad: ["#4ADE80", "#16A34A"] },
-    { key: "promo.4", emo: "\ud83d\udcac", grad: ["#059669", "#34D399"] },
-  ];
+const PROMO_SLIDES = [
+  { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: [ "#16A34A", "#4ADE80" ] },
+  { key: "promo.2", emo: "\ud83d\udce6", grad: [ "#22C55E", "#4FACFE" ] },
+  { key: "promo.3", emo: "\u26a1", grad: [ "#4ADE80", "#16A34A" ] },
+  { key: "promo.4", emo: "\ud83d\udcac", grad: [ "#059669", "#34D399" ] },
+  { key: "promo.5", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, // Добавили эту строку
+   { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
+];
+
 
   function initPromoBanner() {
     const track = document.getElementById("promoTrack");

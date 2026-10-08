@@ -1,465 +1,3071 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-<title>Geran Express — маркетплейс объявлений</title>
-<meta name="theme-color" content="#16A34A" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<link rel="icon" type="image/png" href="./icon.png" />
-<link rel="apple-touch-icon" href="./icon.png" />
-<link rel="manifest" href="./manifest.json" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-<link rel="stylesheet" href="css/style.css?v=2.2.1" />
-</head>
-<body>
+(function () {
+  "use strict";
 
-<div class="backdrop" aria-hidden="true"></div>
+  // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
 
-<div class="splash" id="splash">
-  <div class="splash-glow" aria-hidden="true"></div>
-  <div class="splash-inner">
-    <div class="splash-logo-card"><img src="./assets/logo-icon.png" alt="" /></div>
-    <img class="splash-wordmark" src="./assets/logo-wordmark-white.png" alt="Geran Express" />
-    <div class="splash-progress"><div class="splash-progress-bar" id="splashBar"></div></div>
-    <div class="splash-status" id="splashStatus"></div>
-  </div>
-  <div class="splash-foot" data-i18n="app.tagline"></div>
-</div>
+  const LS = {
+    theme: "bh_theme",
+    favorites: "bh_favorites",
+    chats: "bh_chats",
+    notifSeen: "bh_notif_seen",
+    meProfile: "bh_me_profile",
+    authed: "bh_authed",
+    lang: "bh_lang",
+    location: "bh_location",
+  };
 
-<div class="auth-screen" id="authScreen">
-  <button type="button" class="auth-close" id="authCloseBtn" data-i18n-aria="auth.close">✕</button>
-  <div class="auth-hero">
-    <img class="auth-logo" src="./assets/logo-full-white.png" alt="Geran Express" />
-  </div>
-  <div class="auth-sheet">
-    <div id="authPhoneStep">
-      <h2 class="auth-title" data-i18n="auth.title"></h2>
-      <p class="auth-sub" data-i18n="auth.sub"></p>
+  function loadJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.error("[Geran] loadJSON failed for key '" + key + "':", e);
+      return fallback;
+    }
+  }
+  function saveJSON(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+      console.error("[Geran] saveJSON failed for key '" + key + "':", e);
+    }
+  }
+  function uid(prefix) {
+    return prefix + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+  }
+  function esc(str) {
+    const d = document.createElement("div");
+    d.textContent = str == null ? "" : String(str);
+    return d.innerHTML;
+  }
 
-      <label class="auth-label" data-i18n="auth.label"></label>
-      <div class="auth-phone-row" id="authPhoneRow">
-        <button type="button" class="auth-prefix" id="authCountryBtn">
-          <span id="authCountryFlag">🇹🇯</span><span id="authCountryCode">+992</span><span class="chev">▾</span>
+  // ─────────────────────────────────────────────────────────────
+  //  КАРТИНКИ БАННЕРА НА ГЛАВНОЙ
+  //  Файлы лежат в корне репозитория и/или в папке assets/.
+  //  Порядок соответствует PROMO_SLIDES (4 слайда). Если у вас
+  //  есть ещё баннеры — просто замените строки ниже на их имена,
+  //  количество элементов должно совпадать с PROMO_SLIDES.length.
+  //  Если файла нет — покажется градиент с текстом (не сломается).
+  //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
+  // ─────────────────────────────────────────────────────────────
+  const PROMO_BANNER_IMAGES = [
+    "ddddd.jpg",
+    "dddd.jpg",
+    "dd.jpg",
+    "nn.png",
+    "ss.jpg",
+    "aa.jpg",
+    "dom.jpg",
+    
+  ];
+
+  // ─────────────────────────────────────────────────────────────
+  //  КАРТА — свои координаты и свои картинки для городов/сёл.
+  // ─────────────────────────────────────────────────────────────
+  const CUSTOM_CITY_COORDS = {
+    "Душанбе":         { lat: 38.5598, lng: 68.7870 },
+    "Худжанд":         { lat: 40.2833, lng: 69.6333 },
+    "Бохтар":          { lat: 37.8364, lng: 68.7797 },
+    "Куляб":           { lat: 37.9148, lng: 69.7847 },
+    "Истаравшан":      { lat: 39.9137, lng: 69.0034 },
+    "Турсунзаде":      { lat: 37.5869, lng: 68.2314 },
+    "Вахдат":          { lat: 38.5561, lng: 69.0192 },
+    "Гиссар":          { lat: 38.5264, lng: 68.5528 },
+    "Нурек":           { lat: 38.3894, lng: 69.3258 },
+    "Рогун":           { lat: 38.7817, lng: 69.8722 },
+    "Хорог":           { lat: 37.4896, lng: 71.5520 },
+    "Пенджикент":      { lat: 39.4956, lng: 67.6103 },
+    "Исфара":          { lat: 40.1247, lng: 70.6264 },
+    "Канибадам":       { lat: 40.2981, lng: 70.4239 },
+    "Казань":          { lat: 55.7963, lng: 49.1088 },
+    "Москва":          { lat: 55.7558, lng: 37.6173 },
+    "Нижний Новгород": { lat: 56.3269, lng: 44.0059 },
+    "Дзержинск":       { lat: 56.2377, lng: 43.4595 },
+    "Санкт-Петербург": { lat: 59.9343, lng: 30.3351 },
+    "Екатеринбург":    { lat: 56.8389, lng: 60.6057 },
+    "Новосибирск":     { lat: 55.0084, lng: 82.9357 },
+    "Краснодар":       { lat: 45.0355, lng: 38.9753 },
+  };
+
+  const CUSTOM_MAP_IMAGES = {};
+
+  (function augmentRussiaCities() {
+    if (typeof FOREIGN_CITIES === "undefined" || !Array.isArray(FOREIGN_CITIES)) return;
+    const needed = [
+      "Казань", "Москва", "Нижний Новгород", "Дзержинск",
+      "Санкт-Петербург", "Екатеринбург", "Новосибирск", "Краснодар",
+    ];
+    needed.forEach((city) => {
+      if (!FOREIGN_CITIES.includes(city)) FOREIGN_CITIES.push(city);
+    });
+  })();
+
+  const MAX_LISTING_PHOTOS = 10;
+
+  function normalizePhotos(value) {
+    if (!value) return [];
+    const list = Array.isArray(value) ? value : [value];
+    return list
+      .flatMap((item) => Array.isArray(item) ? item : [item])
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object" && typeof item.url === "string") return item.url.trim();
+        return "";
+      })
+      .filter((src) => typeof src === "string" && src.length > 0)
+      .filter((src, index, arr) => arr.indexOf(src) === index)
+      .slice(0, MAX_LISTING_PHOTOS);
+  }
+
+  function listingImages(listing) {
+    if (!listing) return [];
+    const candidates = [listing.images, listing.photos, listing.photoURLs, listing.photoUrls, listing.pictures, listing.img, listing.image, listing.photo];
+    for (const candidate of candidates) {
+      const images = normalizePhotos(candidate);
+      if (images.length) return images;
+    }
+    return [];
+  }
+
+  const state = {
+    theme: loadJSON(LS.theme, null) || "light",
+    favorites: new Set(loadJSON(LS.favorites, [])),
+    listings: typeof MOCK_LISTINGS !== "undefined" ? JSON.parse(JSON.stringify(MOCK_LISTINGS)) : [],
+    chats: loadJSON(LS.chats, {}),
+    meProfile: loadJSON(LS.meProfile, {}),
+    isAuthed: loadJSON(LS.authed, false),
+    lang: loadJSON(LS.lang, null) || "ru",
+    customBanners: null,
+    currentTab: "home",
+    filters: { category: "all", query: "", location: loadJSON(LS.location, null), priceMin: null, priceMax: null, condition: null, sort: "all" },
+  };
+
+  function persistFavorites() { saveJSON(LS.favorites, Array.from(state.favorites)); }
+  function persistChats() { saveJSON(LS.chats, state.chats); }
+  function persistMeProfile() { saveJSON(LS.meProfile, state.meProfile); }
+  function persistLocation() { saveJSON(LS.location, state.filters.location); }
+
+  function currentUserId() { return fbAuth && fbAuth.currentUser ? fbAuth.currentUser.uid : null; }
+
+  let remoteListings = [];
+  let unsubscribeListings = null;
+
+  function timestampToMillis(value) {
+    if (value && typeof value.toMillis === "function") return value.toMillis();
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = Date.parse(value);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
+  function formatCardDate(timestamp) {
+    if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) return "";
+    const published = new Date(timestamp);
+    const today = new Date();
+    const publishedDay = new Date(published.getFullYear(), published.getMonth(), published.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const days = Math.round((todayDay - publishedDay) / 86400000);
+    if (days === 0) return t("time.today");
+    if (days === 1) return t("time.yesterday");
+    return published.toLocaleDateString("ru-RU");
+  }
+
+  function normalizeRemoteListing(doc) {
+    const myUid = currentUserId();
+    const isMine = !!(myUid && doc.userId === myUid);
+    const location = normalizeCity(doc.location || doc.village || doc.city || doc.address || "");
+    const [fallbackLat, fallbackLng] = coordsForLocation(location);
+    const createdAt = timestampToMillis(doc.createdAt || doc.date || doc.publishedAt || doc.timestamp || doc.created) ?? Date.now();
+
+    let currency = doc.currency || null;
+    if (!currency) {
+      if (doc.priceText && (doc.priceText.includes("c.") || doc.priceText.includes("сомон") || doc.priceText.includes("TJS"))) {
+        currency = "TJS";
+      } else if (doc.priceText && (doc.priceText.includes("р") || doc.priceText.includes("руб") || doc.priceText.includes("RUB"))) {
+        currency = "RUB";
+      } else {
+        currency = countryOfCity(location) === "ru" ? "RUB" : "TJS";
+      }
+    }
+
+    return {
+      id: doc.id,
+      title: doc.title || "",
+      price: doc.price != null ? doc.price : (doc.cost != null ? doc.cost : (doc.amount != null ? doc.amount : 0)),
+      currency: currency,
+      priceText: doc.priceText || null,
+      isVip: !!doc.isVip,
+      category: normalizeCategoryKey(doc.category || "other"),
+      condition: doc.condition || "Б/у",
+      description: doc.description || doc.desc || doc.text || "",
+      city: location,
+      address: doc.address || "",
+      phone: doc.phone || "",
+      images: listingImages(doc),
+      icon: doc.icon || "🏷️",
+      gradient: doc.gradient || GRADIENTS[0],
+      sellerId: "geran",
+      userId: doc.userId || null,
+      mine: isMine,
+      status: doc.status || "active",
+      createdAt,
+      views: typeof doc.views === "number" ? doc.views : 0,
+      favoritedBy: Array.isArray(doc.favoritedBy) ? doc.favoritedBy : [],
+      lat: typeof doc.lat === "number" ? doc.lat : fallbackLat,
+      lng: typeof doc.lng === "number" ? doc.lng : fallbackLng,
+      authorName: doc.authorName || null,
+      authorAvatarPhoto: doc.authorAvatarPhoto || null,
+      authorAvatarEmoji: doc.authorAvatarEmoji || null,
+    };
+  }
+
+  function rebuildListingsFromRemote() {
+    const remoteIds = new Set(remoteListings.map((l) => l.id));
+    const staticSource = typeof MOCK_LISTINGS !== "undefined" ? MOCK_LISTINGS : [];
+    const staticFallback = JSON.parse(JSON.stringify(staticSource.filter((l) => !remoteIds.has(l.id))));
+    staticFallback.forEach((l) => { l.category = normalizeCategoryKey(l.category); });
+    state.listings = remoteListings.length ? remoteListings : staticFallback;
+    console.log("[Geran] Firestore sync: " + remoteListings.length + " remote, " + staticFallback.length + " static fallback, " + state.listings.length + " shown");
+    renderHomeTab();
+    renderMyListingsTab();
+    renderFavoritesTab();
+    renderProfileTab();
+  }
+
+  function startListingsSync() {
+    if (unsubscribeListings || typeof subscribeToListings !== "function") return;
+    unsubscribeListings = subscribeToListings(
+      (docs) => {
+        remoteListings = docs.map(normalizeRemoteListing);
+        rebuildListingsFromRemote();
+      },
+      () => showToast(t("form.syncFailed") || "Sync error")
+    );
+  }
+
+  let unsubscribeBanners = null;
+  function startBannersSync() {
+    if (unsubscribeBanners || typeof subscribeToBanners !== "function" || !FIREBASE_READY) return;
+    unsubscribeBanners = subscribeToBanners((list) => {
+      state.customBanners = Array.isArray(list) ? list : [];
+      initPromoBanner();
+    });
+  }
+
+  function getUser(id) {
+    const u = USERS.find((x) => x.id === id) || USERS[0];
+    return u.id === "me" ? { ...u, ...state.meProfile } : u;
+  }
+  function getListing(id) { return state.listings.find((l) => l.id === id); }
+
+  function applyTheme(theme) {
+    state.theme = theme;
+    document.documentElement.setAttribute("data-theme", theme);
+    saveJSON(LS.theme, theme);
+    const sw = document.getElementById("profileThemeSwitch");
+    if (sw) sw.checked = theme === "dark";
+  }
+  function toggleTheme() { applyTheme(state.theme === "dark" ? "light" : "dark"); }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  function gradientFallback(listing, cls) {
+    return `<div class="${cls}" role="img" aria-label="Нет фото">Нет фото</div>`;
+  }
+
+  function cardPhotoInner(listing) {
+    const images = listingImages(listing);
+    if (images.length) {
+      return `
+        <div class="card-photo-main">
+          <div class="photo-skeleton"></div>
+          <img src="${esc(images[0])}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
+        </div>`;
+    }
+    return gradientFallback(listing, "photo-fallback");
+  }
+
+  function hydratePhotos(root) {
+    root.querySelectorAll("img[data-photo]").forEach((img) => {
+      if (img.dataset.hydrated) return;
+      img.dataset.hydrated = "1";
+      const listing = getListing(img.dataset.photo);
+      const skeleton = img.previousElementSibling;
+
+      const done = () => { img.classList.add("loaded"); if (skeleton) skeleton.classList.add("done"); };
+      const fail = () => {
+        img.remove();
+        if (skeleton && listing) skeleton.outerHTML = gradientFallback(listing, "photo-fallback");
+        else if (skeleton) skeleton.classList.add("done");
+      };
+
+      if (img.complete) {
+        if (img.naturalWidth > 0) done(); else fail();
+        return;
+      }
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", fail, { once: true });
+    });
+  }
+
+  function avatarInner(user) {
+    return user.avatarImg
+      ? `<img class="avatar-img" src="${esc(user.avatarImg)}" alt="" />`
+      : (user.avatar || "\ud83d\ude42");
+  }
+  function avatarClass(user) { return user.avatarImg ? " has-img" : ""; }
+
+  function telHref(phone) { return String(phone || "").replace(/[^\d+]/g, ""); }
+  function waHref(phone, listing) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    const text = encodeURIComponent(`Здравствуйте! Пишу по объявлению «${listingTitle(listing)}» на Geran Express.`);
+    return `https://wa.me/${digits}?text=${text}`;
+  }
+
+  function cardHTML(listing) {
+    const fav = state.favorites.has(listing.id);
+    const sold = listing.status === "sold";
+    const isVip = !!listing.isVip;
+    const location = listing.location || listing.village || listing.city || listing.address || "";
+    const date = formatCardDate(listing.createdAt);
+
+    return `
+    <article class="card ${isVip ? "card-vip" : ""}" data-id="${listing.id}" role="button" tabindex="0">
+      <div class="card-photo">
+        ${cardPhotoInner(listing)}
+        ${isVip ? `<div class="badge-vip"><span>VIP</span></div>` : ""}
+        ${sold ? `<div class="badge-sold"><span>${t("pd.sold")}</span></div>` : ""}
+        <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" aria-label="${t('fav.add')}">
+          <svg viewBox="0 0 24 24"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
         </button>
-        <input type="tel" id="authPhoneInput" inputmode="numeric" autocomplete="tel"
-               placeholder="90 000 00 00" maxlength="14" />
       </div>
-      <div class="auth-error" id="authError"></div>
+      <div class="card-body">
+        <div class="card-price">${formatPrice(listing)}</div>
+        <div class="card-title">${esc(listingTitle(listing))}</div>
+        <div class="card-meta">
+          ${location ? `<span>${esc(location)}</span>` : ""}
+          ${date ? `<span>${esc(date)}</span>` : ""}
+        </div>
+      </div>
+    </article>`;
+  }
 
-      <button class="btn btn-primary btn-block auth-submit" id="authSubmitBtn" disabled>
-        <span class="auth-btn-label" data-i18n="auth.continue"></span>
-        <span class="auth-btn-spinner" aria-hidden="true"></span>
+  function renderGrid(container, listings) {
+    container.innerHTML = listings.map(cardHTML).join("");
+    hydratePhotos(container);
+  }
+
+  function attachGridHandlers(container) {
+    container.addEventListener("click", (e) => {
+      const favBtn = e.target.closest("[data-fav]");
+      if (favBtn) {
+        e.stopPropagation();
+        toggleFavorite(favBtn.dataset.fav, favBtn);
+        return;
+      }
+      const card = e.target.closest(".card");
+      if (card) openProductDetail(card.dataset.id);
+    });
+  }
+
+  function toggleFavorite(id, btnEl) {
+    const isFav = state.favorites.has(id);
+    if (isFav) state.favorites.delete(id);
+    else state.favorites.add(id);
+    persistFavorites();
+
+    const listing = getListing(id);
+    const uidNow = currentUserId();
+    if (listing && uidNow) {
+      if (!Array.isArray(listing.favoritedBy)) listing.favoritedBy = [];
+      if (!isFav) {
+        if (!listing.favoritedBy.includes(uidNow)) listing.favoritedBy.push(uidNow);
+      } else {
+        listing.favoritedBy = listing.favoritedBy.filter((u) => u !== uidNow);
+      }
+      if (FIREBASE_READY && remoteListings.some((l) => l.id === id) && typeof toggleListingFavoriteRemote === "function") {
+        toggleListingFavoriteRemote(id, uidNow, !isFav).catch(() => {});
+      }
+    }
+
+    if (btnEl) {
+      btnEl.classList.toggle("active", !isFav);
+      btnEl.classList.remove("pop");
+      void btnEl.offsetWidth;
+      btnEl.classList.add("pop");
+    }
+    document.querySelectorAll(`[data-fav="${id}"]`).forEach((b) => b.classList.toggle("active", !isFav));
+    document.querySelectorAll(`[data-fav-inline="${id}"]`).forEach((b) => {
+      b.classList.toggle("active", !isFav);
+      const cnt = b.querySelector(".pd-fav-count");
+      if (cnt && listing) cnt.textContent = (listing.favoritedBy || []).length;
+      b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+    });
+    if (document.getElementById("tab-favorites").classList.contains("active")) renderFavoritesTab();
+    if (!isFav) showToast(t("fav.added"));
+  }
+
+  function switchTab(tab) {
+    const enteringHome = tab === "home" && state.currentTab !== "home";
+    state.currentTab = tab;
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".tab-view").forEach((v) => v.classList.toggle("active", v.dataset.tab === tab));
+    document.getElementById("searchRow").style.display = tab === "home" ? "flex" : "none";
+    document.getElementById("quickFilterRow").style.display = tab === "home" ? "flex" : "none";
+    document.getElementById("promoBanner").style.display = tab === "home" ? "block" : "none";
+    if (tab === "favorites") renderFavoritesTab();
+    if (tab === "listings") renderMyListingsTab();
+    if (tab === "profile") renderProfileTab();
+    if (enteringHome) {
+      reseedHomeOrder();
+      renderHomeTab();
+    }
+    document.getElementById("appMain").scrollTop = 0;
+    resetHeaderCollapsed();
+    requestAnimationFrame(syncHeaderHeight);
+  }
+
+  const SORT_OPTIONS = [
+    { id: "all",       emo: "\u2195\ufe0f", key: "sort.all" },
+    { id: "new",       emo: "\ud83d\udd52", key: "sort.new" },
+    { id: "old",       emo: "\ud83d\uddc3\ufe0f", key: "sort.old" },
+    { id: "popular",   emo: "\ud83d\udd25", key: "sort.popular" },
+    { id: "cheap",     emo: "\u2b07\ufe0f", key: "sort.cheap" },
+    { id: "expensive", emo: "\u2b06\ufe0f", key: "sort.expensive" },
+  ];
+
+  function updateQuickFilterUI() {
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
+    const cat = CATEGORIES.find((c) => c.id === activeCatKey) || CATEGORIES[0];
+    const isAllCats = activeCatKey === "all";
+    document.getElementById("qfCategoryLabel").textContent = isAllCats ? t("qf.allCategories") : cat.name;
+    document.getElementById("qfCategoryEmo").textContent = isAllCats ? "📂" : cat.icon;
+    document.getElementById("qfCategory").classList.toggle("active", !isAllCats);
+
+    const isAllLocs = !state.filters.location || state.filters.location === "all" || state.filters.location === "allLocations";
+    const scopedLocCountry = countryOfLocationFilter(state.filters.location);
+    let locLabel = t("qf.allLocations");
+    if (scopedLocCountry) {
+      const countryInfo = LOCATION_COUNTRY_TREE.find((c) => c.id === scopedLocCountry);
+      locLabel = t("qf.allLocations") + (countryInfo ? " · " + countryInfo.name : "");
+    } else if (!isAllLocs) {
+      locLabel = state.filters.location;
+    }
+    document.getElementById("qfLocationLabel").textContent = locLabel;
+    document.getElementById("qfLocation").classList.toggle("active", !isAllLocs);
+
+    const sort = SORT_OPTIONS.find((o) => o.id === state.filters.sort) || SORT_OPTIONS[0];
+    document.getElementById("qfSortLabel").textContent = t(sort.key);
+    document.getElementById("qfSortEmo").textContent = sort.emo;
+    document.getElementById("qfSort").classList.toggle("active", state.filters.sort !== "all");
+  }
+
+  function openSortSheet() {
+    const list = document.getElementById("sortList");
+    list.innerHTML = SORT_OPTIONS.map(
+      (o) => `<div class="option-item ${o.id === state.filters.sort ? "active" : ""}" data-sort="${o.id}">
+        <span class="opt-emo">${o.emo}</span><span class="opt-name">${esc(t(o.key))}</span><span class="check">✓</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-sort]").forEach((item) =>
+      item.addEventListener("click", () => {
+        state.filters.sort = item.dataset.sort;
+        updateQuickFilterUI();
+        renderHomeTab();
+        closeSortSheet();
+      })
+    );
+    document.getElementById("sortOverlay").classList.add("open");
+    openLayer(() => document.getElementById("sortOverlay").classList.remove("open"));
+  }
+  function closeSortSheet() {
+    if (poppingFromHistory) { document.getElementById("sortOverlay").classList.remove("open"); return; }
+    if (document.getElementById("sortOverlay").classList.contains("open")) closeTopLayer();
+  }
+
+  function initQuickFilterRow() {
+    document.getElementById("qfSort").addEventListener("click", openSortSheet);
+    document.getElementById("qfCategory").addEventListener("click", openCategorySheet);
+    document.getElementById("qfLocation").addEventListener("click", () =>
+      openLocationSheet(state.filters.location, (loc) => {
+        state.filters.location = loc;
+        persistLocation();
+        updateQuickFilterUI();
+        renderHomeTab();
+      })
+    );
+    document.getElementById("closeSortBtn").addEventListener("click", closeSortSheet);
+    document.getElementById("sortOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeSortSheet(); });
+    document.getElementById("closeCategoryBtn").addEventListener("click", closeCategorySheet);
+    document.getElementById("categoryOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeCategorySheet(); });
+    document.getElementById("closeLocationBtn").addEventListener("click", closeLocationSheet);
+    document.getElementById("locationOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLocationSheet(); });
+  }
+
+  function openCategorySheet() {
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
+    const grid = document.getElementById("categoryPickerGrid");
+    grid.innerHTML = CATEGORIES.map(
+      (c) => `<div class="category-opt ${c.id === activeCatKey ? "active" : ""}" data-cat="${c.id}"><span class="emo">${c.icon}</span>${c.name}</div>`
+    ).join("");
+    grid.querySelectorAll(".category-opt").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        state.filters.category = opt.dataset.cat;
+        updateQuickFilterUI();
+        renderHomeTab();
+        closeCategorySheet();
+      });
+    });
+    document.getElementById("categoryOverlay").classList.add("open");
+    openLayer(() => document.getElementById("categoryOverlay").classList.remove("open"));
+  }
+  function closeCategorySheet() {
+    if (poppingFromHistory) { document.getElementById("categoryOverlay").classList.remove("open"); return; }
+    if (document.getElementById("categoryOverlay").classList.contains("open")) closeTopLayer();
+  }
+
+  function cityRowHtml(name, currentValue, counts) {
+    return `
+      <div class="location-item ${currentValue === name ? "active" : ""}" data-loc="${esc(name)}">
+        <span class="loc-name">${esc(name)}</span>
+        <span class="loc-count">${counts[name] || 0}</span>
+        <span class="check">\u2713</span>
+      </div>`;
+  }
+
+  function countryOfCity(name) {
+    return FOREIGN_CITIES.includes(normalizeCity(name)) ? "ru" : "tj";
+  }
+
+  const LOCATION_ALL_RU = "__ALL_LOCATIONS_RU__";
+  const LOCATION_ALL_TJ = "__ALL_LOCATIONS_TJ__";
+  function countryOfLocationFilter(value) {
+    if (value === LOCATION_ALL_RU) return "ru";
+    if (value === LOCATION_ALL_TJ) return "tj";
+    return null;
+  }
+
+  function renderLocationCountryStep(currentValue, onSelect) {
+    const counts = {};
+    countableListings().forEach((listing) => {
+      if (listing.city) {
+        const countryId = countryOfCity(listing.city);
+        counts[countryId] = (counts[countryId] || 0) + 1;
+      }
+    });
+
+    document.getElementById("locationBackBtn").hidden = true;
+    document.getElementById("locationSheetTitle").textContent = t("qf.location");
+
+    const totalListingsCount = countableListings().length;
+
+    const list = document.getElementById("locationList");
+    list.innerHTML =
+      `<div class="location-item ${!currentValue ? "active" : ""}" data-loc="">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${totalListingsCount}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      LOCATION_COUNTRY_TREE.map((country) => `
+        <div class="location-item" data-country="${country.id}">
+          <span class="loc-name">${country.flag} ${esc(country.name)}</span>
+          <span class="loc-count">${counts[country.id] || 0}</span>
+          <span class="chev">&gt;</span>
+        </div>`).join("");
+
+    const allLocBtn = list.querySelector("[data-loc]");
+    if (allLocBtn) {
+      allLocBtn.addEventListener("click", () => {
+        onSelect(null);
+        closeLocationSheet();
+      });
+    }
+
+    list.querySelectorAll("[data-country]").forEach((item) => {
+      item.addEventListener("click", () => {
+        if (item.dataset.country === "tj") renderTajikistanLocationStep(currentValue, onSelect);
+        else renderRussiaLocationStep(currentValue, onSelect);
+      });
+    });
+  }
+
+  function renderTajikistanLocationStep(currentValue, onSelect) {
+    const listings = countableListings();
+    const counts = {};
+    listings.forEach((listing) => {
+      if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
+    });
+
+    const backBtn = document.getElementById("locationBackBtn");
+    backBtn.hidden = false;
+    backBtn.onclick = () => renderLocationCountryStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = TAJIKISTAN_LOCATION_TREE.name;
+
+    const tajikistan = LOCATION_COUNTRY_TREE.find((country) => country.id === "tj");
+    const majorCities = tajikistan.sections[0];
+    const districtSection = tajikistan.sections[1];
+    const district = districtSection.locations[0];
+    const list = document.getElementById("locationList");
+    list.innerHTML =
+      `<div class="location-item ${currentValue === LOCATION_ALL_TJ ? "active" : ""}" data-loc="${LOCATION_ALL_TJ}">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${listings.length}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      `<div class="location-group-label">${majorCities.label}</div>` +
+      majorCities.locations.map((name) => cityRowHtml(name, currentValue, counts)).join("") +
+      `<div class="location-group-label">${districtSection.label}</div>` +
+      `<div class="location-item" data-district="${esc(district.name)}">
+        <span class="loc-name">${esc(district.name)}</span>
+        <span class="chev">&gt;</span>
+      </div>`;
+
+    list.querySelectorAll("[data-loc]").forEach((item) => {
+      item.addEventListener("click", () => {
+        onSelect(item.dataset.loc || null);
+        closeLocationSheet();
+      });
+    });
+    list.querySelector("[data-district]").addEventListener("click", () => renderChaykhunVillageStep(currentValue, onSelect));
+  }
+
+  function renderRussiaLocationStep(currentValue, onSelect) {
+    const listings = countableListings();
+    const counts = {};
+    listings.forEach((listing) => {
+      if (listing.city) counts[listing.city] = (counts[listing.city] || 0) + 1;
+    });
+
+    const backBtn = document.getElementById("locationBackBtn");
+    backBtn.hidden = false;
+    backBtn.onclick = () => renderLocationCountryStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = "Россия";
+
+    const list = document.getElementById("locationList");
+    list.innerHTML =
+      `<div class="location-item ${currentValue === LOCATION_ALL_RU ? "active" : ""}" data-loc="${LOCATION_ALL_RU}">
+        <span class="loc-name">${t("qf.allLocations")}</span>
+        <span class="loc-count">${listings.length}</span>
+        <span class="check">\u2713</span>
+      </div>` +
+      FOREIGN_CITIES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
+    list.querySelectorAll("[data-loc]").forEach((item) => {
+      item.addEventListener("click", () => {
+        onSelect(item.dataset.loc || null);
+        closeLocationSheet();
+      });
+    });
+  }
+
+  function renderChaykhunVillageStep(currentValue, onSelect) {
+    const counts = {};
+    countableListings().forEach((l) => { if (l.city) counts[l.city] = (counts[l.city] || 0) + 1; });
+
+    const backBtn = document.getElementById("locationBackBtn");
+    backBtn.hidden = false;
+    backBtn.onclick = () => renderTajikistanLocationStep(currentValue, onSelect);
+    document.getElementById("locationSheetTitle").textContent = CHAYKHUN_DISTRICT_NAME;
+
+    const list = document.getElementById("locationList");
+    list.innerHTML = CHAYKHUN_VILLAGES.map((name) => cityRowHtml(name, currentValue, counts)).join("");
+
+    list.querySelectorAll("[data-loc]").forEach((item) => {
+      item.addEventListener("click", () => {
+        onSelect(item.dataset.loc || null);
+        closeLocationSheet();
+      });
+    });
+  }
+
+  function openLocationSheet(currentValue, onSelect) {
+    renderLocationCountryStep(currentValue, onSelect);
+    document.getElementById("locationOverlay").classList.add("open");
+    openLayer(() => document.getElementById("locationOverlay").classList.remove("open"));
+  }
+  function closeLocationSheet() {
+    if (poppingFromHistory) { document.getElementById("locationOverlay").classList.remove("open"); return; }
+    if (document.getElementById("locationOverlay").classList.contains("open")) closeTopLayer();
+  }
+
+  let SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+
+  function reseedHomeOrder() {
+    SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+  }
+
+  function seededShuffle(list, seed) {
+    const arr = list.slice();
+    let s = seed || 1;
+    for (let i = arr.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      const j = s % (i + 1);
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function shuffleForSession(list) { return seededShuffle(list, SESSION_ORDER_SEED); }
+
+  function nextSeededRandom(seedBox) {
+    seedBox.s = (seedBox.s * 1664525 + 1013904223) >>> 0;
+    return seedBox.s / 4294967296;
+  }
+
+  function interleaveVipListings(regular, vip) {
+    if (!vip.length) return regular;
+    const shuffledVip = seededShuffle(vip, (SESSION_ORDER_SEED ^ 0x9e3779b9) >>> 0);
+    const seedBox = { s: ((SESSION_ORDER_SEED ^ 0x2545f491) >>> 0) || 1 };
+    const result = regular.slice();
+    shuffledVip.forEach((item) => {
+      const windowSize = Math.min(20, result.length + 1);
+      const r1 = nextSeededRandom(seedBox);
+      const r2 = nextSeededRandom(seedBox);
+      const pos = Math.floor(Math.min(r1, r2) * windowSize);
+      result.splice(pos, 0, item);
+    });
+    return result;
+  }
+
+  function placeLine(l) {
+    return l && l.address ? l.city + ", " + l.address : (l ? l.city : "");
+  }
+
+  function extractNumericPrice(rawPrice) {
+    if (typeof rawPrice === "number" && Number.isFinite(rawPrice)) return rawPrice;
+    if (typeof rawPrice === "string") {
+      const num = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
+      return Number.isFinite(num) ? num : null;
+    }
+    return null;
+  }
+
+  function isBrokenListing(l) {
+    if (!l) return true;
+    const hasPrice = (typeof l.price === "number" && l.price > 0) || (typeof l.price === "string" && l.price.trim().length > 0) || !!l.priceText;
+    const hasPhoto = listingImages(l).length > 0;
+    const hasDesc = !!(l.description && l.description.trim());
+    return !hasPrice && !hasPhoto && !hasDesc;
+  }
+
+  function countableListings() {
+    return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
+  }
+
+  function sortMineThenVip(arr, compareFn) {
+    const mineVip = arr.filter((l) => l.mine && l.isVip);
+    const mineReg = arr.filter((l) => l.mine && !l.isVip);
+    const othVip  = arr.filter((l) => !l.mine && l.isVip);
+    const othReg  = arr.filter((l) => !l.mine && !l.isVip);
+    if (compareFn) {
+      mineVip.sort(compareFn);
+      mineReg.sort(compareFn);
+      othVip.sort(compareFn);
+      othReg.sort(compareFn);
+    }
+    return mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
+  }
+
+  function computeFilteredListings() {
+    const f = state.filters;
+    let list = state.listings.filter((l) => (l.status !== "sold" || l.mine) && listingImages(l).length > 0);
+
+    const filterCat = normalizeCategoryKey(f.category);
+    if (filterCat !== "all") {
+      list = list.filter((l) => normalizeCategoryKey(l.category) === filterCat);
+    }
+
+    if (f.location && f.location !== "all" && f.location !== "allLocations" && f.location !== "null" && f.location !== "undefined") {
+      const scopedCountry = countryOfLocationFilter(f.location);
+      if (scopedCountry) {
+        list = list.filter((l) => countryOfCity(l.city) === scopedCountry);
+      } else {
+        const targetLoc = normalizeCity(f.location);
+        list = list.filter((l) => {
+          const itemLoc = normalizeCity(l.city);
+          return itemLoc === targetLoc || itemLoc === f.location;
+        });
+      }
+    }
+
+    if (f.query && f.query.trim()) {
+      const q = f.query.trim().toLowerCase();
+      list = list.filter((l) => (l.title + " " + listingTitle(l)).toLowerCase().includes(q));
+    }
+
+    if (f.priceMin != null) {
+      list = list.filter((l) => {
+        const p = extractNumericPrice(l.price);
+        return p != null && p >= f.priceMin;
+      });
+    }
+    if (f.priceMax != null) {
+      list = list.filter((l) => {
+        const p = extractNumericPrice(l.price);
+        return p != null && p <= f.priceMax;
+      });
+    }
+
+    if (f.condition) {
+      const condTarget = f.condition.startsWith("Новое") ? "Новое" : "Б/у";
+      list = list.filter((l) => String(l.condition || "").startsWith(condTarget));
+    }
+
+    switch (f.sort) {
+      case "all": {
+        const mineVip = list.filter((l) => l.mine && l.isVip);
+        const mineReg = shuffleForSession(list.filter((l) => l.mine && !l.isVip));
+        const othVip  = list.filter((l) => !l.mine && l.isVip);
+        const othReg  = shuffleForSession(list.filter((l) => !l.mine && !l.isVip));
+        list = mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
+        break;
+      }
+      case "new":       list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
+      case "old":       list = sortMineThenVip(list, (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
+      case "cheap":     list = sortMineThenVip(list, (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
+      case "expensive": list = sortMineThenVip(list, (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
+      case "popular":   list = sortMineThenVip(list, (a, b) => (b.views || 0) - (a.views || 0)); break;
+      default:          list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+    return list;
+  }
+
+  function renderHomeTab() {
+    const list = computeFilteredListings();
+    const grid = document.getElementById("homeGrid");
+    renderGrid(grid, list);
+    document.getElementById("homeEmpty").hidden = list.length !== 0;
+    grid.style.display = list.length ? "grid" : "none";
+    document.getElementById("homeResultsCount").textContent = list.length ? list.length + " " + t("home.count") : "";
+
+    const activeCatKey = normalizeCategoryKey(state.filters.category);
+    const cat = CATEGORIES.find((c) => c.id === activeCatKey) || CATEGORIES[0];
+    document.getElementById("homeResultsTitle").textContent =
+      activeCatKey === "all" ? t("home.all") : cat.name;
+
+    const hasActiveFilters = state.filters.priceMin != null || state.filters.priceMax != null || state.filters.condition || state.filters.sort !== "all";
+    document.getElementById("openFilterBtn").classList.toggle("has-active", hasActiveFilters);
+  }
+
+  function renderFavoritesTab() {
+    const list = state.listings.filter((l) => state.favorites.has(l.id));
+    renderGrid(document.getElementById("favGrid"), list);
+    document.getElementById("favGrid").style.display = list.length ? "grid" : "none";
+    document.getElementById("favEmpty").hidden = list.length !== 0;
+    document.getElementById("favCount").textContent = list.length ? list.length : "";
+  }
+
+  function myThumbInner(listing) {
+    const images = listingImages(listing);
+    if (images.length) return `<img src="${esc(images[0])}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
+    const [c1, c2] = listing.gradient || ["#7C6CF6", "#B98CF0"];
+    return `<div style="width:100%;height:100%;border-radius:14px;background:linear-gradient(135deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;">${listing.icon || "📦"}</div>`;
+  }
+
+  async function renderMyListingsTab() {
+    const box = document.getElementById("myListingsList");
+    const uidNow = currentUserId();
+    let mine;
+
+    if (FIREBASE_READY && fbDb && uidNow) {
+      try {
+        const snap = await fbDb.collection(LISTINGS_COLLECTION).where("userId", "==", uidNow).get();
+        mine = snap.docs.map((d) => normalizeRemoteListing({ id: d.id, ...d.data() }));
+      } catch (e) {
+        showToast(t("form.syncFailed"));
+        mine = state.listings.filter((l) => l.mine);
+      }
+    } else {
+      mine = state.listings.filter((l) => l.mine);
+    }
+    mine = mine.slice().sort((a, b) => b.createdAt - a.createdAt);
+
+    box.innerHTML = mine
+      .map(
+        (l) => `
+      <div class="my-item" data-id="${l.id}">
+        <div class="my-thumb">${myThumbInner(l)}</div>
+        <div class="my-info">
+          <div class="my-title">${esc(listingTitle(l))}</div>
+          <div class="my-price">${formatPrice(l)}</div>
+          <span class="my-status ${l.status}">${l.status === "sold" ? t("my.sold") : t("my.active")}</span>
+        </div>
+        <div class="my-actions">
+          <button class="icon-action" data-edit="${l.id}" aria-label="${t('my.edit')}" title="${t('my.edit')}">
+            <svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4Z"/></svg>
+          </button>
+          <button class="icon-action" data-toggle-sold="${l.id}" aria-label="${t('my.markSold')}" title="${t('my.markSold')}">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7"/></svg>
+          </button>
+          <button class="icon-action danger" data-delete="${l.id}" aria-label="${t('my.delete')}" title="${t('my.delete')}">
+            <svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg>
+          </button>
+        </div>
+      </div>`
+      )
+      .join("");
+    document.getElementById("myEmpty").hidden = mine.length !== 0;
+    document.getElementById("myCount").textContent = mine.length ? mine.length : "";
+
+    box.querySelectorAll("[data-edit]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); openAddEditForm(mine.find((l) => l.id === b.dataset.edit) || getListing(b.dataset.edit)); }));
+    box.querySelectorAll("[data-toggle-sold]").forEach((b) =>
+      b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const l = mine.find((x) => x.id === b.dataset.toggleSold) || getListing(b.dataset.toggleSold);
+        l.status = l.status === "sold" ? "active" : "sold";
+        if (FIREBASE_READY) {
+          try { await updateListingInFirestore(l.id, { status: l.status }); } catch (e2) { showToast(t("form.syncFailed")); }
+        }
+        renderMyListingsTab();
+        renderHomeTab();
+        showToast(l.status === "sold" ? t("status.sold") : t("status.active"));
+      })
+    );
+    box.querySelectorAll("[data-delete]").forEach((b) =>
+      b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.delete;
+        state.listings = state.listings.filter((l) => l.id !== id);
+        state.favorites.delete(id);
+        persistFavorites();
+        if (FIREBASE_READY) await deleteListingFromFirestore(id);
+        renderMyListingsTab();
+        renderHomeTab();
+        showToast(t("form.deleted"));
+      })
+    );
+    box.querySelectorAll(".my-item").forEach((item) =>
+      item.addEventListener("click", () => openProductDetail(item.dataset.id))
+    );
+  }
+
+  function isUserAdmin() {
+    const me = getUser("me");
+    if (!me) return false;
+    if (me.isAdmin === true) return true;
+    if (state.meProfile && state.meProfile.isAdmin === true) return true;
+    return false;
+  }
+
+  function renderProfileTab() {
+    const me = getUser("me");
+
+    const av = document.getElementById("profileAvatar");
+    if (av) {
+      if (me.avatarPhoto) {
+        av.innerHTML = `<img src="${esc(me.avatarPhoto)}" alt="" />`;
+        av.classList.add("has-img");
+      } else {
+        av.textContent = me.avatar || "🙂";
+        av.classList.remove("has-img");
+      }
+    }
+
+    document.getElementById("profileName").textContent = me.name;
+    const addr = document.getElementById("addressValue");
+    if (addr) addr.textContent = me.city || "";
+    const ph = document.getElementById("phoneValue");
+    if (ph) ph.textContent = me.phone || "";
+    document.getElementById("profileMemberSince").textContent = t("profile.memberSince") + " " + (me.memberSince || "2026");
+    document.getElementById("profileCity").textContent = "📍 " + me.city;
+    const mine = state.listings.filter((l) => l.mine);
+    document.getElementById("statListings").textContent = mine.filter((l) => l.status !== "sold").length;
+    document.getElementById("statSold").textContent = mine.filter((l) => l.status === "sold").length;
+    document.getElementById("statFavorites").textContent = state.favorites.size;
+
+    const bannersBtn = document.getElementById("openBannersBtn");
+    if (bannersBtn) {
+      const isAdmin = isUserAdmin();
+      bannersBtn.hidden = !isAdmin;
+      bannersBtn.style.display = isAdmin ? "flex" : "none";
+    }
+  }
+
+  function starString(rating) {
+    const full = Math.round(rating);
+    return "★".repeat(full) + "☆".repeat(5 - full);
+  }
+
+  const navLayers = [];
+  let poppingFromHistory = false;
+
+  function openLayer(closeFn) {
+    navLayers.push(closeFn);
+    history.pushState({ layer: navLayers.length }, "");
+  }
+
+  function closeTopLayer() {
+    if (!navLayers.length) return;
+    history.back();
+  }
+
+  window.addEventListener("popstate", () => {
+    const closeFn = navLayers.pop();
+    if (!closeFn) return;
+    poppingFromHistory = true;
+    closeFn();
+    poppingFromHistory = false;
+  });
+
+  const stackEl = document.getElementById("screenStack");
+  let stack = [];
+
+  function pushScreen(innerHTML, mountFn) {
+    const el = document.createElement("div");
+    el.className = "screen";
+    el.innerHTML = innerHTML;
+    stackEl.appendChild(el);
+    stack.push(el);
+    openLayer(removeTopScreen);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("enter")));
+    const backBtn = el.querySelector("[data-back]");
+    if (backBtn) backBtn.addEventListener("click", popScreen);
+    if (mountFn) mountFn(el);
+    return el;
+  }
+
+  function removeTopScreen() {
+    const el = stack.pop();
+    if (!el) return;
+    el.classList.remove("enter");
+    el.classList.add("leaving");
+    setTimeout(() => el.remove(), 400);
+  }
+
+  function popScreen() {
+    if (poppingFromHistory) { removeTopScreen(); return; }
+    closeTopLayer();
+  }
+
+  function screenHeader(title) {
+    return `
+    <div class="screen-header">
+      <button class="back-btn" data-back aria-label="${t('pd.back')}">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 19 8 12l7-7"/></svg>
       </button>
-      <p class="auth-note" data-i18n="auth.note"></p>
-    </div>
+      <div class="screen-title">${esc(title)}</div>
+    </div>`;
+  }
 
-    <div id="authCodeStep" hidden>
-      <h2 class="auth-title" data-i18n="auth.codeTitle"></h2>
-      <p class="auth-sub" id="authCodeSentTo"></p>
+  function sellerCardDisplay(listing) {
+    const seller = getUser(listing.sellerId);
+    if (!listing.authorName) return seller;
+    return {
+      id: seller.id,
+      name: listing.authorName,
+      avatarImg: listing.authorAvatarPhoto || null,
+      avatar: listing.authorAvatarEmoji || "🙂",
+      verified: false,
+      rating: null,
+      reviews: null,
+      city: listing.city,
+      phone: listing.phone || seller.phone,
+    };
+  }
 
-      <label class="auth-label" data-i18n="auth.codeLabel"></label>
-      <div class="auth-phone-row auth-code-row" id="authCodeRow">
-        <input type="tel" id="authCodeInput" inputmode="numeric" autocomplete="one-time-code"
-               placeholder="0 0 0 0 0 0" maxlength="6" />
-      </div>
-      <div class="auth-error" id="authCodeError"></div>
+  const viewedThisSession = new Set();
+  function bumpViewsOnce(listing) {
+    if (!listing || viewedThisSession.has(listing.id)) return;
+    viewedThisSession.add(listing.id);
+    listing.views = (listing.views || 0) + 1;
+    if (FIREBASE_READY && remoteListings.some((l) => l.id === listing.id) && typeof incrementListingField === "function") {
+      incrementListingField(listing.id, "views", 1).catch(() => {});
+    }
+  }
 
-      <button class="btn btn-primary btn-block auth-submit" id="authVerifyBtn" disabled>
-        <span class="auth-btn-label" data-i18n="auth.verify"></span>
-        <span class="auth-btn-spinner" aria-hidden="true"></span>
-      </button>
+  function openProductDetail(id) {
+    const listing = getListing(id);
+    if (!listing) return;
+    bumpViewsOnce(listing);
+    const seller = sellerCardDisplay(listing);
+    const isMine = listing.mine;
+    const fav = state.favorites.has(listing.id);
+    const favCount = Array.isArray(listing.favoritedBy) ? listing.favoritedBy.length : 0;
+    const images = Array.isArray(listing.images) ? listing.images : (listing.images ? [listing.images] : (Array.isArray(listing.photos) ? listing.photos : [listing.photos || './assets/no-image.png']));
+    const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
+    const contactPhone = listing.phone || seller.phone || "";
 
-      <div class="auth-code-actions">
-        <button type="button" class="auth-link-btn" id="authChangeNumberBtn" data-i18n="auth.changeNumber"></button>
-        <button type="button" class="auth-link-btn" id="authResendBtn" disabled data-i18n="auth.resend"></button>
-      </div>
-    </div>
-
-    <div id="recaptchaContainer"></div>
-  </div>
-
-  <div class="sheet-overlay" id="authCountryOverlay">
-    <div class="sheet" id="authCountrySheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h3 data-i18n="auth.country"></h3>
-        <button class="icon-btn" id="closeAuthCountryBtn">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="option-list" id="authCountryList"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="app-frame" id="appFrame">
-
-  <div class="pull-refresh" id="pullRefresh">
-    <div class="pull-refresh-spinner" id="pullRefreshSpinner">
-      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
-    </div>
-  </div>
-
-  <div class="app-body" id="appBody">
-  <header class="app-header" id="appHeader">
-    <div class="header-row">
-      <button type="button" class="brand brand-button" id="brandHomeBtn" aria-label="Geran Express home">
-        <img src="./assets/logo-full.png" alt="Geran Express" class="brand-logo brand-logo-light" />
-        <img src="./assets/logo-full-dark.png" alt="" class="brand-logo brand-logo-dark" aria-hidden="true" />
-      </button>
-      <div class="header-actions">
-        <div class="online-indicator" id="onlineIndicator" data-i18n-title="header.online">
-          <span class="online-dot"></span>
-          <span id="onlineCount">—</span>
-        </div>
-        <button class="icon-btn" id="themeToggleBtn" data-i18n-title="header.theme">
-          <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5"/><g stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22.5" y2="12"/><line x1="4.5" y1="4.5" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.5" y2="19.5"/><line x1="4.5" y1="19.5" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.5" y2="4.5"/></g></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.8 6.8 0 0 0 20 14.5Z"/></svg>
-        </button>
-        <button class="icon-btn" id="notifBtn" data-i18n-title="header.notifications">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3.5a5.5 5.5 0 0 0-5.5 5.5v3.2c0 .6-.2 1.2-.6 1.7L4.5 15.6a1 1 0 0 0 .8 1.6h13.4a1 1 0 0 0 .8-1.6l-1.4-1.7a2.7 2.7 0 0 1-.6-1.7V9A5.5 5.5 0 0 0 12 3.5Z"/><path d="M9.5 19.5a2.5 2.5 0 0 0 5 0"/></svg>
-          <span class="dot-badge" id="notifBadge" hidden></span>
-        </button>
-      </div>
-    </div>
-
-    <div class="header-collapsible" id="headerCollapsible">
-    <div class="search-row" id="searchRow">
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.4" y2="16.4"/></svg>
-        <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" autocomplete="off" />
-        <button class="clear-btn" id="clearSearchBtn" hidden data-i18n-aria="search.clear">✕</button>
-      </div>
-      <button class="filter-btn" id="openFilterBtn" data-i18n-aria="filters.title">
-        <svg viewBox="0 0 24 24" width="18" height="18"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.2" fill="var(--surface)"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.2" fill="var(--surface)"/></svg>
-      </button>
-    </div>
-
-    <div class="promo-banner" id="promoBanner">
-      <div class="promo-track" id="promoTrack"></div>
-      <div class="promo-dots" id="promoDots"></div>
-    </div>
-
-    <div class="quick-filter-row" id="quickFilterRow">
-      <button class="qf-btn" id="qfLocation"><span class="qf-emo">📍</span><span id="qfLocationLabel"></span><span class="qf-chev">▾</span></button>
-      <button class="qf-btn" id="qfSort"><span class="qf-emo" id="qfSortEmo">↕️</span><span id="qfSortLabel"></span><span class="qf-chev">▾</span></button>
-      <button class="qf-btn" id="qfCategory"><span class="qf-emo" id="qfCategoryEmo">📂</span><span id="qfCategoryLabel"></span><span class="qf-chev">▾</span></button>
-    </div>
-    </div>
-  </header>
-
-  <main class="app-main" id="appMain">
-
-    <section class="tab-view" id="tab-home" data-tab="home">
-      <div class="section-title-row">
-        <h2 class="section-title" id="homeResultsTitle"></h2>
-        <span class="section-count" id="homeResultsCount"></span>
-      </div>
-      <div class="grid" id="homeGrid"></div>
-      <div class="empty-state" id="homeEmpty" hidden>
-        <div class="empty-emoji">🔍</div>
-        <p data-i18n="home.emptyTitle"></p>
-        <span data-i18n="home.emptySub"></span>
-        <button class="btn btn-ghost" id="resetFiltersBtn" data-i18n="home.resetFilters"></button>
-      </div>
-    </section>
-
-    <section class="tab-view" id="tab-favorites" data-tab="favorites">
-      <div class="section-title-row">
-        <h2 class="section-title" data-i18n="fav.title"></h2>
-        <span class="section-count" id="favCount"></span>
-      </div>
-      <div class="grid" id="favGrid"></div>
-      <div class="empty-state" id="favEmpty" hidden>
-        <div class="empty-emoji">🤍</div>
-        <p data-i18n="fav.emptyTitle"></p>
-        <span data-i18n="fav.emptySub"></span>
-        <button class="btn btn-primary" data-go="home" data-i18n="fav.browse"></button>
-      </div>
-    </section>
-
-    <section class="tab-view" id="tab-listings" data-tab="listings">
-      <div class="section-title-row">
-        <h2 class="section-title" data-i18n="my.title"></h2>
-        <span class="section-count" id="myCount"></span>
-      </div>
-      <div class="my-list" id="myListingsList"></div>
-      <div class="empty-state" id="myEmpty" hidden>
-        <div class="empty-emoji">📦</div>
-        <p data-i18n="my.emptyTitle"></p>
-        <span data-i18n="my.emptySub"></span>
-        <button class="btn btn-primary" id="myEmptyAddBtn" data-i18n="my.addFirst"></button>
-      </div>
-    </section>
-
-    <section class="tab-view" id="tab-profile" data-tab="profile">
-      <div class="profile-card">
-        <button type="button" class="profile-avatar-btn" id="editAvatarBtn" data-i18n-aria="profile.editAvatar">
-          <span class="profile-avatar" id="profileAvatar"></span>
-        </button>
-        <button class="profile-name-btn" id="editNameBtn" data-i18n-aria="profile.editName">
-          <span class="profile-name" id="profileName"></span>
-          <span class="name-edit-pencil">✎</span>
-        </button>
-        <div class="profile-meta" id="profileMemberSince"></div>
-        <div class="profile-city" id="profileCity"></div>
-        <div class="profile-stats">
-          <div class="stat"><b id="statListings">0</b><span data-i18n="profile.listings"></span></div>
-          <div class="stat"><b id="statSold">0</b><span data-i18n="profile.sold"></span></div>
-          <div class="stat"><b id="statFavorites">0</b><span data-i18n="profile.favorites"></span></div>
-        </div>
-      </div>
-
-      <div class="settings-list">
-        <div class="settings-row">
-          <div class="settings-row-left">
-            <span class="settings-icon">🌗</span>
-            <span data-i18n="profile.darkTheme"></span>
+    const galleryMarkup = images.length
+      ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${images.map((src, index) => `
+          <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
+            <img src="${esc(src)}" alt="" decoding="async" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
-          <label class="switch">
-            <input type="checkbox" id="profileThemeSwitch" />
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-          </label>
+        `).join("")}</div></div>
+        <div class="pd-gallery-dots">${images.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
+      : `<div class="pd-gallery-viewport"><div class="pd-gallery-track"><div class="pd-gallery-slide"><span>${listing.icon}</span></div></div></div>`;
+
+    const html = `
+      ${screenHeader(t("pd.title"))}
+      <div class="screen-body">
+        <div class="pd-gallery" id="pdGallery" style="${images.length ? "" : `background:linear-gradient(135deg, ${listing.gradient[0]}, ${listing.gradient[1]})`}">
+          ${galleryMarkup}
         </div>
-        <button class="settings-row settings-row-btn" id="openAddressBtn">
-          <div class="settings-row-left"><span class="settings-icon">📍</span><span data-i18n="profile.address"></span></div>
-          <span class="row-value" id="addressValue"></span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openPhoneBtn">
-          <div class="settings-row-left"><span class="settings-icon">📞</span><span data-i18n="profile.phone"></span></div>
-          <span class="row-value" id="phoneValue"></span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openMyListingsBtn">
-          <div class="settings-row-left"><span class="settings-icon">📦</span><span data-i18n="profile.myListings"></span></div>
-          <span class="chev">›</span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openFavFromProfileBtn">
-          <div class="settings-row-left"><span class="settings-icon">🤍</span><span data-i18n="profile.favorites"></span></div>
-          <span class="chev">›</span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openChatsBtn">
-          <div class="settings-row-left"><span class="settings-icon">💬</span><span data-i18n="profile.messages"></span></div>
-          <span class="chev">›</span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openLangBtn">
-          <div class="settings-row-left"><span class="settings-icon">🌐</span><span data-i18n="profile.language"></span></div>
-          <span class="row-value" id="langValue"></span>
-        </button>
-        <button class="settings-row settings-row-btn" id="openBannersBtn" hidden style="display:none;">
-          <div class="settings-row-left"><span class="settings-icon">🖼️</span><span>Баннеры на главной (4 шт.)</span></div>
-          <span class="chev">›</span>
-        </button>
-        <button class="settings-row settings-row-btn" id="aboutBtn">
-          <div class="settings-row-left"><span class="settings-icon">✨</span><span data-i18n="profile.about"></span></div>
-          <span class="chev">›</span>
-        </button>
-        <button class="settings-row settings-row-btn" id="refreshDataBtn">
-          <div class="settings-row-left"><span class="settings-icon">🔄</span><span data-i18n="profile.refresh"></span></div>
-          <span class="chev">›</span>
-        </button>
-      </div>
-
-      <div class="settings-list">
-        <button class="settings-row settings-row-btn" id="beSponsorBtn">
-          <div class="settings-row-left"><span class="settings-icon">💛</span><span data-i18n="profile.sponsor"></span></div>
-          <span class="chev">›</span>
-        </button>
-        <a class="settings-row settings-row-btn" id="downloadAppBtn" href="geran-express.apk"
- download>
-          <div class="settings-row-left"><span class="settings-icon">📲</span><span data-i18n="profile.downloadApp"></span></div>
-          <span class="chev">›</span>
-        </a>
-      </div>
-
-      <div class="settings-list">
-        <button class="settings-row settings-row-btn settings-row-danger" id="logoutBtn">
-          <div class="settings-row-left"><span class="settings-icon">🚪</span><span data-i18n="profile.logout"></span></div>
-          <span class="chev">›</span>
-        </button>
-      </div>
-      <p class="profile-footnote" data-i18n="app.footnote"></p>
-    </section>
-
-  </main>
-  </div>
-
-  <nav class="tab-bar" id="tabBar">
-    <button class="tab-btn active" data-tab="home" data-i18n-aria="nav.home">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"/></svg>
-      <span data-i18n="nav.home"></span>
-    </button>
-    <button class="tab-btn" data-tab="favorites" data-i18n-aria="nav.favorites">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
-      <span data-i18n="profile.favorites"></span>
-    </button>
-    <button class="tab-btn tab-btn-add" data-tab="add" data-i18n-aria="nav.add">
-      <span class="add-fab">+</span>
-    </button>
-    <button class="tab-btn" data-tab="listings" data-i18n-aria="nav.listings">
-      <svg viewBox="0 0 24 24" width="22" height="22"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg>
-      <span data-i18n="nav.listings"></span>
-    </button>
-    <button class="tab-btn" data-tab="profile" data-i18n-aria="nav.profile">
-      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/></svg>
-      <span data-i18n="nav.profile"></span>
-    </button>
-  </nav>
-
-  <div class="screen-stack" id="screenStack"></div>
-
-  <div class="sheet-overlay" id="filterOverlay">
-    <div class="sheet" id="filterSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h3 data-i18n="filters.title"></h3>
-        <button class="icon-btn" id="closeFilterBtn">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="filter-block">
-          <label data-i18n="filter.price"></label>
-          <div class="price-inputs">
-            <input type="number" id="priceMin" data-i18n-placeholder="filter.from" inputmode="numeric" />
-            <span>—</span>
-            <input type="number" id="priceMax" data-i18n-placeholder="filter.to" inputmode="numeric" />
+        <div class="pd-top-row">
+          <div>
+            <div class="pd-price">${formatPrice(listing)}</div>
+            <span class="pd-condition">${esc(conditionLabel(listing.condition))}</span>
           </div>
         </div>
-        <div class="filter-block">
-          <label data-i18n="filter.condition"></label>
-          <div class="pill-group" id="conditionPills">
-            <button class="pill" data-cond="Новое" data-i18n="cond.new"></button>
-            <button class="pill" data-cond="Б/у" data-i18n="cond.used"></button>
+        <div class="pd-title">${esc(listingTitle(listing))}</div>
+        <div class="pd-meta">
+          <span>📍 ${esc(placeLine(listing))}</span>
+          <span>· ${timeAgo(listing.createdAt)}</span>
+          <span class="pd-meta-views">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${listing.views || 0}
+          </span>
+          <button type="button" class="pd-meta-fav ${fav ? "active" : ""}" data-fav-inline="${esc(listing.id)}" aria-label="${t('fav.add')}">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
+            <span class="pd-fav-count">${favCount}</span>
+          </button>
+        </div>
+        <div class="pd-desc"><h4>${t("pd.description")}</h4>${esc(listing.description)}</div>
+        ${hasCoords ? `
+        <div class="pd-map-section">
+          <div class="pd-map-head">
+            <h4>${t("pd.location")}</h4>
+            <span class="pd-map-place">${esc(listing.city)}</span>
+          </div>
+          <div class="pd-map-card">
+            <div class="pd-map" id="pdMap"></div>
+            <div class="pd-map-bar">
+              <span class="mb-pin">\ud83d\udccd</span>
+              <div class="mb-text">
+                <div class="mb-place">${esc(placeLine(listing))}</div>
+                <div class="mb-coords">${listing.lat.toFixed(4)}, ${listing.lng.toFixed(4)}</div>
+              </div>
+              <a class="mb-open" href="https://www.openstreetmap.org/?mlat=${listing.lat}&mlon=${listing.lng}#map=14/${listing.lat}/${listing.lng}" target="_blank" rel="noopener">${t("pd.open")}</a>
+            </div>
+          </div>
+        </div>` : ""}
+        <div class="seller-card" id="sellerCardBtn">
+          <div class="seller-avatar${avatarClass(seller)}">${avatarInner(seller)}</div>
+          <div class="seller-info">
+            <div class="seller-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
+            <div class="seller-rating">${seller.rating ? `★ ${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}` : esc(seller.city || "")}</div>
+          </div>
+          <span class="chev">›</span>
+        </div>
+        <div class="pd-actions">
+          ${isMine
+            ? `<button class="btn btn-ghost btn-block" data-edit-mine>${t("pd.edit")}</button>`
+            : `<a class="btn btn-call" href="tel:${telHref(contactPhone)}">
+                 <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6.6 3.5h3l1.5 3.7-1.9 1.4a12.5 12.5 0 0 0 5.2 5.2l1.4-1.9 3.7 1.5v3a1.8 1.8 0 0 1-1.9 1.8A15.6 15.6 0 0 1 4.8 5.4 1.8 1.8 0 0 1 6.6 3.5Z"/></svg>
+                 ${t("pd.call")}
+               </a>
+               <a class="btn btn-whatsapp" href="${waHref(contactPhone, listing)}" target="_blank" rel="noopener">
+                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.18-.3-.02-.46.13-.6.13-.14.3-.35.45-.53.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.03 1.02-1.03 2.48 0 1.46 1.06 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.62.71.23 1.36.2 1.87.12.57-.09 1.75-.72 2-1.41.25-.7.25-1.29.18-1.42-.08-.12-.27-.2-.57-.34m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.37l-.36-.22-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26A9.88 9.88 0 0 1 20.05 5.1a9.83 9.83 0 0 1 2.9 7 9.88 9.88 0 0 1-9.9 9.68m8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.89-11.9a11.82 11.82 0 0 0-3.48-8.41"/></svg>
+                 WhatsApp
+               </a>
+               <button class="fav-square ${fav ? "active" : ""}" data-fav-btn2="${listing.id}" aria-label="${t('fav.add')}" title="${t('fav.add')}">
+                 <svg viewBox="0 0 24 24" width="21" height="21"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
+               </button>`}
+        </div>
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const favBtn = el.querySelector("[data-fav]");
+      if (favBtn) favBtn.addEventListener("click", (e) => toggleFavorite(listing.id, e.currentTarget));
+      const fav2 = el.querySelector("[data-fav-btn2]");
+      if (fav2) fav2.addEventListener("click", () => {
+        toggleFavorite(listing.id);
+        fav2.classList.toggle("active", state.favorites.has(listing.id));
+        fav2.classList.remove("pop"); void fav2.offsetWidth; fav2.classList.add("pop");
+      });
+      const favInline = el.querySelector("[data-fav-inline]");
+      if (favInline) favInline.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavorite(listing.id, favInline);
+      });
+      el.querySelector("#sellerCardBtn").addEventListener("click", () => {
+        if (listing.authorName) openRealUserProfile(listing);
+        else openSellerProfile(seller.id);
+      });
+      const editBtn = el.querySelector("[data-edit-mine]");
+      if (editBtn) editBtn.addEventListener("click", () => openAddEditForm(listing));
+      hydratePhotos(el);
+      if (hasCoords) renderProductMap(el, listing);
+
+      const galleryViewport = el.querySelector(".pd-gallery-viewport");
+      const galleryTrack = el.querySelector(".pd-gallery-track");
+      const gallerySlides = el.querySelectorAll(".pd-gallery-slide");
+      const galleryDots = el.querySelectorAll(".pd-gallery-dot");
+      if (galleryViewport && galleryTrack && gallerySlides.length > 1) {
+        let index = 0, startX = 0, deltaX = 0;
+        const updateSlider = () => {
+          galleryTrack.style.transform = `translateX(-${index * 100}%)`;
+          gallerySlides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+          galleryDots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+        };
+        galleryDots.forEach((dot) => {
+          dot.addEventListener("click", () => {
+            index = Number(dot.dataset.galleryIndex || 0);
+            updateSlider();
+          });
+        });
+        galleryViewport.addEventListener("touchstart", (event) => {
+          startX = event.touches[0].clientX; deltaX = 0;
+        }, { passive: true });
+        galleryViewport.addEventListener("touchmove", (event) => {
+          deltaX = event.touches[0].clientX - startX;
+        }, { passive: true });
+        galleryViewport.addEventListener("touchend", () => {
+          if (deltaX < -40) index = Math.min(index + 1, gallerySlides.length - 1);
+          if (deltaX > 40) index = Math.max(index - 1, 0);
+          updateSlider();
+        }, { passive: true });
+        updateSlider();
+      }
+
+      el.querySelectorAll(".pd-gallery-slide img").forEach((img) => {
+        img.addEventListener("click", () => openImageZoom(img.src));
+      });
+    });
+  }
+
+  function openSellerProfile(sellerId) {
+    const seller = getUser(sellerId);
+    const reviews = MOCK_REVIEWS[sellerId] || [];
+    const sellerListings = state.listings.filter((l) => l.sellerId === sellerId && l.status !== "sold" && (l.mine || !isBrokenListing(l)));
+    const sellerSold = state.listings.filter((l) => l.sellerId === sellerId && l.status === "sold").length;
+
+    const html = `
+      ${screenHeader(seller.name)}
+      <div class="screen-body">
+        <div class="seller-hero">
+          <div class="seller-hero-avatar${avatarClass(seller)}">${avatarInner(seller)}</div>
+          <div class="seller-hero-name">${esc(seller.name)} ${seller.verified ? '<span class="verified-badge">✓</span>' : ""}</div>
+          <div class="profile-meta" style="justify-content:center;margin-top:4px;">
+            ${seller.rating ? `<span class="stars">${starString(seller.rating)}</span><span>${seller.rating.toFixed(1)} · ${seller.reviews} ${t("seller.reviewsCount")}</span>` : `<span>${esc(seller.city || "")}</span>`}
+          </div>
+          ${seller.about ? `<p class="seller-hero-about">${esc(seller.about)}</p>` : ""}
+          <div class="profile-stats" style="max-width:280px;margin:18px auto 0;">
+            <div class="stat"><b>${sellerListings.length}</b><span>${t("seller.listings")}</span></div>
+            <div class="stat"><b>${seller.sales != null ? seller.sales : sellerSold}</b><span>${t("seller.sold")}</span></div>
+            <div class="stat"><b>${seller.memberSince}</b><span>${t("seller.since")}</span></div>
           </div>
         </div>
-        <div class="filter-block">
-          <label data-i18n="filter.sort"></label>
-          <div class="pill-group" id="sortPills">
-            <button class="pill active" data-sort="new" data-i18n="sort.new"></button>
-            <button class="pill" data-sort="cheap" data-i18n="sort.cheap"></button>
-            <button class="pill" data-sort="expensive" data-i18n="sort.expensive"></button>
-            <button class="pill" data-sort="popular" data-i18n="sort.popular"></button>
+        ${sellerListings.length ? `<h4 style="margin:18px 0 10px;font-size:14px;">${t("seller.itsListings")}</h4><div class="grid" id="sellerGrid"></div>` : ""}
+        ${reviews.length ? `<h4 style="margin:22px 0 4px;font-size:14px;">${t("seller.reviews")} (${reviews.length})</h4>` : ""}
+        ${reviews.length ? `<div id="sellerReviews">${reviews.map(reviewHTML).join("")}</div>` : ""}
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const g = el.querySelector("#sellerGrid");
+      if (g) { renderGrid(g, sellerListings); attachGridHandlers(g); }
+    });
+  }
+
+  function openRealUserProfile(listing) {
+    const theirListings = state.listings.filter(
+      (l) => l.status !== "sold" && l.authorName && l.authorName === listing.authorName
+    );
+    const avatarImg = listing.authorAvatarPhoto;
+    const avatarEmoji = listing.authorAvatarEmoji || "🙂";
+
+    const html = `
+      ${screenHeader(listing.authorName)}
+      <div class="screen-body">
+        <div class="seller-hero">
+          <div class="seller-hero-avatar${avatarImg ? " has-img" : ""}">
+            ${avatarImg ? `<img src="${esc(avatarImg)}" alt="" />` : avatarEmoji}
+          </div>
+          <div class="seller-hero-name">${esc(listing.authorName)}</div>
+          <div class="profile-stats" style="max-width:280px;margin:18px auto 0;">
+            <div class="stat"><b>${theirListings.length}</b><span>${t("seller.listings")}</span></div>
           </div>
         </div>
-      </div>
-      <div class="sheet-footer">
-        <button class="btn btn-ghost" id="clearFilterBtn" data-i18n="filter.reset"></button>
-        <button class="btn btn-primary" id="applyFilterBtn" data-i18n="filter.apply"></button>
-      </div>
-    </div>
-  </div>
+        ${theirListings.length ? `<h4 style="margin:18px 0 10px;font-size:14px;">${t("seller.itsListings")}</h4><div class="grid" id="sellerGrid"></div>` : ""}
+      </div>`;
 
-  <div class="sheet-overlay" id="categoryOverlay">
-    <div class="sheet" id="categorySheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h3 data-i18n="qf.categories"></h3>
-        <button class="icon-btn" id="closeCategoryBtn">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="category-grid" id="categoryPickerGrid"></div>
-      </div>
-    </div>
-  </div>
+    pushScreen(html, (el) => {
+      const g = el.querySelector("#sellerGrid");
+      if (g) { renderGrid(g, theirListings); attachGridHandlers(g); }
+    });
+  }
 
-  <div class="sheet-overlay" id="logoutOverlay">
-    <div class="sheet" id="logoutSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-body confirm-body">
-        <div class="confirm-emo">🚪</div>
-        <h3 data-i18n="logout.title"></h3>
-        <p data-i18n="logout.text"></p>
+  function reviewHTML(r) {
+    return `
+    <div class="review-item">
+      <div class="review-top">
+        <div class="review-avatar">${r.avatar}</div>
+        <div class="review-name">${esc(r.author)}</div>
+        <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
       </div>
-      <div class="sheet-footer">
-        <button class="btn btn-ghost" id="cancelLogoutBtn" data-i18n="logout.cancel"></button>
-        <button class="btn btn-danger" id="confirmLogoutBtn" data-i18n="logout.confirm"></button>
-      </div>
-    </div>
-  </div>
+      <div class="review-text">${esc(r.text)}</div>
+      <div class="review-time">${r.daysAgo} ${t("seller.daysAgo")}</div>
+    </div>`;
+  }
 
-  <div class="sheet-overlay" id="langOverlay">
-    <div class="sheet" id="langSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h3 data-i18n="lang.title"></h3>
-        <button class="icon-btn" id="closeLangBtn">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="option-list" id="langList"></div>
-      </div>
-    </div>
-  </div>
+  function chatIdFor(sellerId) { return "chat_" + sellerId; }
 
-  <div class="sheet-overlay" id="sortOverlay">
-    <div class="sheet" id="sortSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h3 data-i18n="qf.sort"></h3>
-        <button class="icon-btn" id="closeSortBtn">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="option-list" id="sortList"></div>
-      </div>
-    </div>
-  </div>
+  function ensureChat(sellerId, listingId) {
+    const id = chatIdFor(sellerId);
+    if (!state.chats[id]) {
+      const seller = getUser(sellerId);
+      const listing = listingId ? getListing(listingId) : null;
+      state.chats[id] = {
+        sellerId,
+        listingId: listingId || null,
+        unread: false,
+        messages: [
+          {
+            from: "them",
+            text: listing
+              ? `Здравствуйте! Спасибо за интерес к объявлению «${listingTitle(listing)}». Чем могу помочь?`
+              : `Здравствуйте! Пишите, если появятся вопросы 🙂`,
+            time: Date.now(),
+          },
+        ],
+      };
+      persistChats();
+    }
+    return state.chats[id];
+  }
 
-  <div class="sheet-overlay" id="locationOverlay">
-    <div class="sheet" id="locationSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <div class="sheet-header-left">
-          <button class="icon-btn" id="locationBackBtn" hidden>‹</button>
-          <h3 id="locationSheetTitle" data-i18n="qf.location"></h3>
+  function updateChatBadge() {
+    const hasUnread = Object.values(state.chats).some((c) => c.unread);
+    const badge = document.getElementById("chatBadge");
+    if (badge) badge.hidden = !hasUnread;
+  }
+
+  function openChatList() {
+    const entries = Object.entries(state.chats).sort((a, b) => lastMsgTime(b[1]) - lastMsgTime(a[1]));
+    const html = `
+      ${screenHeader(t("chat.title"))}
+      <div class="screen-body" id="chatListBody">
+        ${entries.length ? "" : `<div class="empty-state"><div class="empty-emoji">💬</div><p>${t("chat.emptyTitle")}</p><span>${t("chat.emptySub")}</span></div>`}
+        <div id="chatListItems"></div>
+      </div>`;
+    pushScreen(html, (el) => {
+      const box = el.querySelector("#chatListItems");
+      box.innerHTML = entries
+        .map(([id, chat]) => {
+          const seller = getUser(chat.sellerId);
+          const last = chat.messages[chat.messages.length - 1];
+          return `
+          <div class="chat-list-item" data-chat="${id}">
+            <div class="chat-list-avatar${avatarClass(seller)}">${avatarInner(seller)}${chat.unread ? '<span class="chat-unread-dot"></span>' : ""}</div>
+            <div class="chat-list-info">
+              <div class="chat-list-name">${esc(seller.name)}</div>
+              <div class="chat-list-preview">${esc(last ? last.text : "")}</div>
+            </div>
+            <div class="chat-list-time">${last ? timeAgo(last.time) : ""}</div>
+          </div>`;
+        })
+        .join("");
+      box.querySelectorAll("[data-chat]").forEach((item) =>
+        item.addEventListener("click", () => {
+          const chat = state.chats[item.dataset.chat];
+          openChatScreen(chat.sellerId, chat.listingId, true);
+        })
+      );
+    });
+  }
+
+  function lastMsgTime(chat) {
+    return chat.messages.length ? chat.messages[chat.messages.length - 1].time : 0;
+  }
+
+  function openChatScreen(sellerId, listingId, fromList) {
+    const chat = ensureChat(sellerId, listingId);
+    chat.unread = false;
+    persistChats();
+    updateChatBadge();
+    const seller = getUser(sellerId);
+
+    const html = `
+      ${screenHeader(seller.name)}
+      <div class="chat-screen-body" id="chatBody"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="${t('chat.placeholder')}" autocomplete="off" />
+        <button class="send-btn" id="chatSendBtn" aria-label="${t('chat.send')}">
+          <svg viewBox="0 0 24 24" width="17" height="17"><path d="M4 12l16-7-6.5 16-2.7-6.8L4 12Z"/></svg>
+        </button>
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const body = el.querySelector("#chatBody");
+      const input = el.querySelector("#chatInput");
+      const sendBtn = el.querySelector("#chatSendBtn");
+
+      function renderMessages() {
+        body.innerHTML = chat.messages
+          .map(
+            (m) => `<div class="bubble ${m.from === "me" ? "me" : "them"}">${esc(m.text)}<span class="bubble-time">${new Date(m.time).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</span></div>`
+          )
+          .join("");
+        body.scrollTop = body.scrollHeight;
+      }
+      renderMessages();
+
+      function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        chat.messages.push({ from: "me", text, time: Date.now() });
+        persistChats();
+        renderMessages();
+        input.value = "";
+
+        const typingEl = document.createElement("div");
+        typingEl.className = "typing-indicator";
+        typingEl.innerHTML = "<span></span><span></span><span></span>";
+        body.appendChild(typingEl);
+        body.scrollTop = body.scrollHeight;
+
+        setTimeout(() => {
+          typingEl.remove();
+          const replies = [
+            "Да, ещё актуально! Можем договориться о встрече.",
+            "Конечно, отвечу на все вопросы 🙂",
+            "Цена немного обсуждаема при осмотре.",
+            "Спасибо за сообщение! Уточню детали и отвечу.",
+            "Да, всё в наличии, могу отправить дополнительные фото.",
+          ];
+          chat.messages.push({ from: "them", text: replies[Math.floor(Math.random() * replies.length)], time: Date.now() });
+          persistChats();
+          renderMessages();
+        }, 1100 + Math.random() * 900);
+      }
+      sendBtn.addEventListener("click", send);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+    });
+  }
+
+  function openAddEditForm(existing) {
+    const isEdit = !!existing;
+    const initialCity = isEdit ? existing.city : (getUser("me").city || "Душанбе");
+    const initialCountry = countryOfCity(initialCity);
+    const defaultCurrency = initialCountry === "ru" ? "RUB" : "TJS";
+    const initialCurrency = isEdit ? (existing.currency || defaultCurrency) : defaultCurrency;
+
+    const draft = isEdit
+      ? { ...existing, photos: listingImages(existing), currency: initialCurrency }
+      : { title: "", price: "", currency: initialCurrency, category: "electronics", condition: "Новое", description: "",
+          city: initialCity, address: "", phone: getUser("me").phone || "", photos: [] };
+
+    const catOptions = CATEGORIES.filter((c) => c.id !== "all");
+
+    const html = `
+      ${screenHeader(isEdit ? t("form.editTitle") : t("form.newTitle"))}
+      <div class="screen-body">
+        <div class="form-group">
+          <label>${t("form.photos")}</label>
+          <div class="photo-grid" id="photoGrid"></div>
+          <div class="form-hint">${t("form.photosHint")}</div>
+          <input type="file" id="photoInput" accept="image/*" multiple hidden />
         </div>
-        <button class="icon-btn" id="closeLocationBtn">✕</button>
+
+        <div class="form-group">
+          <label>${t("form.name")}</label>
+          <input class="form-input" id="fTitle" maxlength="70" placeholder="${t('form.namePlaceholder')}" value="${esc(draft.title)}" />
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.category")}</label>
+          <div class="category-grid" id="categoryGrid">
+            ${catOptions.map((c) => `<div class="category-opt ${c.id === draft.category ? "active" : ""}" data-cat="${c.id}"><span class="emo">${c.icon}</span>${c.name}</div>`).join("")}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.price")}</label>
+          <div style="display:flex; gap:8px;">
+            <input class="form-input" id="fPrice" type="text" placeholder="Укажите цену" value="${esc(draft.price)}" style="flex:1;" />
+            <select class="form-input" id="fCurrency" style="width:135px; padding:0 8px; font-size:13.5px;">
+              ${CURRENCIES.map((c) => `<option value="${c.code}" ${c.code === (draft.currency || defaultCurrency) ? "selected" : ""}>${esc(c.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; cursor:pointer; user-select:none;">
+              <input type="checkbox" id="fFreeCheck" ${draft.price === "Бесплатно" ? "checked" : ""} style="width:18px; height:18px; accent-color:var(--accent);" />
+              <span>🎁 Отдам даром / Бесплатно</span>
+            </label>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; cursor:pointer; user-select:none; background:rgba(255,215,0,0.12); padding:8px 10px; border-radius:var(--radius-sm); border:1px solid rgba(218,165,32,0.4);">
+              <input type="checkbox" id="fVipCheck" ${draft.isVip ? "checked" : ""} style="width:18px; height:18px; accent-color:#e6a100;" />
+              <span>⭐ Включить VIP-размещение</span>
+            </label>
+            <div id="fVipInfo" style="display:${draft.isVip ? "block" : "none"}; font-size:12px; color:var(--text-dim); background:var(--surface-2); padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+              💡 <strong>Стоимость VIP-размещения:</strong> 50 сомони (для Таджикистана) или 500 рублей (для России).<br/>
+              <em>Объявление появится в топе с рамкой VIP. Оплата после публикации.</em>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.location")}</label>
+          <button type="button" class="form-picker" id="fCityBtn">
+            <span class="fp-left"><span class="fp-emo">📍</span><span id="fCityLabel">${esc(draft.city || t("form.pickLocation"))}</span></span>
+            <span class="chev">›</span>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.address")} <span class="label-opt">${t("form.addressOptional")}</span></label>
+          <input class="form-input" id="fAddress" maxlength="80" placeholder="${t('form.addressPlaceholder')}" value="${esc(draft.address || "")}" />
+          <div class="form-hint">${t("form.addressHint")}</div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.phone")}</label>
+          <input class="form-input" id="fPhone" type="tel" inputmode="tel" placeholder="+992 90 000 00 00" value="${esc(draft.phone || "")}" />
+          <div class="form-hint">${t("form.phoneHint")}</div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.condition")}</label>
+          <div class="cond-toggle" id="condToggle">
+            <button type="button" class="${draft.condition.startsWith("Новое") ? "active" : ""}" data-cond="Новое">${t("cond.new")}</button>
+            <button type="button" class="${draft.condition.startsWith("Б/у") ? "active" : ""}" data-cond="Б/у, хорошее">${t("cond.used")}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("form.description")}</label>
+          <textarea class="form-textarea" id="fDesc" maxlength="600" placeholder="${t('form.descPlaceholder')}">${esc(draft.description)}</textarea>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="submitListingBtn">${isEdit ? t("form.save") : t("form.publish")}</button>
+        ${isEdit ? `<button class="btn btn-danger btn-block" id="deleteListingBtn" style="margin-top:10px;">${t("form.delete")}</button>` : ""}
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const photoGrid = el.querySelector("#photoGrid");
+      const photoInput = el.querySelector("#photoInput");
+
+      function renderPhotoGrid() {
+        const slots = draft.photos.map(
+          (src, i) => `<div class="photo-slot" data-existing="${i}"><img src="${src}" alt="" /><button class="photo-remove" data-remove="${i}">✕</button></div>`
+        );
+        if (draft.photos.length < MAX_LISTING_PHOTOS) slots.push(`<div class="photo-slot" id="addPhotoSlot">+</div>`);
+        photoGrid.innerHTML = slots.join("");
+        const addSlot = photoGrid.querySelector("#addPhotoSlot");
+        if (addSlot) addSlot.addEventListener("click", () => photoInput.click());
+        photoGrid.querySelectorAll("[data-remove]").forEach((btn) =>
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            draft.photos.splice(Number(btn.dataset.remove), 1);
+            renderPhotoGrid();
+          })
+        );
+      }
+      renderPhotoGrid();
+
+      const pendingUploads = new Set();
+      const pendingReads = new Set();
+
+      photoInput.addEventListener("change", () => {
+        const remainingSlots = MAX_LISTING_PHOTOS - draft.photos.length;
+        if (remainingSlots <= 0) {
+          showToast(`До ${MAX_LISTING_PHOTOS} фото в одном объявлении.`);
+          photoInput.value = "";
+          return;
+        }
+        const files = Array.from(photoInput.files).slice(0, remainingSlots);
+        files.forEach((file) => {
+          const reader = new FileReader();
+          const readTask = new Promise((resolve) => {
+            reader.onload = () => {
+              const localIndex = draft.photos.push(reader.result) - 1;
+              renderPhotoGrid();
+              const uploadTask = uploadToImgBB(file)
+                .then((url) => {
+                  if (url && draft.photos[localIndex] === reader.result) {
+                    draft.photos[localIndex] = url;
+                    renderPhotoGrid();
+                  }
+                })
+                .finally(() => pendingUploads.delete(uploadTask));
+              pendingUploads.add(uploadTask);
+              resolve();
+            };
+            reader.onerror = () => resolve();
+          }).finally(() => pendingReads.delete(readTask));
+          pendingReads.add(readTask);
+          reader.readAsDataURL(file);
+        });
+        photoInput.value = "";
+      });
+
+      const priceInput = el.querySelector("#fPrice");
+      const freeCheck = el.querySelector("#fFreeCheck");
+      const vipCheck = el.querySelector("#fVipCheck");
+      const vipInfo = el.querySelector("#fVipInfo");
+
+      if (freeCheck) {
+        freeCheck.addEventListener("change", () => {
+          if (freeCheck.checked) {
+            priceInput.value = "Бесплатно";
+            priceInput.disabled = true;
+          } else {
+            if (priceInput.value === "Бесплатно") priceInput.value = "";
+            priceInput.disabled = false;
+          }
+        });
+        if (freeCheck.checked) priceInput.disabled = true;
+      }
+
+      if (vipCheck) {
+        vipCheck.addEventListener("change", () => {
+          vipInfo.style.display = vipCheck.checked ? "block" : "none";
+        });
+      }
+
+      const currencySelect = el.querySelector("#fCurrency");
+      if (currencySelect) {
+        if (isEdit && existing && existing.currency) currencySelect.dataset.userModified = "true";
+        currencySelect.addEventListener("change", () => {
+          currencySelect.dataset.userModified = "true";
+          draft.currency = currencySelect.value;
+        });
+      }
+
+      el.querySelector("#fCityBtn").addEventListener("click", () =>
+        openLocationSheet(draft.city, (loc) => {
+          if (!loc || countryOfLocationFilter(loc)) return;
+          draft.city = loc;
+          el.querySelector("#fCityLabel").textContent = loc;
+          if (currencySelect && currencySelect.dataset.userModified !== "true") {
+            const locCountry = countryOfCity(loc);
+            const newDefaultCurrency = locCountry === "ru" ? "RUB" : "TJS";
+            currencySelect.value = newDefaultCurrency;
+            draft.currency = newDefaultCurrency;
+          }
+        })
+      );
+
+      el.querySelector("#categoryGrid").addEventListener("click", (e) => {
+        const opt = e.target.closest(".category-opt");
+        if (!opt) return;
+        draft.category = opt.dataset.cat;
+        el.querySelectorAll(".category-opt").forEach((o) => o.classList.toggle("active", o === opt));
+      });
+
+      el.querySelector("#condToggle").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        draft.condition = btn.dataset.cond;
+        el.querySelectorAll("#condToggle button").forEach((b) => b.classList.toggle("active", b === btn));
+      });
+
+      el.querySelector("#submitListingBtn").addEventListener("click", async () => {
+        const title = el.querySelector("#fTitle").value.trim();
+        const rawPriceVal = el.querySelector("#fPrice").value.trim();
+        const parsedNum = parseFloat(rawPriceVal.replace(/[^\d.]/g, ""));
+        const price = (!rawPriceVal || isNaN(parsedNum)) ? (rawPriceVal || "Договорная") : parsedNum;
+        const currency = el.querySelector("#fCurrency").value || "RUB";
+        const isVip = !!(el.querySelector("#fVipCheck") && el.querySelector("#fVipCheck").checked);
+        const city = draft.city || getUser("me").city;
+        const phone = el.querySelector("#fPhone").value.trim();
+        const address = el.querySelector("#fAddress").value.trim();
+        const description = el.querySelector("#fDesc").value.trim();
+
+        if (!title) { showToast(t("form.needName")); el.querySelector("#fTitle").focus(); return; }
+        if (price === "" || price == null) { showToast(t("form.needPrice")); el.querySelector("#fPrice").focus(); return; }
+        if (!description) { showToast(t("form.needDesc")); el.querySelector("#fDesc").focus(); return; }
+        if (!phone || phone.replace(/\D/g, "").length < 9) { showToast(t("form.needPhone")); el.querySelector("#fPhone").focus(); return; }
+
+        const submitBtn = el.querySelector("#submitListingBtn");
+
+        if (pendingReads.size) {
+          submitBtn.disabled = true;
+          showToast(t("form.uploadingPhotos"));
+          await Promise.all(Array.from(pendingReads)).catch(() => {});
+        }
+        if (pendingUploads.size) {
+          submitBtn.disabled = true;
+          showToast(t("form.uploadingPhotos"));
+          await Promise.all(Array.from(pendingUploads)).catch(() => {});
+        }
+
+        const uploadedPhotos = draft.photos.filter((p) => typeof p === "string" && !p.startsWith("data:"));
+        if (uploadedPhotos.length !== draft.photos.length) {
+          showToast(t("form.someSyncFailed"));
+        }
+        draft.photos = uploadedPhotos;
+        submitBtn.disabled = true;
+
+        let uidNow = currentUserId();
+        if (FIREBASE_READY && typeof ensureFirebaseAuth === "function") {
+          try {
+            const authedUser = await ensureFirebaseAuth();
+            if (authedUser) uidNow = authedUser.uid;
+          } catch (err) {}
+        }
+        if (FIREBASE_READY && !uidNow) {
+          showToast(t("form.needAuth"));
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const cat = CATEGORIES.find((c) => c.id === draft.category) || CATEGORIES[1];
+
+        if (isEdit) {
+          const [eLat, eLng] = coordsForLocation(city);
+          const patch = {
+            title: title || "",
+            price: price !== undefined && price !== null ? price : "Договорная",
+            currency: currency || "RUB",
+            isVip: !!isVip,
+            city: city || "",
+            address: address || "",
+            phone: phone || "",
+            description: description || "",
+            category: draft.category || "electronics",
+            condition: draft.condition || "Новое",
+            images: Array.isArray(draft.photos) ? draft.photos : [],
+            icon: cat ? cat.icon : "🏷️",
+            lat: typeof eLat === "number" ? eLat : 0,
+            lng: typeof eLng === "number" ? eLng : 0,
+          };
+          Object.assign(existing, patch);
+          try {
+            if (FIREBASE_READY) await updateListingInFirestore(existing.id, patch);
+            showToast(t("form.saved"));
+          } catch (e) {
+            showToast(t("form.syncFailed"));
+            submitBtn.disabled = false;
+            return;
+          }
+        } else {
+          const gradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+          const me = getUser("me") || {};
+          const listingData = {
+            title: title || "",
+            price: price !== undefined && price !== null ? price : "Договорная",
+            currency: currency || "RUB",
+            isVip: !!isVip,
+            city: city || "",
+            address: address || "",
+            phone: phone || "",
+            description: description || "",
+            category: draft.category || "electronics",
+            condition: draft.condition || "Новое",
+            images: Array.isArray(draft.photos) ? draft.photos : [],
+            icon: cat ? cat.icon : "🏷️",
+            gradient: gradient || "",
+            userId: uidNow || "",
+            status: "active",
+            views: 0,
+            favoritedBy: [],
+            lat: (coordsForLocation(city) && typeof coordsForLocation(city)[0] === "number") ? coordsForLocation(city)[0] : 0,
+            lng: (coordsForLocation(city) && typeof coordsForLocation(city)[1] === "number") ? coordsForLocation(city)[1] : 0,
+            authorName: me.name || "",
+            authorAvatarPhoto: me.avatarPhoto || null,
+            authorAvatarEmoji: me.avatarPhoto ? null : (me.avatar || null),
+          };
+          try {
+            let newId;
+            if (FIREBASE_READY) {
+              const docRef = await addListingToFirestore(listingData);
+              newId = docRef.id;
+            } else {
+              newId = uid("l");
+            }
+            state.listings.unshift({ ...listingData, id: newId, sellerId: "geran", mine: true, createdAt: Date.now() });
+            showToast(t("form.published"));
+          } catch (e) {
+            showToast(t("form.syncFailed"));
+            submitBtn.disabled = false;
+            return;
+          }
+        }
+        renderHomeTab();
+        renderMyListingsTab();
+        renderProfileTab();
+        popScreen();
+      });
+
+      const delBtn = el.querySelector("#deleteListingBtn");
+      if (delBtn) delBtn.addEventListener("click", async () => {
+        state.listings = state.listings.filter((l) => l.id !== existing.id);
+        state.favorites.delete(existing.id);
+        persistFavorites();
+        if (FIREBASE_READY) await deleteListingFromFirestore(existing.id);
+        renderHomeTab();
+        renderMyListingsTab();
+        showToast(t("form.deleted"));
+        popScreen();
+      });
+    });
+  }
+
+  function initFilterSheet() {
+    const overlay = document.getElementById("filterOverlay");
+    const openBtn = document.getElementById("openFilterBtn");
+    const closeBtn = document.getElementById("closeFilterBtn");
+    const priceMin = document.getElementById("priceMin");
+    const priceMax = document.getElementById("priceMax");
+    const condPills = document.getElementById("conditionPills");
+    const sortPills = document.getElementById("sortPills");
+
+    function open() {
+      priceMin.value = state.filters.priceMin ?? "";
+      priceMax.value = state.filters.priceMax ?? "";
+      condPills.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.dataset.cond === state.filters.condition));
+      sortPills.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.dataset.sort === state.filters.sort));
+      overlay.classList.add("open");
+      openLayer(() => overlay.classList.remove("open"));
+    }
+    function close() {
+      if (poppingFromHistory) { overlay.classList.remove("open"); return; }
+      if (overlay.classList.contains("open")) closeTopLayer();
+    }
+
+    openBtn.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+    condPills.addEventListener("click", (e) => {
+      const pill = e.target.closest(".pill");
+      if (!pill) return;
+      const already = pill.classList.contains("active");
+      condPills.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+      if (!already) pill.classList.add("active");
+    });
+    sortPills.addEventListener("click", (e) => {
+      const pill = e.target.closest(".pill");
+      if (!pill) return;
+      sortPills.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+    });
+
+    document.getElementById("applyFilterBtn").addEventListener("click", () => {
+      state.filters.priceMin = priceMin.value ? Number(priceMin.value) : null;
+      state.filters.priceMax = priceMax.value ? Number(priceMax.value) : null;
+      const activeCond = condPills.querySelector(".pill.active");
+      state.filters.condition = activeCond ? activeCond.dataset.cond : null;
+      const activeSort = sortPills.querySelector(".pill.active");
+      state.filters.sort = activeSort ? activeSort.dataset.sort : "all";
+      close();
+      updateQuickFilterUI();
+      renderHomeTab();
+    });
+    document.getElementById("clearFilterBtn").addEventListener("click", () => {
+      state.filters.priceMin = null; state.filters.priceMax = null; state.filters.condition = null; state.filters.sort = "all";
+      priceMin.value = ""; priceMax.value = "";
+      condPills.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+      sortPills.querySelectorAll(".pill").forEach((p, i) => p.classList.toggle("active", i === 0));
+      updateQuickFilterUI();
+      renderHomeTab();
+    });
+    document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+      state.filters = { category: "all", query: "", location: null, priceMin: null, priceMax: null, condition: null, sort: "all" };
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").hidden = true;
+      updateQuickFilterUI();
+      renderHomeTab();
+    });
+  }
+
+  function initOnlineIndicator() {
+    const el = document.getElementById("onlineCount");
+    if (!el) return;
+    if (typeof initPresenceTracking !== "function" || !FIREBASE_READY) {
+      el.textContent = 1;
+      return;
+    }
+    initPresenceTracking((count) => { el.textContent = count; });
+  }
+
+  function updateNotifBadge() {
+    const seen = loadJSON(LS.notifSeen, 0);
+    const badge = document.getElementById("notifBadge");
+    if (badge) badge.hidden = seen >= NEWS_ITEMS.length;
+  }
+
+  function openNotificationsScreen() {
+    saveJSON(LS.notifSeen, NEWS_ITEMS.length);
+    updateNotifBadge();
+    const html = `
+      ${screenHeader(t("news.title"))}
+      <div class="screen-body">
+        ${NEWS_ITEMS.map((n) => `
+          <div class="news-item">
+            <div class="news-icon">${n.icon}</div>
+            <div>
+              <div class="news-title">${esc(n.title)}</div>
+              <div class="news-text">${esc(n.text)}</div>
+              <div class="news-time">${n.daysAgo === 0 ? t("news.today") : n.daysAgo + " " + t("news.daysAgo")}</div>
+            </div>
+          </div>`).join("")}
+      </div>`;
+    pushScreen(html);
+  }
+
+const PROMO_SLIDES = [
+  { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: [ "#16A34A", "#4ADE80" ] },
+  { key: "promo.2", emo: "\ud83d\udce6", grad: [ "#22C55E", "#4FACFE" ] },
+  { key: "promo.3", emo: "\u26a1", grad: [ "#4ADE80", "#16A34A" ] },
+  { key: "promo.4", emo: "\ud83d\udcac", grad: [ "#059669", "#34D399" ] },
+  { key: "promo.5", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, // Добавили эту строку
+   { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
+    { key: "promo.7", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
+];
+
+
+  function initPromoBanner() {
+    const track = document.getElementById("promoTrack");
+    const dotsWrap = document.getElementById("promoDots");
+    if (!track) return;
+
+    if (track._autoplayTimer) {
+      clearInterval(track._autoplayTimer);
+      track._autoplayTimer = null;
+    }
+
+    track.innerHTML = "";
+    if (dotsWrap) dotsWrap.innerHTML = "";
+
+    const customList = Array.isArray(state.customBanners) ? state.customBanners : null;
+
+    // Важно: количество слайдов = PROMO_SLIDES.length (4).
+    // Если картинка для слайда задана — рендерим только <img class="promo-slide-img">
+    // (текст/эмодзи не накладываем, т.к. они уже внутри баннера).
+    // Если картинки нет — показываем градиент с текстом и эмодзи.
+    track.innerHTML = PROMO_SLIDES.map((s, i) => {
+      const customImg = (customList && customList[i]) ? customList[i] : "";
+      const defaultImg = PROMO_BANNER_IMAGES[i] || "";
+      const image = (customImg || defaultImg || "").trim();
+
+      if (image) {
+        return `<div class="promo-slide has-img">
+          <img class="promo-slide-img" src="${esc(image)}" alt="" loading="lazy"
+               onerror="this.parentElement.classList.remove('has-img'); this.remove();" />
+        </div>`;
+      }
+
+      return `<div class="promo-slide" style="background:linear-gradient(135deg, ${s.grad[0]}, ${s.grad[1]});">
+        <div class="promo-slide-text">
+          <div class="promo-slide-title">${esc(t(s.key + ".t"))}</div>
+          <div class="promo-slide-sub">${esc(t(s.key + ".s"))}</div>
+        </div>
+        <span class="promo-slide-emo">${s.emo}</span>
+      </div>`;
+    }).join("");
+
+    dotsWrap.innerHTML = PROMO_SLIDES.map((_, i) => `<span class="promo-dot ${i === 0 ? "active" : ""}"></span>`).join("");
+    const dots = dotsWrap.querySelectorAll(".promo-dot");
+
+    let dotTimer = null;
+    function setActiveDot() {
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+    }
+    track.addEventListener("scroll", () => {
+      clearTimeout(dotTimer);
+      dotTimer = setTimeout(setActiveDot, 60);
+    });
+
+    let isDown = false, startX = 0, startScroll = 0;
+    track.addEventListener("mousedown", (e) => {
+      isDown = true; track.classList.add("dragging");
+      startX = e.pageX; startScroll = track.scrollLeft;
+      e.preventDefault();
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+      track.scrollLeft = startScroll - (e.pageX - startX);
+    });
+    window.addEventListener("mouseup", () => {
+      if (!isDown) return;
+      isDown = false; track.classList.remove("dragging");
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      track.scrollTo({ left: idx * track.clientWidth, behavior: "smooth" });
+    });
+
+    function next() {
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      const n = (idx + 1) % PROMO_SLIDES.length;
+      track.scrollTo({ left: n * track.clientWidth, behavior: "smooth" });
+    }
+    track._autoplayTimer = setInterval(next, 4500);
+
+    function pause() { if (track._autoplayTimer) clearInterval(track._autoplayTimer); }
+    track.addEventListener("mousedown", pause);
+    track.addEventListener("touchstart", pause, { passive: true });
+  }
+
+  function openAvatarEditor() {
+    const me = getUser("me");
+    const html = `
+      ${screenHeader(t("avatar.title"))}
+      <div class="screen-body">
+        <div class="avatar-preview-big" id="avatarPreview"
+             style="${me.avatarPhoto ? `background-image:url(${me.avatarPhoto})` : ""}">${me.avatarPhoto ? "" : (me.avatar || "🙂")}</div>
+
+        <div class="form-group">
+          <button class="btn btn-primary btn-block" id="uploadAvatarBtn">${t("avatar.upload")}</button>
+          ${me.avatarPhoto ? `<button class="btn btn-ghost btn-block" id="removeAvatarBtn" style="margin-top:9px;">${t("avatar.remove")}</button>` : ""}
+          <div class="form-hint">${t("avatar.hint")}</div>
+        </div>
+
+        <div class="form-group">
+          <label>${t("avatar.orEmoji")}</label>
+          <div class="avatar-emoji-grid" id="avatarEmojiGrid">
+            ${AVATAR_EMOJI.map((e) => `<div class="avatar-emoji-opt ${!me.avatarPhoto && (me.avatar || "🙂") === e ? "active" : ""}" data-emo="${e}">${e}</div>`).join("")}
+          </div>
+        </div>
+      </div>`;
+
+    pushScreen(html, (el) => {
+      const fileInput = document.getElementById("avatarPhotoInput");
+      el.querySelector("#uploadAvatarBtn").addEventListener("click", () => fileInput.click());
+
+      fileInput.onchange = () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.meProfile.avatarPhoto = reader.result;
+          persistMeProfile();
+          renderProfileTab();
+          fileInput.value = "";
+          fileInput.onchange = null;
+          popScreen();
+          showToast(t("avatar.updated"));
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const removeBtn = el.querySelector("#removeAvatarBtn");
+      if (removeBtn) removeBtn.addEventListener("click", () => {
+        state.meProfile.avatarPhoto = null;
+        persistMeProfile();
+        renderProfileTab();
+        popScreen();
+        showToast(t("avatar.removed"));
+      });
+
+      el.querySelectorAll("[data-emo]").forEach((opt) =>
+        opt.addEventListener("click", () => {
+          state.meProfile.avatar = opt.dataset.emo;
+          state.meProfile.avatarPhoto = null;
+          persistMeProfile();
+          renderProfileTab();
+          popScreen();
+          showToast(t("avatar.emojiUpdated"));
+        })
+      );
+    });
+  }
+
+  function openTextEditor({ title, label, value, placeholder, hint, inputType, onSave }) {
+    const html = `
+      ${screenHeader(title)}
+      <div class="screen-body">
+        <div class="form-group">
+          <label>${esc(label)}</label>
+          <input class="form-input" id="editorInput" type="${inputType || "text"}" maxlength="60"
+                 placeholder="${esc(placeholder || "")}" value="${esc(value || "")}" />
+          ${hint ? `<div class="form-hint">${esc(hint)}</div>` : ""}
+        </div>
+        <button class="btn btn-primary btn-block" id="editorSaveBtn">${t("editor.save")}</button>
+      </div>`;
+    pushScreen(html, (el) => {
+      const input = el.querySelector("#editorInput");
+      setTimeout(() => input.focus(), 350);
+      const save = () => {
+        const v = input.value.trim();
+        if (!v) { showToast(t("editor.empty")); return; }
+        onSave(v);
+        popScreen();
+      };
+      el.querySelector("#editorSaveBtn").addEventListener("click", save);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+    });
+  }
+
+  function openAdminBannersModal() {
+    if (!isUserAdmin()) {
+      showToast("Доступ запрещен: требуется статус администратора");
+      return;
+    }
+
+    const banners = [...(state.customBanners || ["", "", "", ""])];
+    while (banners.length < 4) banners.push("");
+
+    const html = `
+      ${screenHeader("Управление баннерами (4 шт.)")}
+      <div class="screen-body">
+        <div style="background:var(--surface-2); padding:12px; border-radius:var(--radius-md); font-size:13px; line-height:1.4; margin-bottom:16px;">
+          <strong>📏 Размеры баннеров:</strong><br/>
+          Рекомендуемый единый размер: <strong>1200 × 400 px</strong> (соотношение 3:1).
+        </div>
+        ${[0, 1, 2, 3].map((i) => `
+          <div class="form-group" style="border:1px solid var(--border); padding:12px; border-radius:var(--radius-md); margin-bottom:12px;">
+            <label style="font-weight:700; display:flex; justify-content:space-between; align-items:center;">
+              Баннер #${i + 1}
+              ${banners[i] ? `<button type="button" class="btn btn-sm btn-danger" data-remove-banner="${i}" style="padding:4px 8px; font-size:11px;">Удалить</button>` : ""}
+            </label>
+            <div id="bannerPreview_${i}" style="margin-top:8px; width:100%; aspect-ratio:3/1; border-radius:var(--radius-sm); background:var(--surface-2); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--border);">
+              ${banners[i] ? `<img src="${banners[i]}" style="width:100%; height:100%; object-fit:contain;" />` : `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`}
+            </div>
+            <input type="file" id="bannerInput_${i}" accept="image/*" hidden />
+            <button type="button" class="btn btn-sm btn-secondary btn-block" id="uploadBannerBtn_${i}" style="margin-top:8px; font-size:12px;">
+              ${banners[i] ? "Заменить фото" : "+ Загрузить фото баннера"}
+            </button>
+          </div>
+        `).join("")}
+        <button class="btn btn-primary btn-block" id="saveBannersBtn" style="margin-top:12px;">Сохранить баннеры</button>
       </div>
-      <div class="sheet-body">
-        <div class="location-list" id="locationList"></div>
-      </div>
-    </div>
-  </div>
+    `;
 
-  <div class="zoom-overlay" id="zoomOverlay">
-    <button class="zoom-close" id="zoomCloseBtn" data-i18n-aria="pd.close">✕</button>
-    <img id="zoomImg" src="" alt="" draggable="false" />
-    <div class="zoom-hint" id="zoomHint" data-i18n="pd.zoomHint"></div>
-  </div>
+    pushScreen(html, (el) => {
+      [0, 1, 2, 3].forEach((i) => {
+        const input = el.querySelector(`#bannerInput_${i}`);
+        const uploadBtn = el.querySelector(`#uploadBannerBtn_${i}`);
+        const preview = el.querySelector(`#bannerPreview_${i}`);
 
-  <input type="file" id="avatarPhotoInput" accept="image/*" hidden />
+        if (uploadBtn) uploadBtn.addEventListener("click", () => input.click());
 
-  <div class="toast" id="toast"></div>
+        if (input) input.addEventListener("change", async () => {
+          const file = input.files[0];
+          if (!file) return;
+          showToast("Загрузка фото баннера...");
+          uploadBtn.disabled = true;
+          const url = await uploadToImgBB(file);
+          uploadBtn.disabled = false;
+          if (url) {
+            banners[i] = url;
+            preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:contain;" />`;
+            showToast(`Баннер #${i + 1} загружен!`);
+          } else {
+            showToast("Ошибка загрузки фото");
+          }
+        });
 
-  <div class="install-banner" id="installBanner" hidden>
-    <div class="install-banner-icon">
-      <img src="./assets/logo-icon.png" alt="" />
-    </div>
-    <div class="install-banner-text">
-      <div class="install-banner-title">Установить Geran Express</div>
-      <div class="install-banner-sub">Добавьте ярлык на главный экран</div>
-    </div>
-    <button type="button" class="install-banner-btn" id="installBannerBtn">Установить</button>
-    <button type="button" class="install-banner-close" id="installBannerClose" aria-label="Close">✕</button>
-  </div>
+        const removeBtn = el.querySelector(`[data-remove-banner="${i}"]`);
+        if (removeBtn) removeBtn.addEventListener("click", () => {
+          banners[i] = "";
+          preview.innerHTML = `<span style="font-size:12px; color:var(--text-dim);">Заглушка (нет фото)</span>`;
+          removeBtn.remove();
+        });
+      });
 
-</div>
+      const saveBtn = el.querySelector("#saveBannersBtn");
+      saveBtn.addEventListener("click", async () => {
+        saveBtn.disabled = true;
+        try {
+          if (FIREBASE_READY && typeof saveBannersToFirestore === "function") {
+            await saveBannersToFirestore(banners);
+          }
+          state.customBanners = banners;
+          initPromoBanner();
+          showToast("Баннеры успешно сохранены! 🎉");
+          popScreen();
+        } catch (e) {
+          showToast("Не удалось сохранить баннеры");
+          saveBtn.disabled = false;
+        }
+      });
+    });
+  }
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-storage-compat.js"></script>
-<script src="js/firebase-config.js?v=2.2.0" onerror="console.error('[Geran] Failed to load js/firebase-config.js')"></script>
-<script src="js/i18n.js?v=2.0.8" onerror="console.error('[Geran] Failed to load js/i18n.js')"></script>
-<script src="js/geran-listings.js?v=2.1.0" onerror="console.error('[Geran] Failed to load js/geran-listings.js')"></script>
-<script src="js/listing-ru.js?v=2.0.8" onerror="console.error('[Geran] Failed to load js/listing-ru.js')"></script>
-<script src="js/data.js?v=2.2.0" onerror="console.error('[Geran] Failed to load js/data.js')"></script>
-<script src="js/app.js?v=2.2.1" onerror="console.error('[Geran] Failed to load js/app.js')"></script>
-</body>
-</html>
+  function renderProductMap(el, listing) {
+    const mapEl = el.querySelector("#pdMap");
+    if (!mapEl) return;
+
+    const customImg = CUSTOM_MAP_IMAGES[listing.city];
+    if (customImg) {
+      const img = document.createElement("img");
+      img.src = customImg;
+      img.alt = "";
+      img.style.cssText = "width:100%;height:190px;object-fit:cover;border-radius:inherit;display:block;";
+      mapEl.replaceWith(img);
+      return;
+    }
+
+    const custom = CUSTOM_CITY_COORDS[listing.city];
+    const lat = custom ? custom.lat : listing.lat;
+    const lng = custom ? custom.lng : listing.lng;
+    const hasCoords = typeof lat === "number" && typeof lng === "number";
+
+    if (!hasCoords) {
+      mapEl.className = "pd-map-offline";
+      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span>
+        <span>${t("pd.mapOffline")}</span>
+        <span>${esc(listing.city)}</span>`;
+      return;
+    }
+
+    if (typeof L === "undefined") {
+      mapEl.className = "pd-map-offline";
+      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span>
+        <span>${t("pd.mapOffline")}</span>
+        <span>${esc(listing.city)} \u00b7 ${lat.toFixed(4)}, ${lng.toFixed(4)}</span>`;
+      return;
+    }
+
+    try {
+      const map = L.map(mapEl, {
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: true,
+        dragging: true,
+      }).setView([lat, lng], 13);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: "\u00a9 OpenStreetMap",
+      }).addTo(map);
+
+      const icon = L.divIcon({
+        className: "geran-pin",
+        html: '<div class="pin-ring"></div><div class="pin-body"></div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -30],
+      });
+      L.marker([lat, lng], { icon, title: listing.city })
+        .addTo(map)
+        .bindPopup(`<b>${esc(listingTitle(listing))}</b><br>${esc(listing.city)}`);
+
+      setTimeout(() => map.invalidateSize(), 260);
+      setTimeout(() => map.invalidateSize(), 700);
+    } catch (err) {
+      mapEl.className = "pd-map-offline";
+      mapEl.innerHTML = `<span class="off-emo">\ud83d\uddfa\ufe0f</span><span>${t("pd.mapFailed")}</span>`;
+    }
+  }
+
+  let zoomState = { scale: 1, x: 0, y: 0 };
+
+  function initZoomViewer() {
+    const overlay = document.getElementById("zoomOverlay");
+    const img = document.getElementById("zoomImg");
+    const hint = document.getElementById("zoomHint");
+
+    document.getElementById("zoomCloseBtn").addEventListener("click", closeImageZoom);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeImageZoom(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeImageZoom(); });
+
+    function apply() {
+      img.style.transform = `translate(${zoomState.x}px, ${zoomState.y}px) scale(${zoomState.scale})`;
+      if (hint) hint.style.opacity = zoomState.scale > 1 ? "0" : "1";
+    }
+    function setScale(next) {
+      zoomState.scale = Math.max(1, Math.min(5, next));
+      if (zoomState.scale === 1) { zoomState.x = 0; zoomState.y = 0; }
+      apply();
+    }
+    overlay._reset = () => { zoomState = { scale: 1, x: 0, y: 0 }; img.style.transition = "none"; apply(); requestAnimationFrame(() => { img.style.transition = "transform .12s linear"; }); };
+
+    overlay.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      setScale(zoomState.scale * (e.deltaY < 0 ? 1.16 : 0.86));
+    }, { passive: false });
+
+    img.addEventListener("dblclick", () => setScale(zoomState.scale > 1 ? 1 : 2.5));
+    let lastTap = 0;
+    img.addEventListener("touchend", () => {
+      const now = Date.now();
+      if (now - lastTap < 280) setScale(zoomState.scale > 1 ? 1 : 2.5);
+      lastTap = now;
+    });
+
+    const pointers = new Map();
+    let startDist = 0, startScale = 1, dragFrom = null, panFrom = null;
+
+    img.addEventListener("pointerdown", (e) => {
+      pointers.set(e.pointerId, e);
+      try { img.setPointerCapture(e.pointerId); } catch (err) {}
+      if (pointers.size === 1 && zoomState.scale > 1) {
+        dragFrom = { x: e.clientX, y: e.clientY };
+        panFrom = { x: zoomState.x, y: zoomState.y };
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        startDist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        startScale = zoomState.scale;
+        dragFrom = null;
+      }
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, e);
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+        if (!startDist) { startDist = dist; startScale = zoomState.scale; }
+        else setScale(startScale * (dist / startDist));
+      } else if (dragFrom) {
+        zoomState.x = panFrom.x + (e.clientX - dragFrom.x);
+        zoomState.y = panFrom.y + (e.clientY - dragFrom.y);
+        apply();
+      }
+    });
+    function release(e) { pointers.delete(e.pointerId); if (pointers.size < 2) startDist = 0; if (pointers.size === 0) dragFrom = null; }
+    img.addEventListener("pointerup", release);
+    img.addEventListener("pointercancel", release);
+  }
+
+  function openImageZoom(src) {
+    const overlay = document.getElementById("zoomOverlay");
+    document.getElementById("zoomImg").src = src;
+    if (overlay._reset) overlay._reset();
+    overlay.classList.add("open");
+    openLayer(() => overlay.classList.remove("open"));
+  }
+  function closeImageZoom() {
+    const o = document.getElementById("zoomOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  const SPLASH_STEPS = [
+    { at: 120,  pct: 18,  key: "splash.connect" },
+    { at: 620,  pct: 46,  key: "splash.catalog" },
+    { at: 1150, pct: 72,  key: "splash.listings" },
+    { at: 1700, pct: 92,  key: "splash.almost" },
+    { at: 2050, pct: 100, key: "splash.done" },
+  ];
+
+  function runSplash(onDone) {
+    const splash = document.getElementById("splash");
+    const bar = document.getElementById("splashBar");
+    const status = document.getElementById("splashStatus");
+
+    SPLASH_STEPS.forEach((step) => {
+      setTimeout(() => {
+        bar.style.width = step.pct + "%";
+        status.textContent = t(step.key);
+      }, step.at);
+    });
+
+    setTimeout(() => {
+      onDone();
+      requestAnimationFrame(() => splash.classList.add("hide"));
+      setTimeout(() => splash.remove(), 620);
+    }, 2300);
+  }
+
+  const AUTH_COUNTRIES = [
+    { id: "tj", flag: "\ud83c\uddf9\ud83c\uddef", code: "+992", digits: 9,  groups: [2, 3, 2, 2], nameKey: "country.tj", placeholder: "90 000 00 00" },
+    { id: "ru", flag: "\ud83c\uddf7\ud83c\uddfa", code: "+7",   digits: 10, groups: [3, 3, 2, 2], nameKey: "country.ru", placeholder: "912 345 67 89" },
+    { id: "uz", flag: "\ud83c\uddfa\ud83c\uddff", code: "+998", digits: 9,  groups: [2, 3, 2, 2], nameKey: "country.uz", placeholder: "90 123 45 67" },
+    { id: "kz", flag: "\ud83c\uddf0\ud83c\uddff", code: "+7",   digits: 10, groups: [3, 3, 2, 2], nameKey: "country.kz", placeholder: "701 234 56 78" },
+    { id: "kg", flag: "\ud83c\uddf0\ud83c\uddec", code: "+996", digits: 9,  groups: [3, 3, 3],    nameKey: "country.kg", placeholder: "700 123 456" },
+  ];
+  let authCountry = AUTH_COUNTRIES[0];
+
+  function formatPhoneByCountry(digits, country) {
+    const d = digits.slice(0, country.digits);
+    const parts = [];
+    let i = 0;
+    for (const size of country.groups) { parts.push(d.slice(i, i + size)); i += size; }
+    return parts.filter(Boolean).join(" ");
+  }
+
+  function applyAuthCountryToUI() {
+    const flagEl = document.getElementById("authCountryFlag");
+    const codeEl = document.getElementById("authCountryCode");
+    const input = document.getElementById("authPhoneInput");
+    if (!flagEl || !input) return;
+    flagEl.textContent = authCountry.flag;
+    codeEl.textContent = authCountry.code;
+    input.placeholder = authCountry.placeholder;
+    input.maxLength = authCountry.digits + authCountry.groups.length - 1;
+  }
+
+  function openAuthCountrySheet() {
+    const list = document.getElementById("authCountryList");
+    list.innerHTML = AUTH_COUNTRIES.map(
+      (c) => `<div class="option-item ${c.id === authCountry.id ? "active" : ""}" data-country="${c.id}">
+        <span class="opt-emo">${c.flag}</span><span class="opt-name">${esc(t(c.nameKey))} ${c.code}</span><span class="check">\u2713</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-country]").forEach((item) =>
+      item.addEventListener("click", () => {
+        const country = AUTH_COUNTRIES.find((c) => c.id === item.dataset.country);
+        if (!country) return;
+        authCountry = country;
+        applyAuthCountryToUI();
+        const input = document.getElementById("authPhoneInput");
+        const btn = document.getElementById("authSubmitBtn");
+        const row = document.getElementById("authPhoneRow");
+        const err = document.getElementById("authError");
+        input.value = "";
+        btn.disabled = true;
+        row.classList.remove("invalid");
+        err.textContent = "";
+        closeAuthCountrySheet();
+        setTimeout(() => input.focus(), 300);
+      })
+    );
+    document.getElementById("authCountryOverlay").classList.add("open");
+    openLayer(() => document.getElementById("authCountryOverlay").classList.remove("open"));
+  }
+  function closeAuthCountrySheet() {
+    const o = document.getElementById("authCountryOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  let authOnDone = null;
+  let authScreenBound = false;
+  let recaptchaVerifier = null;
+  let authConfirmationResult = null;
+  let authPendingPhone = null;
+  let authResendTimer = null;
+
+  function hideAuthScreen(screen) {
+    screen.style.transition = "";
+    screen.style.opacity = "";
+    screen.classList.remove("show");
+  }
+
+  function resetAuthCodeStep() {
+    clearInterval(authResendTimer);
+    authResendTimer = null;
+    authConfirmationResult = null;
+    authPendingPhone = null;
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    const codeErr = document.getElementById("authCodeError");
+    const resendBtn = document.getElementById("authResendBtn");
+    if (codeInput) codeInput.value = "";
+    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.classList.remove("loading"); }
+    if (codeErr) codeErr.textContent = "";
+    if (resendBtn) { resendBtn.disabled = true; resendBtn.textContent = t("auth.resend"); }
+    document.getElementById("authCodeStep").hidden = true;
+    document.getElementById("authPhoneStep").hidden = false;
+  }
+
+  function ensureRecaptcha() {
+    if (recaptchaVerifier) { try { recaptchaVerifier.clear(); } catch (e) {} recaptchaVerifier = null; }
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptchaContainer", {
+      size: "invisible",
+      callback: () => {},
+      "expired-callback": () => {},
+    });
+    return recaptchaVerifier;
+  }
+
+  function mapFirebaseAuthError(e) {
+    const code = e && e.code;
+    if (code === "auth/invalid-phone-number") return t("auth.invalidPhoneErr");
+    if (code === "auth/too-many-requests" || code === "auth/quota-exceeded") return t("auth.tooManyErr");
+    if (code === "auth/invalid-verification-code" || code === "auth/code-expired") return t("auth.codeErr");
+    return t("auth.sendErr");
+  }
+
+  function finishAuthSuccess(screen, phone, uid) {
+    state.meProfile.phone = phone;
+    if (uid) state.meProfile.uid = uid;
+    persistMeProfile();
+    state.isAuthed = true;
+    saveJSON(LS.authed, true);
+    clearInterval(authResendTimer);
+
+    screen.style.transition = "opacity .4s var(--ease)";
+    screen.style.opacity = "0";
+    setTimeout(() => {
+      hideAuthScreen(screen);
+      const done = authOnDone;
+      authOnDone = null;
+      if (done) done();
+      showToast(t("auth.welcome"));
+    }, 420);
+  }
+
+  function sendAuthCode(fullPhone, ui) {
+    // !!! TEMPORARY: SMS AUTH BYPASSED — remove before production !!!
+    const { screen, displayPhone, btn } = ui;
+    fbAuth.signInAnonymously()
+      .then((cred) => {
+        finishAuthSuccess(screen, displayPhone || fullPhone, cred.user.uid);
+      })
+      .catch((e) => {
+        if (btn) { btn.classList.remove("loading"); btn.disabled = false; }
+        showToast(t("form.syncFailed"));
+      });
+  }
+
+  function verifyAuthCode(screen) {
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    const codeErr = document.getElementById("authCodeError");
+    const code = codeInput.value;
+    if (!authConfirmationResult || code.length !== 6) return;
+    verifyBtn.classList.add("loading");
+    verifyBtn.disabled = true;
+    authConfirmationResult.confirm(code)
+      .then((result) => {
+        finishAuthSuccess(screen, authPendingPhone, result.user.uid);
+      })
+      .catch((e) => {
+        verifyBtn.classList.remove("loading");
+        verifyBtn.disabled = codeInput.value.length !== 6;
+        codeErr.textContent = mapFirebaseAuthError(e);
+      });
+  }
+
+  function showAuthScreen(onDone) {
+    authOnDone = onDone;
+
+    const screen = document.getElementById("authScreen");
+    const row = document.getElementById("authPhoneRow");
+    const input = document.getElementById("authPhoneInput");
+    const btn = document.getElementById("authSubmitBtn");
+    const err = document.getElementById("authError");
+    const closeBtn = document.getElementById("authCloseBtn");
+    const countryBtn = document.getElementById("authCountryBtn");
+
+    applyAuthCountryToUI();
+    input.value = "";
+    btn.disabled = true;
+    btn.classList.remove("loading");
+    row.classList.remove("invalid", "focus");
+    err.textContent = "";
+    screen.style.transition = "";
+    screen.style.opacity = "";
+    resetAuthCodeStep();
+
+    screen.classList.add("show");
+    setTimeout(() => input.focus(), 450);
+
+    if (authScreenBound) return;
+    authScreenBound = true;
+
+    const digitsOf = () => input.value.replace(/\D/g, "").slice(0, authCountry.digits);
+
+    input.addEventListener("input", () => {
+      const d = digitsOf();
+      input.value = formatPhoneByCountry(d, authCountry);
+      btn.disabled = d.length !== authCountry.digits;
+      row.classList.remove("invalid");
+      err.textContent = "";
+    });
+    input.addEventListener("focus", () => row.classList.add("focus"));
+    input.addEventListener("blur", () => row.classList.remove("focus"));
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !btn.disabled) btn.click(); });
+
+    countryBtn.addEventListener("click", openAuthCountrySheet);
+    document.getElementById("closeAuthCountryBtn").addEventListener("click", closeAuthCountrySheet);
+    document.getElementById("authCountryOverlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeAuthCountrySheet();
+    });
+
+    closeBtn.addEventListener("click", () => {
+      hideAuthScreen(screen);
+      authOnDone = null;
+      resetAuthCodeStep();
+    });
+
+    const codeInput = document.getElementById("authCodeInput");
+    const verifyBtn = document.getElementById("authVerifyBtn");
+    codeInput.addEventListener("input", () => {
+      codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 6);
+      verifyBtn.disabled = codeInput.value.length !== 6;
+      document.getElementById("authCodeError").textContent = "";
+    });
+    codeInput.addEventListener("keydown", (e) => { if (e.key === "Enter" && !verifyBtn.disabled) verifyBtn.click(); });
+    verifyBtn.addEventListener("click", () => verifyAuthCode(screen));
+
+    document.getElementById("authChangeNumberBtn").addEventListener("click", () => {
+      resetAuthCodeStep();
+      setTimeout(() => input.focus(), 100);
+    });
+    document.getElementById("authResendBtn").addEventListener("click", () => {
+      if (!authPendingPhone) return;
+      sendAuthCode(authPendingPhone, {
+        row: document.getElementById("authCodeRow"),
+        err: document.getElementById("authCodeError"),
+        btn: document.getElementById("authResendBtn"),
+      });
+    });
+
+    btn.addEventListener("click", () => {
+      const d = digitsOf();
+      if (d.length !== authCountry.digits) {
+        row.classList.add("invalid");
+        err.textContent = t("auth.err").replace("{n}", authCountry.digits);
+        return;
+      }
+
+      const displayPhone = authCountry.code + " " + formatPhoneByCountry(d, authCountry);
+
+      if (FIREBASE_READY) {
+        const fullPhone = authCountry.code.replace(/\s/g, "") + d;
+        sendAuthCode(fullPhone, { row, err, btn, screen, displayPhone });
+      } else {
+        btn.classList.add("loading");
+        btn.disabled = true;
+        setTimeout(() => {
+          finishAuthSuccess(screen, displayPhone, null);
+        }, 700);
+      }
+    });
+  }
+
+  async function requireAuth(onDone) {
+    if (FIREBASE_READY && typeof ensureFirebaseAuth === "function") {
+      await ensureFirebaseAuth().catch(() => {});
+    }
+    if (state.isAuthed) { onDone(); return; }
+    showAuthScreen(onDone);
+  }
+
+  function applyLanguage(lang) {
+    state.lang = lang;
+    saveJSON(LS.lang, lang);
+    setLanguage(lang);
+    applyStaticTranslations();
+    refreshAllText();
+  }
+
+  function refreshAllText() {
+    const langRow = document.getElementById("langValue");
+    if (langRow) {
+      const l = LANGUAGES.find((x) => x.id === state.lang) || LANGUAGES[0];
+      langRow.textContent = l.flag + " " + l.native;
+    }
+    if (typeof updateQuickFilterUI === "function") updateQuickFilterUI();
+    if (document.getElementById("promoTrack").children.length) initPromoBanner();
+    requestAnimationFrame(syncHeaderHeight);
+    renderHomeTab();
+    renderFavoritesTab();
+    renderMyListingsTab();
+    renderProfileTab();
+  }
+
+  function openLogoutSheet() {
+    document.getElementById("logoutOverlay").classList.add("open");
+    openLayer(() => document.getElementById("logoutOverlay").classList.remove("open"));
+  }
+  function closeLogoutSheet() {
+    const o = document.getElementById("logoutOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  function doLogout() {
+    state.isAuthed = false;
+    state.meProfile = {};
+    saveJSON(LS.authed, false);
+    saveJSON(LS.meProfile, {});
+    closeLogoutSheet();
+    showToast(t("logout.done"));
+    setTimeout(() => location.reload(), 700);
+  }
+
+  function openLanguageSheet() {
+    const list = document.getElementById("langList");
+    list.innerHTML = LANGUAGES.map(
+      (l) => `<div class="option-item ${l.id === state.lang ? "active" : ""}" data-lang="${l.id}">
+        <span class="opt-emo">${l.flag}</span><span class="opt-name">${esc(l.native)}</span><span class="check">✓</span>
+      </div>`
+    ).join("");
+    list.querySelectorAll("[data-lang]").forEach((item) =>
+      item.addEventListener("click", () => {
+        applyLanguage(item.dataset.lang);
+        closeLanguageSheet();
+        showToast(t("lang.changed"));
+      })
+    );
+    document.getElementById("langOverlay").classList.add("open");
+    openLayer(() => document.getElementById("langOverlay").classList.remove("open"));
+  }
+  function closeLanguageSheet() {
+    const o = document.getElementById("langOverlay");
+    if (poppingFromHistory) { o.classList.remove("open"); return; }
+    if (o.classList.contains("open")) closeTopLayer();
+  }
+
+  function syncHeaderHeight() {
+    const header = document.getElementById("appHeader");
+    const frame = document.getElementById("appFrame");
+    if (!header || !frame) return;
+    if (header.classList.contains("collapsed")) return;
+    const el = document.getElementById("headerCollapsible");
+    const extra = el && getComputedStyle(el).display !== "none" ? el.offsetHeight : 0;
+    frame.style.setProperty("--header-h", (header.offsetHeight + extra) + "px");
+  }
+
+  let headerLockUntil = 0;
+
+  function setHeaderCollapsed(on) {
+    const header = document.getElementById("appHeader");
+    if (!header || header.classList.contains("collapsed") === on) return;
+    header.classList.toggle("collapsed", on);
+    headerLockUntil = Date.now() + 320;
+  }
+
+  function resetHeaderCollapsed() {
+    const header = document.getElementById("appHeader");
+    if (!header) return;
+    header.classList.remove("collapsed");
+    headerLockUntil = 0;
+    const main = document.getElementById("appMain");
+    if (main) main.dispatchEvent(new Event("headerreset"));
+  }
+
+  function initHeaderCollapse() {
+    const main = document.getElementById("appMain");
+    const header = document.getElementById("appHeader");
+    let ticking = false;
+    let lastY = 0;
+
+    function backAtFirstListing() {
+      const list = document.querySelector(".tab-view.active .grid, .tab-view.active .my-list");
+      const first = list && list.firstElementChild;
+      if (!first) return main.scrollTop < 60;
+      return first.getBoundingClientRect().top > -40;
+    }
+
+    function update() {
+      ticking = false;
+      const y = main.scrollTop;
+      const delta = y - lastY;
+      lastY = y;
+
+      if (main.scrollHeight - main.clientHeight < 240) { setHeaderCollapsed(false); return; }
+      if (Date.now() < headerLockUntil) return;
+
+      if (y <= 4) {
+        setHeaderCollapsed(false);
+      } else if (header.classList.contains("collapsed")) {
+        if (delta < 0 && backAtFirstListing()) setHeaderCollapsed(false);
+      } else if (delta > 0 && y > 8) {
+        setHeaderCollapsed(true);
+      }
+    }
+
+    main.addEventListener("scroll", () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+
+    main.addEventListener("headerreset", () => { lastY = main.scrollTop; });
+  }
+
+  function initPullToRefresh() {
+    const main = document.getElementById("appMain");
+    const body = document.getElementById("appBody");
+    const indicator = document.getElementById("pullRefresh");
+
+    const INDICATOR_H = 64;
+    const MAX_PULL = 92;
+    const TRIGGER = 62;
+    const DAMPING = 0.45;
+
+    let startY = 0, lastPull = 0, dragging = false, refreshing = false;
+
+    function applyPull(px, animated) {
+      lastPull = px;
+      body.classList.toggle("pull-anim", animated);
+      indicator.classList.toggle("pull-anim", animated);
+      body.style.transform = px > 0 ? `translateY(${px}px)` : "";
+      indicator.style.transform = `translateY(${px - INDICATOR_H}px)`;
+      indicator.style.opacity = Math.min(1, px / TRIGGER);
+      indicator.classList.toggle("ready", px >= TRIGGER);
+    }
+
+    function canStart() {
+      return !refreshing && state.currentTab === "home" && main.scrollTop === 0;
+    }
+
+    function start(y) { if (!canStart()) return false; startY = y; dragging = true; return true; }
+
+    function move(y) {
+      if (!dragging) return false;
+      if (main.scrollTop !== 0 || y < startY) { dragging = false; applyPull(0, true); return false; }
+      const raw = y - startY;
+      if (raw <= 0) { applyPull(0, false); return false; }
+      applyPull(Math.min(MAX_PULL, raw * DAMPING), false);
+      return true;
+    }
+
+    function finish() {
+      if (!dragging) return;
+      dragging = false;
+      if (lastPull >= TRIGGER) doRefresh();
+      else applyPull(0, true);
+    }
+
+    function doRefresh() {
+      refreshing = true;
+      applyPull(TRIGGER, true);
+      indicator.classList.add("spinning");
+      setTimeout(() => {
+        SESSION_ORDER_SEED = (Date.now() ^ Math.floor(Math.random() * 2147483647)) >>> 0;
+        renderHomeTab();
+        indicator.classList.remove("spinning", "ready");
+        applyPull(0, true);
+        refreshing = false;
+        showToast(t("refresh.done"));
+      }, 650);
+    }
+
+    main.addEventListener("touchstart", (e) => { start(e.touches[0].clientY); }, { passive: true });
+    main.addEventListener("touchmove", (e) => { if (move(e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
+    main.addEventListener("touchend", finish, { passive: true });
+    main.addEventListener("touchcancel", finish, { passive: true });
+
+    let mouseActive = false;
+    main.addEventListener("mousedown", (e) => { mouseActive = start(e.clientY); if (mouseActive) e.preventDefault(); });
+    window.addEventListener("mousemove", (e) => { if (mouseActive) move(e.clientY); });
+    window.addEventListener("mouseup", () => { if (mouseActive) { mouseActive = false; finish(); } });
+  }
+
+  function playEntrance() {
+    const frame = document.getElementById("appFrame");
+    frame.classList.add("entering");
+    setTimeout(() => frame.classList.remove("entering"), 1100);
+  }
+
+  // PWA INSTALL PROMPT
+  let deferredInstallPrompt = null;
+  const INSTALL_DISMISS_KEY = "bh_install_dismissed_at";
+  const INSTALL_DISMISS_DAYS = 7;
+
+  function wasInstallRecentlyDismissed() {
+    try {
+      const ts = Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0);
+      if (!ts) return false;
+      return (Date.now() - ts) < INSTALL_DISMISS_DAYS * 86400000;
+    } catch (e) { return false; }
+  }
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+      || window.navigator.standalone === true;
+  }
+  function showInstallBanner() {
+    if (isStandalone()) return;
+    if (wasInstallRecentlyDismissed()) return;
+    const banner = document.getElementById("installBanner");
+    if (!banner) return;
+    banner.hidden = false;
+  }
+  function hideInstallBanner() {
+    const banner = document.getElementById("installBanner");
+    if (banner) banner.hidden = true;
+  }
+  function initInstallPrompt() {
+    const banner = document.getElementById("installBanner");
+    const installBtn = document.getElementById("installBannerBtn");
+    const closeBtn = document.getElementById("installBannerClose");
+    if (!banner || !installBtn || !closeBtn) return;
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch((e) => {
+        console.warn("[Geran] SW registration failed:", e);
+      });
+    }
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      setTimeout(showInstallBanner, 3500);
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      hideInstallBanner();
+      showToast("Приложение установлено!");
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) {
+        showToast("Откройте меню браузера → «На главный экран»");
+        hideInstallBanner();
+        return;
+      }
+      hideInstallBanner();
+      deferredInstallPrompt.prompt();
+      try {
+        const choice = await deferredInstallPrompt.userChoice;
+        console.info("[Geran] Install prompt choice:", choice && choice.outcome);
+      } catch (e) {}
+      deferredInstallPrompt = null;
+    });
+
+    closeBtn.addEventListener("click", () => {
+      hideInstallBanner();
+      try { localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now())); } catch (e) {}
+    });
+  }
+
+  function init() {
+    applyTheme(state.theme);
+
+    document.getElementById("themeToggleBtn").addEventListener("click", toggleTheme);
+    document.getElementById("profileThemeSwitch").addEventListener("change", (e) => applyTheme(e.target.checked ? "dark" : "light"));
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.tab === "add") { requireAuth(() => openAddEditForm(null)); return; }
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.go)));
+
+    document.getElementById("brandHomeBtn").addEventListener("click", () => window.location.reload());
+    document.getElementById("myEmptyAddBtn").addEventListener("click", () => requireAuth(() => openAddEditForm(null)));
+    document.getElementById("openMyListingsBtn").addEventListener("click", () => switchTab("listings"));
+    document.getElementById("openFavFromProfileBtn").addEventListener("click", () => switchTab("favorites"));
+    document.getElementById("openChatsBtn").addEventListener("click", openChatList);
+    document.getElementById("notifBtn").addEventListener("click", openNotificationsScreen);
+    document.getElementById("logoutBtn").addEventListener("click", openLogoutSheet);
+    document.getElementById("cancelLogoutBtn").addEventListener("click", closeLogoutSheet);
+    document.getElementById("confirmLogoutBtn").addEventListener("click", doLogout);
+    document.getElementById("logoutOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLogoutSheet(); });
+    document.getElementById("openLangBtn").addEventListener("click", openLanguageSheet);
+    document.getElementById("openBannersBtn")?.addEventListener("click", openAdminBannersModal);
+    document.getElementById("closeLangBtn").addEventListener("click", closeLanguageSheet);
+    document.getElementById("langOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeLanguageSheet(); });
+
+    const editAvatarBtn = document.getElementById("editAvatarBtn");
+    if (editAvatarBtn) editAvatarBtn.addEventListener("click", openAvatarEditor);
+
+    document.getElementById("editNameBtn").addEventListener("click", () =>
+      openTextEditor({
+        title: t("name.title"), label: t("name.label"), value: getUser("me").name, placeholder: t("name.placeholder"),
+        onSave: (v) => { state.meProfile.name = v; persistMeProfile(); renderProfileTab(); showToast(t("name.updated")); },
+      })
+    );
+    document.getElementById("openPhoneBtn").addEventListener("click", () =>
+      openTextEditor({
+        title: t("phone.title"), label: t("phone.label"), value: getUser("me").phone, inputType: "tel",
+        placeholder: "+992 90 000 00 00",
+        hint: t("phone.hint"),
+        onSave: (v) => { state.meProfile.phone = v; persistMeProfile(); renderProfileTab(); showToast(t("phone.updated")); },
+      })
+    );
+    document.getElementById("openAddressBtn").addEventListener("click", () =>
+      openLocationSheet(getUser("me").city, (loc) => {
+        if (!loc || countryOfLocationFilter(loc)) return;
+        state.meProfile.city = loc;
+        persistMeProfile();
+        renderProfileTab();
+        showToast(t("address.updated"));
+      })
+    );
+    document.getElementById("refreshDataBtn").addEventListener("click", () => {
+      if (typeof MOCK_LISTINGS === "undefined" || !MOCK_LISTINGS.length) {
+        showToast(t("catalog.refreshed"));
+        return;
+      }
+      rebuildListingsFromRemote();
+      showToast(`${t("catalog.refreshed")} · ${state.listings.length} ${t("home.count")}`);
+    });
+    document.getElementById("aboutBtn").addEventListener("click", () => showToast(t("app.about")));
+
+    document.getElementById("beSponsorBtn").addEventListener("click", () => {
+      const html = `
+        ${screenHeader(t("sponsor.title"))}
+        <div class="screen-body">
+          <div class="sponsor-card">
+            <h3>${t("sponsor.title")}</h3>
+            <p class="sponsor-intro">${t("sponsor.intro")}</p>
+            <div class="sponsor-meta">
+              <div><span>${t("sponsor.bank")}</span><b>${t("sponsor.bankName")}</b></div>
+              <div><span>${t("sponsor.account")}</span><b>971 220 800</b></div>
+            </div>
+            <div class="sponsor-form">
+              <input id="sponsorAmount" type="number" min="1" step="1" placeholder="${t("sponsor.amountPlaceholder")}" />
+              <textarea id="sponsorMessage" maxlength="250" placeholder="${t("sponsor.messagePlaceholder")}"></textarea>
+              <div class="sponsor-actions">
+                <button type="button" class="btn btn-primary btn-block" id="sponsorSubmitBtn">${t("sponsor.confirm")}</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      pushScreen(html, async (el) => {
+        const amountInput = el.querySelector("#sponsorAmount");
+        const messageInput = el.querySelector("#sponsorMessage");
+        const submitBtn = el.querySelector("#sponsorSubmitBtn");
+
+        submitBtn.addEventListener("click", async () => {
+          const amount = Number(amountInput.value);
+          if (!amount || amount <= 0) { showToast(t("sponsor.needAmount")); amountInput.focus(); return; }
+
+          submitBtn.disabled = true;
+          const payload = { userId: currentUserId(), amount, bank: "Эсхата", account: "971 220 800", message: messageInput.value.trim(), receiptUrl: "" };
+
+          try {
+            if (FIREBASE_READY && typeof saveSponsorDonation === "function") await saveSponsorDonation(payload);
+            const waText = encodeURIComponent(`Здравствуйте! Я хочу поддержать Geran Express на сумму ${amount} сомони. ${payload.message ? "Комментарий: " + payload.message : ""}`);
+            const tgText = encodeURIComponent(`Поддержка Geran Express: ${amount} сомони. ${payload.message || ""}`);
+            window.open(`https://wa.me/79385401876?text=${waText}`, "_blank");
+            window.open(`https://t.me/79385401876?text=${tgText}`, "_blank");
+            showToast(t("sponsor.thanks"));
+            popScreen();
+          } catch (e) {
+            showToast(t("sponsor.sendFailed"));
+            submitBtn.disabled = false;
+          }
+        });
+      });
+    });
+
+    const searchInput = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearSearchBtn");
+    let searchTimer = null;
+    searchInput.addEventListener("input", () => {
+      clearBtn.hidden = !searchInput.value;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { state.filters.query = searchInput.value; renderHomeTab(); }, 180);
+    });
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      clearBtn.hidden = true;
+      state.filters.query = "";
+      renderHomeTab();
+      searchInput.focus();
+    });
+
+    updateQuickFilterUI();
+    initQuickFilterRow();
+    initFilterSheet();
+    attachGridHandlers(document.getElementById("homeGrid"));
+    attachGridHandlers(document.getElementById("favGrid"));
+    renderHomeTab();
+    renderProfileTab();
+    updateChatBadge();
+    updateNotifBadge();
+    initOnlineIndicator();
+    initPromoBanner();
+    initZoomViewer();
+    initHeaderCollapse();
+    initPullToRefresh();
+    initInstallPrompt();
+    syncHeaderHeight();
+    startListingsSync();
+    if (typeof startBannersSync === "function") startBannersSync();
+    window.addEventListener("resize", () => requestAnimationFrame(syncHeaderHeight));
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && state.currentTab === "home") {
+        reseedHomeOrder();
+        renderHomeTab();
+      }
+    });
+    history.replaceState({ base: true }, "");
+    applyLanguage(state.lang);
+    requestAnimationFrame(playEntrance);
+    switchTab("home");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    applyTheme(state.theme);
+    setLanguage(state.lang);
+    applyStaticTranslations();
+    runSplash(() => { init(); });
+  });
+})();

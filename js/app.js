@@ -49,6 +49,7 @@
   //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
+    "dom.jpg",
     "ddddd.jpg",
     "dddd.jpg",
     "dd.jpg",
@@ -1910,6 +1911,7 @@ const PROMO_SLIDES = [
   { key: "promo.4", emo: "\ud83d\udcac", grad: [ "#059669", "#34D399" ] },
   { key: "promo.5", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, // Добавили эту строку
    { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
+    { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
 ];
 
 

@@ -54,7 +54,7 @@ const CHAYKHUN_VILLAGES = [
   "Дехаи Хаштум",
   "Дехаи Нухум",
   "Дехаи Дахум",
-"Райони Чайхун",
+"Райони Чаихун",
   "Бозор",
   "Аэрапорт",
   "Новая Земля",
@@ -68,7 +68,7 @@ const CHAYKHUN_VILLAGES = [
   "Далин 4",
   "Панч",
 ];
-const CHAYKHUN_DISTRICT_NAME = "Раёни Чайхун";
+const CHAYKHUN_DISTRICT_NAME = "Раёни Чаиихун";
 const TAJIKISTAN_LOCATION_TREE = {
   name: "Таджикистан",
   sections: [
@@ -90,9 +90,9 @@ const CITY_ALIASES = {
   "Шаҳри Қазон": "Казань, Россия",
   "Дзержинск": "Дзержинск, Нижний Новгород",
   "Нижний Новгород, Дзержинск": "Дзержинск, Нижний Новгород",
-  "Райони Чайхун": CHAYKHUN_DISTRICT_NAME,
-  "Раёни Чайхун": CHAYKHUN_DISTRICT_NAME,
-  "Район Чайхун": CHAYKHUN_DISTRICT_NAME,
+  "Райони Чаихун": CHAYKHUN_DISTRICT_NAME,
+  "Раёни Чаихун": CHAYKHUN_DISTRICT_NAME,
+  "Район Чаихун": CHAYKHUN_DISTRICT_NAME,
   "Дехаи Геран": "Дехаи Геран",
   "Дехаи Якум": "Дехаи Якум",
   "Дехаи Дуввум": "Дехаи Дуввум",

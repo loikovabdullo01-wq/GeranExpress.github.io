@@ -40,12 +40,68 @@
   }
 
   // ─────────────────────────────────────────────────────────────
+  //  СЖАТИЕ И МИНИАТЮРЫ ИЗОБРАЖЕНИЙ
+  // ─────────────────────────────────────────────────────────────
+  const IMG_MAX_SIDE = 1280;     // максимум по большей стороне при загрузке
+  const IMG_QUALITY = 0.75;      // качество JPEG
+
+  // Сжатие файла перед отправкой на imgbb
+  function compressImage(file, maxSide, quality) {
+    maxSide = maxSide || IMG_MAX_SIDE;
+    quality = quality || IMG_QUALITY;
+    return new Promise((resolve) => {
+      if (!file || !file.type || !file.type.startsWith("image/") || file.type === "image/gif") {
+        resolve(file);
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let width = img.width, height = img.height;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) { resolve(file); return; }
+            const name = (file.name || "photo").replace(/\.\w+$/, "") + ".jpg";
+            resolve(new File([blob], name, { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
+  // Миниатюра через ресайз-прокси (кэшируется, отдаётся в WebP).
+  // Если wsrv.nl недоступен — замените тело функции на: return src;
+  function thumbUrl(src, w) {
+    if (!src || typeof src !== "string") return src;
+    if (!/^https?:\/\//i.test(src)) return src;
+    if (src.indexOf("wsrv.nl") !== -1) return src;
+    const clean = src.replace(/^https?:\/\//i, "");
+    return "https://wsrv.nl/?url=" + encodeURIComponent(clean) +
+           "&w=" + (w || 400) + "&q=70&output=webp&we";
+  }
+
+  // ─────────────────────────────────────────────────────────────
   //  КАРТИНКИ БАННЕРА НА ГЛАВНОЙ
   //  Файлы лежат в корне репозитория и/или в папке assets/.
-  //  Порядок соответствует PROMO_SLIDES (4 слайда). Если у вас
-  //  есть ещё баннеры — просто замените строки ниже на их имена,
-  //  количество элементов должно совпадать с PROMO_SLIDES.length.
-  //  Если файла нет — покажется градиент с текстом (не сломается).
+  //  Порядок соответствует PROMO_SLIDES. Если файла нет — покажется
+  //  градиент с текстом (не сломается).
   //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
@@ -56,13 +112,12 @@
     "ss.jpg",
     "aa.jpg",
     "dom.jpg",
-    
   ];
 
   // ─────────────────────────────────────────────────────────────
   //  КАРТА — свои координаты и свои картинки для городов/сёл.
   // ─────────────────────────────────────────────────────────────
- const CUSTOM_CITY_COORDS = {
+  const CUSTOM_CITY_COORDS = {
     "Душанбе":           { lat: 38.5598, lng: 68.7870 },
     "Худжанд":           { lat: 40.2833, lng: 69.6333 },
     "Бохтар":            { lat: 37.8339, lng: 68.7800 },
@@ -76,15 +131,10 @@
     "Казань, Россия":    { lat: 55.7963, lng: 49.1088 },
     "Дзержинск, Нижний Новгород": { lat: 56.2377, lng: 43.4603 },
 
-    // Ваш рынок/поселок в Шахринаве
-   
-     // Локации и деревни (Дехи) из района Джайхун
-    
-       "Дехаи Геран":       { lat: 37.343043853634555, lng: 68.7215250809315 }, 
-
+    // Локации и деревни (Дехи) из района Джайхун
+    "Дехаи Геран":       { lat: 37.343043853634555, lng: 68.7215250809315 },
     "Дехаи Якум":        { lat: 37.4115, lng: 68.6180 },
     "Дехаи Дуввум":      { lat: 37.351859, lng: 68.680009 },
-
     "Дехаи Севвум":      { lat: 37.351859, lng: 68.680009 },
     "Дехаи Чахорум":     { lat: 37.351859, lng: 68.680009 },
     "Дехаи Панчум":      { lat: 37.351859, lng: 68.680009 },
@@ -93,11 +143,9 @@
     "Дехаи Хаштум":      { lat: 37.351859, lng: 68.680009 },
     "Дехаи Нухум":       { lat: 37.351859, lng: 68.680009 },
     "Дехаи Дахум":       { lat: 37.351859, lng: 68.680009 },
-   "Райони Чайхун":       { lat: 37.351859, lng: 68.680009 },
+    "Райони Чайхун":     { lat: 37.351859, lng: 68.680009 },
 
-
-
-      "Бозор":             { lat: 37.347895, lng: 68.673493 },
+    "Бозор":             { lat: 37.347895, lng: 68.673493 },
 
     "Аэропорт":          { lat: 37.3255, lng: 68.6590 },
     "Новая Земля":       { lat: 37.2625, lng: 68.6611 },
@@ -110,8 +158,7 @@
     "Далин 3":           { lat: 37.4830, lng: 68.5600 },
     "Далин 4":           { lat: 37.4940, lng: 68.5490 },
     "Панч":              { lat: 37.2634, lng: 69.0858 }
-};
-
+  };
 
   const CUSTOM_MAP_IMAGES = {};
 
@@ -308,13 +355,17 @@
     return `<div class="${cls}" role="img" aria-label="Нет фото">Нет фото</div>`;
   }
 
+  // Карточка: маленькая WebP-миниатюра (~20 КБ) вместо оригинала
   function cardPhotoInner(listing) {
     const images = listingImages(listing);
     if (images.length) {
+      const full = images[0];
       return `
         <div class="card-photo-main">
           <div class="photo-skeleton"></div>
-          <img src="${esc(images[0])}" alt="" loading="lazy" data-photo="${esc(listing.id)}" data-photo-index="0" />
+          <img src="${esc(thumbUrl(full, 400))}" data-full="${esc(full)}" alt=""
+               loading="lazy" decoding="async" fetchpriority="low"
+               data-photo="${esc(listing.id)}" data-photo-index="0" />
         </div>`;
     }
     return gradientFallback(listing, "photo-fallback");
@@ -327,11 +378,23 @@
       const listing = getListing(img.dataset.photo);
       const skeleton = img.previousElementSibling;
 
-      const done = () => { img.classList.add("loaded"); if (skeleton) skeleton.classList.add("done"); };
+      const done = () => { img.classList.add("loaded"); if (skeleton && skeleton.classList) skeleton.classList.add("done"); };
       const fail = () => {
+        // если миниатюра не загрузилась — пробуем оригинал один раз
+        const full = img.dataset.full;
+        if (full && img.src !== full && !img.dataset.retried) {
+          img.dataset.retried = "1";
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", fail, { once: true });
+          img.src = full;
+          return;
+        }
         img.remove();
-        if (skeleton && listing) skeleton.outerHTML = gradientFallback(listing, "photo-fallback");
-        else if (skeleton) skeleton.classList.add("done");
+        if (skeleton && skeleton.classList && skeleton.classList.contains("photo-skeleton") && listing) {
+          skeleton.outerHTML = gradientFallback(listing, "photo-fallback");
+        } else if (skeleton && skeleton.classList) {
+          skeleton.classList.add("done");
+        }
       };
 
       if (img.complete) {
@@ -893,7 +956,7 @@
 
   function myThumbInner(listing) {
     const images = listingImages(listing);
-    if (images.length) return `<img src="${esc(images[0])}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
+    if (images.length) return `<img src="${esc(thumbUrl(images[0], 200))}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />`;
     const [c1, c2] = listing.gradient || ["#7C6CF6", "#B98CF0"];
     return `<div style="width:100%;height:100%;border-radius:14px;background:linear-gradient(135deg, ${c1}, ${c2});display:flex;align-items:center;justify-content:center;">${listing.icon || "📦"}</div>`;
   }
@@ -1121,10 +1184,19 @@
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
+    // предзагрузка остальных фото галереи в фоне
+    images.slice(1).forEach((src) => {
+      const p = new Image();
+      p.decoding = "async";
+      p.src = thumbUrl(src, 900);
+    });
+
     const galleryMarkup = images.length
       ? `<div class="pd-gallery-viewport"><div class="pd-gallery-track">${images.map((src, index) => `
           <div class="pd-gallery-slide ${index === 0 ? "active" : ""}">
-            <img src="${esc(src)}" alt="" decoding="async" data-photo="${esc(listing.id)}" data-photo-index="${index}" />
+            <img src="${esc(thumbUrl(src, 900))}" data-full="${esc(src)}" alt="" decoding="async"
+                 ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}
+                 data-photo="${esc(listing.id)}" data-photo-index="${index}" />
           </div>
         `).join("")}</div></div>
         <div class="pd-gallery-dots">${images.map((_, index) => `<button type="button" class="pd-gallery-dot ${index === 0 ? "active" : ""}" data-gallery-index="${index}" aria-label="Перейти к фото ${index + 1}"></button>`).join("")}</div>`
@@ -1253,8 +1325,9 @@
         updateSlider();
       }
 
+      // оригинал грузим только при зуме
       el.querySelectorAll(".pd-gallery-slide img").forEach((img) => {
-        img.addEventListener("click", () => openImageZoom(img.src));
+        img.addEventListener("click", () => openImageZoom(img.dataset.full || img.src));
       });
     });
   }
@@ -1605,7 +1678,8 @@
             reader.onload = () => {
               const localIndex = draft.photos.push(reader.result) - 1;
               renderPhotoGrid();
-              const uploadTask = uploadToImgBB(file)
+              // сжимаем перед отправкой на imgbb (~200 КБ вместо 3–5 МБ)
+              const uploadTask = compressImage(file).then((small) => uploadToImgBB(small))
                 .then((url) => {
                   if (url && draft.photos[localIndex] === reader.result) {
                     draft.photos[localIndex] = url;
@@ -1930,16 +2004,15 @@
     pushScreen(html);
   }
 
-const PROMO_SLIDES = [
-  { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: [ "#16A34A", "#4ADE80" ] },
-  { key: "promo.2", emo: "\ud83d\udce6", grad: [ "#22C55E", "#4FACFE" ] },
-  { key: "promo.3", emo: "\u26a1", grad: [ "#4ADE80", "#16A34A" ] },
-  { key: "promo.4", emo: "\ud83d\udcac", grad: [ "#059669", "#34D399" ] },
-  { key: "promo.5", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, // Добавили эту строку
-   { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
-    { key: "promo.7", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] }, 
-];
-
+  const PROMO_SLIDES = [
+    { key: "promo.1", emo: "\ud83d\udee0\ufe0f", grad: [ "#16A34A", "#4ADE80" ] },
+    { key: "promo.2", emo: "\ud83d\udce6", grad: [ "#22C55E", "#4FACFE" ] },
+    { key: "promo.3", emo: "\u26a1", grad: [ "#4ADE80", "#16A34A" ] },
+    { key: "promo.4", emo: "\ud83d\udcac", grad: [ "#059669", "#34D399" ] },
+    { key: "promo.5", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] },
+    { key: "promo.6", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] },
+    { key: "promo.7", emo: "\ud83d\udce3", grad: [ "#16A34A", "#4ADE80" ] },
+  ];
 
   function initPromoBanner() {
     const track = document.getElementById("promoTrack");
@@ -1956,10 +2029,9 @@ const PROMO_SLIDES = [
 
     const customList = Array.isArray(state.customBanners) ? state.customBanners : null;
 
-    // Важно: количество слайдов = PROMO_SLIDES.length (4).
-    // Если картинка для слайда задана — рендерим только <img class="promo-slide-img">
-    // (текст/эмодзи не накладываем, т.к. они уже внутри баннера).
+    // Если картинка для слайда задана — рендерим только <img class="promo-slide-img">.
     // Если картинки нет — показываем градиент с текстом и эмодзи.
+    // Первый слайд грузится сразу, остальные лениво.
     track.innerHTML = PROMO_SLIDES.map((s, i) => {
       const customImg = (customList && customList[i]) ? customList[i] : "";
       const defaultImg = PROMO_BANNER_IMAGES[i] || "";
@@ -1967,7 +2039,8 @@ const PROMO_SLIDES = [
 
       if (image) {
         return `<div class="promo-slide has-img">
-          <img class="promo-slide-img" src="${esc(image)}" alt="" loading="lazy"
+          <img class="promo-slide-img" src="${esc(image)}" alt="" decoding="async"
+               ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}
                onerror="this.parentElement.classList.remove('has-img'); this.remove();" />
         </div>`;
       }
@@ -2052,17 +2125,20 @@ const PROMO_SLIDES = [
       fileInput.onchange = () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          state.meProfile.avatarPhoto = reader.result;
-          persistMeProfile();
-          renderProfileTab();
-          fileInput.value = "";
-          fileInput.onchange = null;
-          popScreen();
-          showToast(t("avatar.updated"));
-        };
-        reader.readAsDataURL(file);
+        // аватар сжимаем до 256px, чтобы не раздувать localStorage
+        compressImage(file, 256, 0.8).then((small) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            state.meProfile.avatarPhoto = reader.result;
+            persistMeProfile();
+            renderProfileTab();
+            fileInput.value = "";
+            fileInput.onchange = null;
+            popScreen();
+            showToast(t("avatar.updated"));
+          };
+          reader.readAsDataURL(small);
+        });
       };
 
       const removeBtn = el.querySelector("#removeAvatarBtn");
@@ -2161,7 +2237,7 @@ const PROMO_SLIDES = [
           if (!file) return;
           showToast("Загрузка фото баннера...");
           uploadBtn.disabled = true;
-          const url = await uploadToImgBB(file);
+          const url = await uploadToImgBB(await compressImage(file, 1600, 0.8));
           uploadBtn.disabled = false;
           if (url) {
             banners[i] = url;

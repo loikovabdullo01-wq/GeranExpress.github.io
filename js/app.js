@@ -99,10 +99,6 @@
 
   // ─────────────────────────────────────────────────────────────
   //  КАРТИНКИ БАННЕРА НА ГЛАВНОЙ
-  //  Файлы лежат в корне репозитория и/или в папке assets/.
-  //  Порядок соответствует PROMO_SLIDES. Если файла нет — покажется
-  //  градиент с текстом (не сломается).
-  //  Firestore-баннеры (settings/banners.list) приоритетнее этих.
   // ─────────────────────────────────────────────────────────────
   const PROMO_BANNER_IMAGES = [
     "ddddd.jpg",
@@ -114,7 +110,7 @@
     "dom.jpg",
   ];
 
-  // ─────────────────────────────────────────────────────────────
+ // ─────────────────────────────────────────────────────────────
   //  КАРТА — свои координаты и свои картинки для городов/сёл.
   // ─────────────────────────────────────────────────────────────
   const CUSTOM_CITY_COORDS = {
@@ -131,7 +127,7 @@
     "Казань, Россия":    { lat: 55.7963, lng: 49.1088 },
     "Дзержинск, Нижний Новгород": { lat: 56.2377, lng: 43.4603 },
 
-    // Локации и деревни (Дехи) из района Джайхун
+    // Локации и деревни (Дехи) из района Джайхун - ВОЗВРАЩЕНЫ СТАРЫЕ КООРДИНАТЫ
     "Дехаи Геран":       { lat: 37.343043853634555, lng: 68.7215250809315 },
     "Дехаи Якум":        { lat: 37.4115, lng: 68.6180 },
     "Дехаи Дуввум":      { lat: 37.351859, lng: 68.680009 },
@@ -222,6 +218,10 @@
 
   let remoteListings = [];
   let unsubscribeListings = null;
+  
+  // ПРОМЕЖУТОЧНЫЙ ПРОМИС: Ждем загрузки первой пачки данных из базы для заставки
+  let firstSyncPromiseResolve = null;
+  const firstSyncPromise = new Promise((resolve) => { firstSyncPromiseResolve = resolve; });
 
   function timestampToMillis(value) {
     if (value && typeof value.toMillis === "function") return value.toMillis();
@@ -308,13 +308,22 @@
   }
 
   function startListingsSync() {
-    if (unsubscribeListings || typeof subscribeToListings !== "function") return;
+    if (unsubscribeListings || typeof subscribeToListings !== "function") {
+      if (firstSyncPromiseResolve) { firstSyncPromiseResolve(); firstSyncPromiseResolve = null; }
+      return;
+    }
     unsubscribeListings = subscribeToListings(
       (docs) => {
         remoteListings = docs.map(normalizeRemoteListing);
         rebuildListingsFromRemote();
+        // Сообщаем заставке, что данные пришли
+        if (firstSyncPromiseResolve) { firstSyncPromiseResolve(); firstSyncPromiseResolve = null; }
       },
-      () => showToast(t("form.syncFailed") || "Sync error")
+      () => {
+        showToast(t("form.syncFailed") || "Sync error");
+        // Даже при ошибке отпускаем заставку, чтобы приложение не зависло
+        if (firstSyncPromiseResolve) { firstSyncPromiseResolve(); firstSyncPromiseResolve = null; }
+      }
     );
   }
 
@@ -851,18 +860,15 @@
     return state.listings.filter((l) => l.status !== "sold" && !isBrokenListing(l));
   }
 
-  function sortMineThenVip(arr, compareFn) {
-    const mineVip = arr.filter((l) => l.mine && l.isVip);
-    const mineReg = arr.filter((l) => l.mine && !l.isVip);
-    const othVip  = arr.filter((l) => !l.mine && l.isVip);
-    const othReg  = arr.filter((l) => !l.mine && !l.isVip);
+  // УБРАН ПРИОРИТЕТ ДЛЯ СВОИХ ОБЪЯВЛЕНИЙ
+  function sortVipAndReg(arr, compareFn) {
+    const vip = arr.filter((l) => l.isVip);
+    const reg = arr.filter((l) => !l.isVip);
     if (compareFn) {
-      mineVip.sort(compareFn);
-      mineReg.sort(compareFn);
-      othVip.sort(compareFn);
-      othReg.sort(compareFn);
+      vip.sort(compareFn);
+      reg.sort(compareFn);
     }
-    return mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
+    return interleaveVipListings(reg, vip);
   }
 
   function computeFilteredListings() {
@@ -912,19 +918,17 @@
 
     switch (f.sort) {
       case "all": {
-        const mineVip = list.filter((l) => l.mine && l.isVip);
-        const mineReg = shuffleForSession(list.filter((l) => l.mine && !l.isVip));
-        const othVip  = list.filter((l) => !l.mine && l.isVip);
-        const othReg  = shuffleForSession(list.filter((l) => !l.mine && !l.isVip));
-        list = mineVip.concat(mineReg, interleaveVipListings(othReg, othVip));
+        const vip = list.filter((l) => l.isVip);
+        const reg = shuffleForSession(list.filter((l) => !l.isVip));
+        list = interleaveVipListings(reg, vip);
         break;
       }
-      case "new":       list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
-      case "old":       list = sortMineThenVip(list, (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
-      case "cheap":     list = sortMineThenVip(list, (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
-      case "expensive": list = sortMineThenVip(list, (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
-      case "popular":   list = sortMineThenVip(list, (a, b) => (b.views || 0) - (a.views || 0)); break;
-      default:          list = sortMineThenVip(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      case "new":       list = sortVipAndReg(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
+      case "old":       list = sortVipAndReg(list, (a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
+      case "cheap":     list = sortVipAndReg(list, (a, b) => (extractNumericPrice(a.price) || 0) - (extractNumericPrice(b.price) || 0)); break;
+      case "expensive": list = sortVipAndReg(list, (a, b) => (extractNumericPrice(b.price) || 0) - (extractNumericPrice(a.price) || 0)); break;
+      case "popular":   list = sortVipAndReg(list, (a, b) => (b.views || 0) - (a.views || 0)); break;
+      default:          list = sortVipAndReg(list, (a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     }
     return list;
   }
@@ -2426,31 +2430,52 @@
     if (o.classList.contains("open")) closeTopLayer();
   }
 
+  // ИЗМЕНЕНО: Растянули шаги загрузки, чтобы анимация была плавнее и дольше
   const SPLASH_STEPS = [
-    { at: 120,  pct: 18,  key: "splash.connect" },
-    { at: 620,  pct: 46,  key: "splash.catalog" },
-    { at: 1150, pct: 72,  key: "splash.listings" },
-    { at: 1700, pct: 92,  key: "splash.almost" },
-    { at: 2050, pct: 100, key: "splash.done" },
+    { at: 300,  pct: 20,  key: "splash.connect" },
+    { at: 1000, pct: 45,  key: "splash.catalog" },
+    { at: 2000, pct: 75,  key: "splash.listings" },
+    { at: 3000, pct: 90,  key: "splash.almost" },
   ];
 
-  function runSplash(onDone) {
+  async function runSplash() {
     const splash = document.getElementById("splash");
     const bar = document.getElementById("splashBar");
     const status = document.getElementById("splashStatus");
 
+    // Запускаем инициализацию приложения (внутри запустится загрузка БД)
+    init();
+
     SPLASH_STEPS.forEach((step) => {
       setTimeout(() => {
-        bar.style.width = step.pct + "%";
-        status.textContent = t(step.key);
+        // Обновляем до 100% только когда БД реально загрузится
+        if (parseInt(bar.style.width || "0") < 100) {
+          bar.style.width = step.pct + "%";
+          status.textContent = t(step.key);
+        }
       }, step.at);
     });
 
+    // ИЗМЕНЕНО: Увеличили минимальное время до 3.5 секунд, чтобы анимация выглядела плавно
+    const minDisplayTime = new Promise((resolve) => setTimeout(resolve, 3500));
+    // ИЗМЕНЕНО: Увеличили максимальное время до 15 секунд (на случай очень медленного интернета)
+    const maxWaitTime = new Promise((resolve) => setTimeout(resolve, 15000));
+
+    // Ждем либо загрузки БД + минимальное время, либо истечения максимального таймаута
+    await Promise.race([
+      Promise.all([minDisplayTime, firstSyncPromise]),
+      maxWaitTime
+    ]);
+
+    // Догружаем полоску до 100% и меняем текст
+    bar.style.width = "100%";
+    status.textContent = t("splash.done");
+
     setTimeout(() => {
-      onDone();
       requestAnimationFrame(() => splash.classList.add("hide"));
       setTimeout(() => splash.remove(), 620);
-    }, 2300);
+      playEntrance();
+    }, 400);
   }
 
   const AUTH_COUNTRIES = [
@@ -3160,7 +3185,6 @@
     });
     history.replaceState({ base: true }, "");
     applyLanguage(state.lang);
-    requestAnimationFrame(playEntrance);
     switchTab("home");
   }
 
@@ -3168,6 +3192,6 @@
     applyTheme(state.theme);
     setLanguage(state.lang);
     applyStaticTranslations();
-    runSplash(() => { init(); });
+    runSplash();
   });
 })();

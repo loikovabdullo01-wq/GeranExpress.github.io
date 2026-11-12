@@ -87,7 +87,6 @@
   }
 
   // Миниатюра через ресайз-прокси (кэшируется, отдаётся в WebP).
-  // Если wsrv.nl недоступен — замените тело функции на: return src;
   function thumbUrl(src, w) {
     if (!src || typeof src !== "string") return src;
     if (!/^https?:\/\//i.test(src)) return src;
@@ -110,7 +109,7 @@
     "dom.jpg",
   ];
 
- // ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   //  КАРТА — свои координаты и свои картинки для городов/сёл.
   // ─────────────────────────────────────────────────────────────
   const CUSTOM_CITY_COORDS = {
@@ -364,7 +363,6 @@
     return `<div class="${cls}" role="img" aria-label="Нет фото">Нет фото</div>`;
   }
 
-  // Карточка: маленькая WebP-миниатюра (~20 КБ) вместо оригинала
   function cardPhotoInner(listing) {
     const images = listingImages(listing);
     if (images.length) {
@@ -389,7 +387,6 @@
 
       const done = () => { img.classList.add("loaded"); if (skeleton && skeleton.classList) skeleton.classList.add("done"); };
       const fail = () => {
-        // если миниатюра не загрузилась — пробуем оригинал один раз
         const full = img.dataset.full;
         if (full && img.src !== full && !img.dataset.retried) {
           img.dataset.retried = "1";
@@ -429,17 +426,21 @@
     return `https://wa.me/${digits}?text=${text}`;
   }
 
-  function cardHTML(listing) {
+  function cardHTML(listing, index) {
     const fav = state.favorites.has(listing.id);
     const sold = listing.status === "sold";
     const isVip = !!listing.isVip;
     const location = listing.location || listing.village || listing.city || listing.address || "";
     const date = formatCardDate(listing.createdAt);
+    
+    // Нумерация объявлений
+    const numberBadge = index !== undefined ? `<div class="card-number">#${index + 1}</div>` : "";
 
     return `
     <article class="card ${isVip ? "card-vip" : ""}" data-id="${listing.id}" role="button" tabindex="0">
       <div class="card-photo">
         ${cardPhotoInner(listing)}
+        ${numberBadge}
         ${isVip ? `<div class="badge-vip"><span>VIP</span></div>` : ""}
         ${sold ? `<div class="badge-sold"><span>${t("pd.sold")}</span></div>` : ""}
         <button class="fav-btn ${fav ? "active" : ""}" data-fav="${listing.id}" aria-label="${t('fav.add')}">
@@ -458,7 +459,8 @@
   }
 
   function renderGrid(container, listings) {
-    container.innerHTML = listings.map(cardHTML).join("");
+    // Передаем индекс для нумерации
+    container.innerHTML = listings.map((l, i) => cardHTML(l, i)).join("");
     hydratePhotos(container);
   }
 
@@ -1188,7 +1190,6 @@
     const hasCoords = typeof listing.lat === "number" && typeof listing.lng === "number";
     const contactPhone = listing.phone || seller.phone || "";
 
-    // предзагрузка остальных фото галереи в фоне
     images.slice(1).forEach((src) => {
       const p = new Image();
       p.decoding = "async";
@@ -1271,6 +1272,9 @@
                </a>
                <button class="fav-square ${fav ? "active" : ""}" data-fav-btn2="${listing.id}" aria-label="${t('fav.add')}" title="${t('fav.add')}">
                  <svg viewBox="0 0 24 24" width="21" height="21"><path d="M12 20.5s-7.6-4.7-10-9.4C.4 7.4 2.3 4 5.9 4c2 0 3.6 1 6.1 3.6C14.5 5 16.1 4 18.1 4c3.6 0 5.5 3.4 3.9 7.1-2.4 4.7-10 9.4-10 9.4Z"/></svg>
+               </button>
+               <button class="share-square" id="pdShareBtn" aria-label="Поделиться" title="Поделиться">
+                 <svg viewBox="0 0 24 24" width="21" height="21"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                </button>`}
         </div>
       </div>`;
@@ -1295,6 +1299,33 @@
       });
       const editBtn = el.querySelector("[data-edit-mine]");
       if (editBtn) editBtn.addEventListener("click", () => openAddEditForm(listing));
+      
+      // Кнопка "Поделиться"
+      const shareBtn = el.querySelector("#pdShareBtn");
+      if (shareBtn) shareBtn.addEventListener("click", async () => {
+        const shareUrl = window.location.origin + '/?listing=' + listing.id;
+        const shareText = `Посмотрите объявление "${listingTitle(listing)}" за ${formatPrice(listing)} на Geran Express!`;
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Geran Express',
+              text: shareText,
+              url: shareUrl,
+            });
+          } catch (err) {
+            if (err.name !== 'AbortError') showToast("Ошибка при попытке поделиться");
+          }
+        } else {
+          try {
+            await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+            showToast("Ссылка скопирована в буфер обмена!");
+          } catch (err) {
+            showToast("Не удалось скопировать ссылку");
+          }
+        }
+      });
+
       hydratePhotos(el);
       if (hasCoords) renderProductMap(el, listing);
 
@@ -1329,7 +1360,6 @@
         updateSlider();
       }
 
-      // оригинал грузим только при зуме
       el.querySelectorAll(".pd-gallery-slide img").forEach((img) => {
         img.addEventListener("click", () => openImageZoom(img.dataset.full || img.src));
       });
@@ -1682,7 +1712,6 @@
             reader.onload = () => {
               const localIndex = draft.photos.push(reader.result) - 1;
               renderPhotoGrid();
-              // сжимаем перед отправкой на imgbb (~200 КБ вместо 3–5 МБ)
               const uploadTask = compressImage(file).then((small) => uploadToImgBB(small))
                 .then((url) => {
                   if (url && draft.photos[localIndex] === reader.result) {
@@ -2033,9 +2062,6 @@
 
     const customList = Array.isArray(state.customBanners) ? state.customBanners : null;
 
-    // Если картинка для слайда задана — рендерим только <img class="promo-slide-img">.
-    // Если картинки нет — показываем градиент с текстом и эмодзи.
-    // Первый слайд грузится сразу, остальные лениво.
     track.innerHTML = PROMO_SLIDES.map((s, i) => {
       const customImg = (customList && customList[i]) ? customList[i] : "";
       const defaultImg = PROMO_BANNER_IMAGES[i] || "";
@@ -2129,7 +2155,6 @@
       fileInput.onchange = () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
-        // аватар сжимаем до 256px, чтобы не раздувать localStorage
         compressImage(file, 256, 0.8).then((small) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -2430,7 +2455,6 @@
     if (o.classList.contains("open")) closeTopLayer();
   }
 
-  // ИЗМЕНЕНО: Растянули шаги загрузки, чтобы анимация была плавнее и дольше
   const SPLASH_STEPS = [
     { at: 300,  pct: 20,  key: "splash.connect" },
     { at: 1000, pct: 45,  key: "splash.catalog" },
@@ -2443,12 +2467,10 @@
     const bar = document.getElementById("splashBar");
     const status = document.getElementById("splashStatus");
 
-    // Запускаем инициализацию приложения (внутри запустится загрузка БД)
     init();
 
     SPLASH_STEPS.forEach((step) => {
       setTimeout(() => {
-        // Обновляем до 100% только когда БД реально загрузится
         if (parseInt(bar.style.width || "0") < 100) {
           bar.style.width = step.pct + "%";
           status.textContent = t(step.key);
@@ -2456,18 +2478,14 @@
       }, step.at);
     });
 
-    // ИЗМЕНЕНО: Увеличили минимальное время до 3.5 секунд, чтобы анимация выглядела плавно
     const minDisplayTime = new Promise((resolve) => setTimeout(resolve, 3500));
-    // ИЗМЕНЕНО: Увеличили максимальное время до 15 секунд (на случай очень медленного интернета)
     const maxWaitTime = new Promise((resolve) => setTimeout(resolve, 15000));
 
-    // Ждем либо загрузки БД + минимальное время, либо истечения максимального таймаута
     await Promise.race([
       Promise.all([minDisplayTime, firstSyncPromise]),
       maxWaitTime
     ]);
 
-    // Догружаем полоску до 100% и меняем текст
     bar.style.width = "100%";
     status.textContent = t("splash.done");
 
@@ -2475,6 +2493,13 @@
       requestAnimationFrame(() => splash.classList.add("hide"));
       setTimeout(() => splash.remove(), 620);
       playEntrance();
+      
+      // Глубокие ссылки (Deep Linking)
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedListingId = urlParams.get('listing');
+      if (sharedListingId && getListing(sharedListingId)) {
+        openProductDetail(sharedListingId);
+      }
     }, 400);
   }
 

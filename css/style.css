@@ -1338,3 +1338,53 @@ svg[fill]{ stroke:none; }
 }
 /* Старые костыли img[src*="nn.png"] и div:has(...) удалены:
    теперь и слайд, и картинка баннера корректно стилизованы выше. */
+   /* ───────── НУМЕРАЦИЯ И КНОПКА ПОДЕЛИТЬСЯ ───────── */
+.card-number {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+/* Кнопка поделиться в карточке товара */
+.pd-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.pd-actions .btn {
+  flex: 1;
+  height: 48px;
+  padding: 0 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.pd-actions .fav-square,
+.pd-actions .share-square {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s, transform .18s var(--ease-spring);
+}
+.pd-actions .share-square:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pd-actions .share-square:active {
+  transform: scale(.9);
+}
